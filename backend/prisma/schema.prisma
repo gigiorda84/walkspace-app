@@ -55,10 +55,12 @@ model Tour {
   defaultDistanceKm       Float    @map("default_distance_km")
   isProtected             Boolean  @default(false) @map("is_protected")
   coverImageFileId        String?  @map("cover_image_file_id")
+  videoFileId             String?  @map("video_file_id")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
   coverImage         MediaFile?              @relation("TourCoverImage", fields: [coverImageFileId], references: [id])
+  video              MediaFile?              @relation("TourVideo", fields: [videoFileId], references: [id])
   versions           TourVersion[]
   points             TourPoint[]
   userAccess         UserTourAccess[]
@@ -135,13 +137,14 @@ model TourPointLocalization {
 
 model MediaFile {
   id            String   @id @default(uuid())
-  type          String   // "audio", "image", "subtitle"
+  type          String   // "audio", "image", "subtitle", "video"
   mimeType      String   @map("mime_type")
   fileSizeBytes Int      @map("file_size_bytes")
   storagePath   String   @map("storage_path")
   createdAt     DateTime @default(now()) @map("created_at")
 
   tourCoverImages       Tour[]                   @relation("TourCoverImage")
+  tourVideos            Tour[]                   @relation("TourVideo")
   pointAudio            TourPointLocalization[]  @relation("PointAudio")
   pointImages           TourPointLocalization[]  @relation("PointImage")
   pointSubtitles        TourPointLocalization[]  @relation("PointSubtitle")

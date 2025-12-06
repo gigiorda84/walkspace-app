@@ -1,0 +1,257 @@
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import {
+  TourListItemDto,
+  TourDetailDto,
+  TourPointDto,
+  ManifestDto,
+  AudioFileDto,
+  ImageFileDto,
+  SubtitleFileDto,
+  OfflineMapDto,
+} from './dto';
+
+@Injectable()
+export class ToursService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async listTours(userId?: string): Promise<TourListItemDto[]> {
+    const tours = await this.prisma.tour.findMany({
+      include: {
+        versions: {
+          where: { status: 'published' },
+          select: { language: true, title: true, description: true },
+        },
+        coverImage: true,
+        userAccess: userId ? { where: { userId } } : false,
+      },
+    });
+
+    return tours.map((tour) => {
+      const title: Record<string, string> = {};
+      const descriptionPreview: Record<string, string> = {};
+      const languages: string[] = [];
+
+      tour.versions.forEach((version) => {
+        title[version.language] = version.title;
+        descriptionPreview[version.language] = version.description.substring(0, 200) + '...';
+        languages.push(version.language);
+      });
+
+      return {
+        id: tour.id,
+        slug: tour.slug,
+        title,
+        descriptionPreview,
+        city: tour.defaultCity,
+        durationMinutes: tour.defaultDurationMinutes,
+        distanceKm: tour.defaultDistanceKm,
+        languages,
+        isProtected: tour.isProtected,
+        coverImageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
+        hasAccess: userId ? tour.userAccess.length > 0 : undefined,
+      };
+    });
+  }
+
+  async getTourDetails(tourId: string, language: string, userId?: string): Promise<TourDetailDto> {
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+      include: {
+        versions: {
+          where: { language, status: 'published' },
+        },
+        coverImage: true,
+        userAccess: userId ? { where: { userId } } : false,
+      },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    const version = tour.versions[0];
+    if (!version) {
+      throw new NotFoundException(`Tour not available in language: ${language}`);
+    }
+
+    const hasAccess = !tour.isProtected || !!(userId && tour.userAccess.length > 0);
+
+    const allVersions = await this.prisma.tourVersion.findMany({
+      where: { tourId: tour.id, status: 'published' },
+      select: { language: true },
+    });
+
+    return {
+      id: tour.id,
+      slug: tour.slug,
+      title: version.title,
+      description: version.description,
+      city: tour.defaultCity,
+      durationMinutes: tour.defaultDurationMinutes,
+      distanceKm: tour.defaultDistanceKm,
+      languages: allVersions.map((v) => v.language),
+      isProtected: tour.isProtected,
+      coverImageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
+      startingPoint: {
+        lat: version.startingPointLat,
+        lng: version.startingPointLng,
+      },
+      routePreview: {
+        polyline: version.routePolyline,
+      },
+      downloadInfo: {
+        estimatedSizeMb: 180, // Placeholder - would calculate from media files
+        isDownloaded: false, // Client-side state
+      },
+      hasAccess,
+    };
+  }
+
+  async getTourManifest(tourId: string, language: string, userId?: string): Promise<ManifestDto> {
+    // Check access first
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+      include: {
+        userAccess: userId ? { where: { userId } } : false,
+      },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    if (tour.isProtected && (!userId || tour.userAccess.length === 0)) {
+      throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+    }
+
+    const version = await this.prisma.tourVersion.findFirst({
+      where: { tourId, language, status: 'published' },
+    });
+
+    if (!version) {
+      throw new NotFoundException(`Tour not available in language: ${language}`);
+    }
+
+    const points = await this.prisma.tourPoint.findMany({
+      where: { tourId },
+      include: {
+        localizations: {
+          where: { tourVersionId: version.id, language },
+          include: {
+            audioFile: true,
+            imageFile: true,
+            subtitleFile: true,
+          },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    const audio: AudioFileDto[] = [];
+    const images: ImageFileDto[] = [];
+    const subtitles: SubtitleFileDto[] = [];
+
+    points.forEach((point) => {
+      const localization = point.localizations[0];
+      if (localization) {
+        if (localization.audioFile) {
+          audio.push({
+            pointId: point.id,
+            order: point.order,
+            fileUrl: `/media/${localization.audioFile.storagePath}`,
+            fileSizeBytes: localization.audioFile.fileSizeBytes,
+          });
+        }
+        if (localization.imageFile) {
+          images.push({
+            pointId: point.id,
+            fileUrl: `/media/${localization.imageFile.storagePath}`,
+            fileSizeBytes: localization.imageFile.fileSizeBytes,
+          });
+        }
+        if (localization.subtitleFile) {
+          subtitles.push({
+            pointId: point.id,
+            language,
+            fileUrl: `/media/${localization.subtitleFile.storagePath}`,
+            fileSizeBytes: localization.subtitleFile.fileSizeBytes,
+          });
+        }
+      }
+    });
+
+    // Mock offline map configuration
+    const offlineMap: OfflineMapDto = {
+      tilesUrlTemplate: 'https://tiles.example.org/{z}/{x}/{y}.pbf',
+      bounds: {
+        north: version.startingPointLat + 0.1,
+        south: version.startingPointLat - 0.1,
+        east: version.startingPointLng + 0.1,
+        west: version.startingPointLng - 0.1,
+      },
+      recommendedZoomLevels: [14, 15, 16],
+    };
+
+    return {
+      tourId: tour.id,
+      language,
+      version: version.versionNumber,
+      audio,
+      images,
+      subtitles,
+      offlineMap,
+    };
+  }
+
+  async getTourPoints(tourId: string, language: string, userId?: string): Promise<TourPointDto[]> {
+    // Check access first
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+      include: {
+        userAccess: userId ? { where: { userId } } : false,
+      },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    if (tour.isProtected && (!userId || tour.userAccess.length === 0)) {
+      throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+    }
+
+    const version = await this.prisma.tourVersion.findFirst({
+      where: { tourId, language, status: 'published' },
+    });
+
+    if (!version) {
+      throw new NotFoundException(`Tour not available in language: ${language}`);
+    }
+
+    const points = await this.prisma.tourPoint.findMany({
+      where: { tourId },
+      include: {
+        localizations: {
+          where: { tourVersionId: version.id, language },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    return points.map((point) => {
+      const localization = point.localizations[0];
+      return {
+        id: point.id,
+        order: point.order,
+        title: localization?.title || 'Untitled Point',
+        description: localization?.description || '',
+        location: {
+          lat: point.lat,
+          lng: point.lng,
+        },
+        triggerRadiusMeters: point.defaultTriggerRadiusMeters,
+      };
+    });
+  }
+}

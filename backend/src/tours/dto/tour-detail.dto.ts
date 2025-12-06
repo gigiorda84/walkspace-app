@@ -1,0 +1,24 @@
+export class TourDetailDto {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  city: string;
+  durationMinutes: number;
+  distanceKm: number;
+  languages: string[];
+  isProtected: boolean;
+  coverImageUrl: string | null;
+  startingPoint: {
+    lat: number;
+    lng: number;
+  };
+  routePreview: {
+    polyline: string | null;
+  };
+  downloadInfo: {
+    estimatedSizeMb: number;
+    isDownloaded: boolean;
+  };
+  hasAccess: boolean;
+}

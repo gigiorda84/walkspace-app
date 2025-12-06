@@ -1,0 +1,13 @@
+export class TourListItemDto {
+  id: string;
+  slug: string;
+  title: Record<string, string>; // { "it": "...", "fr": "...", "en": "..." }
+  descriptionPreview: Record<string, string>;
+  city: string;
+  durationMinutes: number;
+  distanceKm: number;
+  languages: string[];
+  isProtected: boolean;
+  coverImageUrl: string | null;
+  hasAccess?: boolean; // Whether current user has access
+}

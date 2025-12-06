@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { CmsAuthModule } from './cms-auth/cms-auth.module';
 import { UsersModule } from './users/users.module';
 import { ToursModule } from './tours/tours.module';
 import { MediaModule } from './media/media.module';
@@ -20,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     }),
     TerminusModule,
     AuthModule,
+    CmsAuthModule,
     UsersModule,
     ToursModule,
     MediaModule,
