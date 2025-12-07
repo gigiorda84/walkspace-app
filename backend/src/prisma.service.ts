@@ -11,11 +11,28 @@ export class PrismaService
   constructor() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const adapter = new PrismaPg(pool);
-    super({ adapter });
+    super({
+      adapter,
+      log: [
+        { emit: 'event', level: 'query' },
+        { emit: 'stdout', level: 'info' },
+        { emit: 'stdout', level: 'warn' },
+        { emit: 'stdout', level: 'error' },
+      ],
+    });
   }
 
   async onModuleInit() {
     await this.$connect();
+
+    // Log query duration for performance monitoring
+    this.$on('query' as never, (e: any) => {
+      console.log(`Query: ${e.query}`);
+      console.log(`Duration: ${e.duration}ms`);
+      if (e.duration > 100) {
+        console.warn(`⚠️  SLOW QUERY (${e.duration}ms): ${e.query}`);
+      }
+    });
   }
 
   async onModuleDestroy() {

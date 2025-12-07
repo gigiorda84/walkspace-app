@@ -1,0 +1,366 @@
+{
+  "info": {
+    "name": "BANDITE CMS API",
+    "description": "Content Management System API for BANDITE Sonic Walkscape",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "tour_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "version_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "point_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Tours Management",
+      "item": [
+        {
+          "name": "List All Tours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours"]
+            },
+            "description": "Get all tours with counts"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tour",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const tour = pm.response.json();",
+                  "    pm.collectionVariables.set('tour_id', tour.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"milan-historic-center\",\n  \"defaultCity\": \"Milan\",\n  \"defaultDurationMinutes\": 90,\n  \"defaultDistanceKm\": 3.5,\n  \"isProtected\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours"]
+            },
+            "description": "Create a new tour"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tour by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}"]
+            },
+            "description": "Get complete tour details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tour",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"defaultDurationMinutes\": 120,\n  \"defaultDistanceKm\": 4.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}"]
+            },
+            "description": "Update tour properties"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tour",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}"]
+            },
+            "description": "Delete tour and all related data"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Versions",
+      "item": [
+        {
+          "name": "Create Version (Italian)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const version = pm.response.json();",
+                  "    pm.collectionVariables.set('version_id', version.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"it\",\n  \"title\": \"Centro Storico di Milano\",\n  \"description\": \"Un viaggio sonoro attraverso il cuore di Milano\",\n  \"startingPointLat\": 45.464211,\n  \"startingPointLng\": 9.191383\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/versions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "versions"]
+            },
+            "description": "Create Italian version of tour"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/versions/{{version_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "versions", "{{version_id}}"]
+            },
+            "description": "Get version details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Version",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Milano Centro Storico - Tour Aggiornato\",\n  \"description\": \"Una nuova descrizione del tour\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/versions/{{version_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "versions", "{{version_id}}"]
+            },
+            "description": "Update version content"
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Version",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/versions/{{version_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "versions", "{{version_id}}", "publish"]
+            },
+            "description": "Publish version to mobile API"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Version",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/versions/{{version_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "versions", "{{version_id}}"]
+            },
+            "description": "Delete version"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Points",
+      "item": [
+        {
+          "name": "Create Point",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const point = pm.response.json();",
+                  "    pm.collectionVariables.set('point_id', point.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order\": 1,\n  \"lat\": 45.464211,\n  \"lng\": 9.191383,\n  \"defaultTriggerRadiusMeters\": 150\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/points",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "points"]
+            },
+            "description": "Add GPS waypoint"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Point",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/points/{{point_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "points", "{{point_id}}"]
+            },
+            "description": "Get point details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Point",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"defaultTriggerRadiusMeters\": 200\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/points/{{point_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "points", "{{point_id}}"]
+            },
+            "description": "Update point properties"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Point",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/points/{{point_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "points", "{{point_id}}"]
+            },
+            "description": "Delete point"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Localizations",
+      "item": [
+        {
+          "name": "Create Localization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"it\",\n  \"title\": \"Duomo di Milano\",\n  \"contentText\": \"Benvenuti al Duomo, simbolo di Milano...\",\n  \"audioUrl\": \"https://storage.example.com/audio/point-1-it.mp3\",\n  \"imageUrl\": \"https://storage.example.com/images/duomo.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tours/{{tour_id}}/points/{{point_id}}/localizations",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tours", "{{tour_id}}", "points", "{{point_id}}", "localizations"]
+            },
+            "description": "Add localized content"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
