@@ -1,216 +1,305 @@
-# Backend Development - All Phases COMPLETED ✅
+# CMS Development Plan - Phase 1 Completion
 
-## All Phases Summary
+## Overview
+Building the Web CMS (Next.js + React) to complete Phase 1 of the BANDITE Sonic Walkscape project.
 
-✅ **PHASE 1 COMPLETED** - Mobile User APIs (27/27 tests passed)
-✅ **PHASE 2 COMPLETED** - CMS Admin APIs (10/10 tests passed)
-✅ **PHASE 3 COMPLETED** - Edge Cases & Error Handling (51/51 tests passed)
-✅ **PHASE 4 COMPLETED** - Performance & Load Testing (All targets exceeded)
-✅ **PHASE 5 COMPLETED** - API Documentation (Swagger + Postman + Guides)
-
-**Total: 88/88 functional tests + performance validation + complete documentation ✅**
-
----
-
-## Phase 5 Summary: API Documentation
-
-### Deliverables COMPLETED ✅
-
-**1. Swagger/OpenAPI Documentation**
-- ✅ Interactive API docs at `/api/docs`
-- ✅ JWT Bearer authentication configured
-- ✅ 30 endpoints fully documented
-- ✅ Request/response schemas with examples
-- ✅ Error codes and descriptions
-- ✅ API tags for organization
-
-**2. Endpoints Documented (30 total)**
-
-**Mobile API (12 endpoints)**
-- Authentication (5): register, login, refresh, get profile, update profile
-- Tours (4): list, get details, get manifest, get points
-- Vouchers (2): validate, get my-tours
-- Analytics (1): track events
-
-**CMS Admin API (18 endpoints)**
-- Tours CRUD (5): list, get, create, update, delete
-- Versions (5): create, get, update, publish, delete
-- Points (4): create, get, update, delete
-- Localizations (3): create, update, delete
-
-**3. Postman Collections**
-- ✅ Mobile API collection (12 requests with auto-token management)
-- ✅ CMS API collection (15 requests with workflow examples)
-- ✅ Environment file with variables
-- ✅ Pre-request scripts for authentication
-- ✅ Test scripts for response validation
-
-**4. DTOs Enhanced**
-- ✅ RegisterDto - Full registration fields
-- ✅ LoginDto - Authentication credentials
-- ✅ ValidateVoucherDto - Voucher redemption
-- ✅ CreateTourDto - Tour creation with all fields
-
-**5. Integration Guides**
-- ✅ Mobile Integration Guide (10,000+ words)
-  - Complete authentication flow
-  - Tour discovery and download
-  - GPS triggering implementation
-  - Analytics tracking
-  - Error handling
-  - Code examples in Swift
-- ✅ CMS Integration Guide (8,000+ words)
-  - Tour creation workflow
-  - Multilingual content management
-  - Version publishing
-  - React/Next.js examples
-  - Best practices
-
-### Files Created
-
-**Documentation:**
-- `backend/docs/Mobile-Integration-Guide.md`
-- `backend/docs/CMS-Integration-Guide.md`
-
-**Postman:**
-- `backend/docs/postman/Mobile-API.postman_collection.json`
-- `backend/docs/postman/CMS-API.postman_collection.json`
-- `backend/docs/postman/BANDITE.postman_environment.json`
-
-**Code Changes:**
-- `backend/src/main.ts` - Swagger configuration
-- `backend/src/auth/auth.controller.ts` - Auth endpoints documented
-- `backend/src/tours/tours.controller.ts` - Tours endpoints documented
-- `backend/src/vouchers/vouchers.controller.ts` - Vouchers documented
-- `backend/src/analytics/analytics.controller.ts` - Analytics documented
-- `backend/src/admin/tours/admin-tours.controller.ts` - CMS documented
-- `backend/src/auth/dto/register.dto.ts` - Enhanced with @ApiProperty
-- `backend/src/auth/dto/login.dto.ts` - Enhanced with @ApiProperty
-- `backend/src/vouchers/dto/validate-voucher.dto.ts` - Enhanced
-- `backend/src/admin/tours/dto/create-tour.dto.ts` - Enhanced
+**Tech Stack:**
+- Next.js 14+ (App Router)
+- React + TypeScript
+- MapLibre GL JS (for map editor)
+- Tailwind CSS (styling)
+- React Hook Form (forms)
+- Tanstack Query (data fetching)
+- Zustand (state management)
 
 ---
 
-## Overall Project Status
+## Phase 1: Project Setup & Foundation ✅ COMPLETED
+### Tasks
+- [x] Initialize Next.js 14 project with TypeScript
+- [x] Configure Tailwind CSS
+- [x] Set up project structure (app/, components/, lib/, types/)
+- [x] Install core dependencies (react-hook-form, @tanstack/react-query, zustand)
+- [x] Create API client utilities for backend integration
+- [x] Set up environment variables (.env.local with backend API URL)
+- [x] Create basic layout components (Navbar, Sidebar, PageHeader)
 
-### Backend is Production-Ready! 🎉
-
-**All 5 Phases Complete:**
-1. ✅ **Functional Testing** - 88/88 tests passing
-2. ✅ **Edge Cases** - Comprehensive error handling validated
-3. ✅ **Performance** - Exceeds all targets by 7-222x
-4. ✅ **Documentation** - Complete API reference + guides
-5. ✅ **Developer Tools** - Postman collections ready
-
-### Key Metrics
-
-**Testing:**
-- 88/88 functional tests passed
-- 51 edge case tests passed
-- 0 N+1 queries found
-- 100% success rate under concurrent load
-
-**Performance:**
-- Manifest generation: 9ms (target: 2000ms) - **222x faster** ✅
-- Points loading: 26ms (target: 500ms) - **19x faster** ✅
-- Concurrent users (50): p95 = 93-134ms (target: 1000ms) - **7-10x faster** ✅
-- Analytics: 162,162 events/min (target: 1000/min) - **162x faster** ✅
-
-**Documentation:**
-- 30 endpoints documented
-- 2 comprehensive integration guides
-- 2 Postman collections with 27 requests
-- Interactive Swagger UI
+**Summary:**
+- ✅ Next.js 14 initialized with TypeScript and Tailwind CSS
+- ✅ Project structure created (src/app, src/components, src/lib, src/types)
+- ✅ Core dependencies installed (react-hook-form, @tanstack/react-query, zustand, axios)
+- ✅ API client with JWT auth and token refresh configured
+- ✅ Type definitions for all API entities created
+- ✅ Layout components (Navbar, Sidebar, PageHeader, MainLayout) implemented
+- ✅ QueryClientProvider integrated into app
+- ✅ Dev server tested and working on http://localhost:3001
 
 ---
 
-## How to Use the Documentation
+## Phase 2: Authentication & Authorization ✅ COMPLETED
+### Tasks
+- [x] Create login page (/login)
+- [x] Implement JWT token management (localStorage + refresh logic)
+- [x] Create authentication context/provider
+- [x] Add protected route middleware
+- [x] Implement role-based access control (admin vs editor)
+- [x] Create logout functionality
+- [ ] Add "Forgot Password" flow (if backend supports it) - SKIPPED
 
-### For Frontend Developers
-
-**1. Swagger UI (Interactive)**
-```bash
-# Start backend
-cd backend
-npm run start:dev
-
-# Open browser
-http://localhost:3000/api/docs
-```
-
-Features:
-- Try API calls directly in browser
-- See request/response examples
-- Test authentication flow
-- Export OpenAPI spec
-
-**2. Postman Collections**
-```bash
-# Import into Postman
-1. Open Postman
-2. Import > File
-3. Select: backend/docs/postman/Mobile-API.postman_collection.json
-4. Import environment: backend/docs/postman/BANDITE.postman_environment.json
-5. Run requests!
-```
-
-Features:
-- Auto token management
-- Environment variables
-- Example requests
-- Response validation
-
-**3. Integration Guides**
-
-**Mobile Developers:**
-- Read: `backend/docs/Mobile-Integration-Guide.md`
-- Covers: Auth, Tours, Downloads, GPS, Analytics
-- Includes: Swift code examples
-
-**CMS Developers:**
-- Read: `backend/docs/CMS-Integration-Guide.md`
-- Covers: Tour creation, Versions, Publishing
-- Includes: React/TypeScript examples
+**Summary:**
+- ✅ Login page with form validation and error handling
+- ✅ JWT token storage and automatic refresh on 401 errors
+- ✅ AuthContext/AuthProvider for global auth state management
+- ✅ ProtectedRoute component for client-side route protection
+- ✅ Next.js middleware for route handling
+- ✅ Role-based access control (admin/editor) in auth context
+- ✅ Logout functionality integrated in Navbar
+- ✅ User info display with role badge in Navbar
 
 ---
 
-## Next Steps (Optional Enhancements)
+## Phase 3: Tours Management (List & CRUD) ✅ COMPLETED
+### Tasks
+- [x] Create tours list page (/tours)
+  - [x] Display all tours in a table/grid
+  - [ ] Add filters (city, status, language) - DEFERRED
+  - [ ] Add search functionality - DEFERRED
+  - [x] Show tour metadata (slug, city, distance, duration)
+- [x] Create tour detail page (/tours/[id])
+  - [x] Display full tour information
+  - [x] Show all language versions
+  - [x] List all points
+- [x] Create "New Tour" form (/tours/new)
+  - [x] Basic info: slug, city, duration, distance
+  - [x] Protection status (public/protected)
+  - [x] Form validation
+- [x] Create "Edit Tour" page (/tours/[id]/edit)
+  - [x] Update tour metadata
+  - [x] Change protection status
+- [x] Add delete tour functionality (with confirmation)
+- [x] Implement tour duplication/cloning feature
 
-The backend is **production-ready**, but these enhancements could be added:
-
-### Security
-- [ ] Implement proper CMS JWT authentication (remove `@Public()` from admin endpoints)
-- [ ] Add rate limiting
-- [ ] Implement CORS policies
-- [ ] Add request validation middleware
-
-### Features
-- [ ] Actual media upload endpoints
-- [ ] Voucher batch generation
-- [ ] Analytics dashboard endpoints
-- [ ] User data export (GDPR compliance)
-
-### DevOps
-- [ ] Docker configuration
-- [ ] CI/CD pipeline
-- [ ] Production environment setup
-- [ ] Database migrations strategy
-- [ ] Monitoring and logging (APM)
-
-### Documentation
-- [ ] API changelog/versioning
-- [ ] Webhook documentation (if implemented)
-- [ ] Rate limiting documentation
-
----
-
-## Documentation Access
-
-**Swagger UI:** http://localhost:3000/api/docs
-**Mobile Guide:** `backend/docs/Mobile-Integration-Guide.md`
-**CMS Guide:** `backend/docs/CMS-Integration-Guide.md`
-**Postman:** `backend/docs/postman/`
+**Summary:**
+- ✅ Tours API service with all CRUD operations
+- ✅ Tours list page with table display
+- ✅ Tour detail page showing info, versions, and points
+- ✅ Create new tour form with validation
+- ✅ Edit tour page with pre-populated data
+- ✅ Delete confirmation dialog
+- ✅ Clone/duplicate tour functionality
+- ✅ Protected route integration
+- ✅ Loading states and error handling
+- ✅ Responsive table layout with action buttons
 
 ---
 
-**Status**: All 5 phases complete! Backend is production-ready with comprehensive documentation and testing. Ready for frontend integration. 🚀
+## Phase 4: Map Editor & Route Management
+### Tasks
+- [ ] Install MapLibre GL JS and React bindings
+- [ ] Create map editor component
+  - [ ] Initialize map with default view
+  - [ ] Add drawing controls for polylines
+  - [ ] Enable route editing (drag vertices, add/remove points)
+  - [ ] Save route polyline to tour version
+- [ ] Create points management interface
+  - [ ] Add point markers on map (draggable)
+  - [ ] Set point sequence order (1, 2, 3...)
+  - [ ] Configure trigger radius per point (visual circle on map)
+  - [ ] Point details panel (lat/lng, radius, order)
+- [ ] Add point CRUD operations
+  - [ ] Create new point by clicking map
+  - [ ] Edit point position and properties
+  - [ ] Delete point (with confirmation)
+  - [ ] Reorder points (drag-and-drop sequence)
+- [ ] Integrate route + points editor into tour version page
+
+---
+
+## Phase 5: Language Versions & Multilingual Content
+### Tasks
+- [ ] Create tour versions list (/tours/[id]/versions)
+  - [ ] Show all language variants (it, fr, en)
+  - [ ] Display status (draft/published)
+- [ ] Create "New Version" form (/tours/[id]/versions/new)
+  - [ ] Select language
+  - [ ] Add title and description
+  - [ ] Copy route from existing version (optional)
+- [ ] Create version editor (/tours/[id]/versions/[versionId]/edit)
+  - [ ] Edit title, description
+  - [ ] Manage route polyline (map editor)
+  - [ ] Change status (draft/published)
+- [ ] Implement version publishing workflow
+  - [ ] Publish/unpublish toggle
+  - [ ] Validation before publishing
+- [ ] Add version deletion
+
+---
+
+## Phase 6: Point Localizations & Content
+### Tasks
+- [ ] Create point localizations interface (/tours/[id]/versions/[versionId]/points/[pointId])
+  - [ ] Show all languages for a point
+  - [ ] Display audio, image, subtitle, text per language
+- [ ] Create localization editor form
+  - [ ] Text content (title, description)
+  - [ ] Audio file upload/selection
+  - [ ] Image upload/selection
+  - [ ] Subtitle (.srt) upload/selection
+- [ ] Implement CRUD for point localizations
+  - [ ] Create new localization for a language
+  - [ ] Update existing localization
+  - [ ] Delete localization
+
+---
+
+## Phase 7: Media Upload & Management
+### Tasks
+- [ ] Create media library page (/media)
+  - [ ] List all uploaded files (audio, images, subtitles)
+  - [ ] Filter by type
+  - [ ] Search by filename
+  - [ ] Display file metadata (size, type, upload date)
+- [ ] Implement file upload component
+  - [ ] Drag-and-drop zone
+  - [ ] Progress indicator for large files (audio up to 50MB)
+  - [ ] File type validation (.mp3/.wav, .jpg/.png, .srt)
+  - [ ] File size validation
+- [ ] Create upload API integration
+  - [ ] Connect to POST /admin/media/upload
+  - [ ] Handle multipart/form-data
+  - [ ] Display upload errors
+- [ ] Add file selection modal (for associating with points)
+  - [ ] Browse existing media
+  - [ ] Upload new file inline
+  - [ ] Select and attach to localization
+- [ ] Implement file deletion (with usage check)
+
+---
+
+## Phase 8: Voucher Management
+### Tasks
+- [ ] Create vouchers list page (/vouchers)
+  - [ ] Display all voucher batches
+  - [ ] Show batch info (codes count, tour, expiration)
+  - [ ] Display usage statistics
+- [ ] Create "New Voucher Batch" form (/vouchers/new)
+  - [ ] Select tour(s)
+  - [ ] Set quantity of codes
+  - [ ] Configure max uses per code
+  - [ ] Set expiration date
+  - [ ] Auto-generate or custom prefix
+- [ ] Create voucher batch detail page (/vouchers/[batchId])
+  - [ ] List all codes in batch
+  - [ ] Show redemption status per code
+  - [ ] Export codes as CSV
+- [ ] Add voucher batch editing
+  - [ ] Update expiration date
+  - [ ] Activate/deactivate batch
+- [ ] Implement individual voucher management
+  - [ ] View redemption history
+  - [ ] Deactivate specific codes
+
+---
+
+## Phase 9: Analytics Dashboard
+### Tasks
+- [ ] Create analytics overview page (/analytics)
+  - [ ] Summary cards (total downloads, starts, completions)
+  - [ ] Tour-by-tour breakdown
+  - [ ] Language distribution chart
+  - [ ] Voucher redemption stats
+- [ ] Implement tour-specific analytics (/analytics/tours/[id])
+  - [ ] Downloads over time (chart)
+  - [ ] Start vs completion rate
+  - [ ] Point-level engagement (which points trigger most)
+  - [ ] Language preference breakdown
+- [ ] Add date range filters
+  - [ ] Last 7 days, 30 days, 90 days, all time
+  - [ ] Custom date range picker
+- [ ] Implement CSV export
+  - [ ] Export tour analytics
+  - [ ] Export voucher usage
+  - [ ] Export user activity (GDPR-compliant)
+- [ ] Create visualization components
+  - [ ] Line charts for time-series data
+  - [ ] Pie charts for language distribution
+  - [ ] Bar charts for comparison
+
+---
+
+## Phase 10: UI/UX Polish & Testing
+### Tasks
+- [ ] Add loading states for all async operations
+- [ ] Implement error boundaries
+- [ ] Add toast notifications for success/error messages
+- [ ] Improve form validation feedback
+- [ ] Add keyboard shortcuts (Cmd+S to save, etc.)
+- [ ] Implement breadcrumb navigation
+- [ ] Add confirmation dialogs for destructive actions
+- [ ] Optimize performance (code splitting, lazy loading)
+- [ ] Add responsive design for tablet support
+- [ ] Test all CRUD operations end-to-end
+- [ ] Test role-based access (admin vs editor)
+- [ ] Test file uploads (small and large files)
+- [ ] Test map editor functionality
+- [ ] Write basic E2E tests with Playwright (optional)
+
+---
+
+## Phase 11: Documentation & Deployment
+### Tasks
+- [ ] Write CMS user guide (for artistic team)
+  - [ ] How to create a tour
+  - [ ] How to add route and points
+  - [ ] How to upload audio and manage content
+  - [ ] How to publish tours
+- [ ] Write deployment documentation
+  - [ ] Environment variables setup
+  - [ ] Build and deploy instructions
+  - [ ] Vercel/Netlify configuration
+- [ ] Create README.md for CMS repository
+- [ ] Document component architecture
+- [ ] Add inline code comments where necessary
+- [ ] Create a demo video/walkthrough (optional)
+
+---
+
+## Additional Features (Nice-to-Have)
+- [ ] Tour preview mode (simulate mobile experience)
+- [ ] Bulk operations (delete multiple tours, etc.)
+- [ ] Version comparison (diff between languages)
+- [ ] Media optimization (auto-compress images)
+- [ ] Undo/redo for map editing
+- [ ] Collaborative editing (real-time if needed)
+- [ ] Tour templates (pre-configured structures)
+- [ ] Automated backup/export of tour data
+
+---
+
+## Success Criteria
+- ✅ CMS allows creating and managing tours
+- ✅ Map editor enables route and point placement
+- ✅ Multilingual content management works seamlessly
+- ✅ Media upload handles large files (up to 50MB)
+- ✅ Voucher system is functional
+- ✅ Analytics dashboard displays meaningful data
+- ✅ Role-based access control is enforced
+- ✅ UI is intuitive for non-technical users
+
+---
+
+## Timeline Estimate
+- **Phase 1-2 (Setup + Auth):** Foundation work
+- **Phase 3 (Tours CRUD):** Core functionality
+- **Phase 4 (Map Editor):** Most complex feature
+- **Phase 5-6 (Versions + Localizations):** Content management
+- **Phase 7 (Media Upload):** File handling
+- **Phase 8 (Vouchers):** Access control
+- **Phase 9 (Analytics):** Data visualization
+- **Phase 10-11 (Polish + Docs):** Finalization
+
+---
+
+## Current Status
+**Phase:** Planning
+**Next Step:** Get user approval, then start Phase 1 (Project Setup)
