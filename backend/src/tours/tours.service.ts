@@ -62,7 +62,6 @@ export class ToursService {
           where: { language, status: 'published' },
         },
         coverImage: true,
-        userAccess: userId ? { where: { userId } } : false,
       },
     });
 
@@ -75,7 +74,17 @@ export class ToursService {
       throw new NotFoundException(`Tour not available in language: ${language}`);
     }
 
-    const hasAccess = !tour.isProtected || !!(userId && tour.userAccess.length > 0);
+    // Check user access explicitly
+    let hasAccess = !tour.isProtected; // Free tours always have access
+    if (tour.isProtected && userId) {
+      const userAccess = await this.prisma.userTourAccess.findFirst({
+        where: {
+          userId: userId,
+          tourId: tour.id,
+        },
+      });
+      hasAccess = !!userAccess;
+    }
 
     const allVersions = await this.prisma.tourVersion.findMany({
       where: { tourId: tour.id, status: 'published' },
@@ -112,17 +121,26 @@ export class ToursService {
     // Check access first
     const tour = await this.prisma.tour.findUnique({
       where: { id: tourId },
-      include: {
-        userAccess: userId ? { where: { userId } } : false,
-      },
     });
 
     if (!tour) {
       throw new NotFoundException('Tour not found');
     }
 
-    if (tour.isProtected && (!userId || tour.userAccess.length === 0)) {
-      throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+    // Check user access explicitly for protected tours
+    if (tour.isProtected) {
+      if (!userId) {
+        throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+      }
+      const userAccess = await this.prisma.userTourAccess.findFirst({
+        where: {
+          userId: userId,
+          tourId: tour.id,
+        },
+      });
+      if (!userAccess) {
+        throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+      }
     }
 
     const version = await this.prisma.tourVersion.findFirst({
@@ -208,17 +226,26 @@ export class ToursService {
     // Check access first
     const tour = await this.prisma.tour.findUnique({
       where: { id: tourId },
-      include: {
-        userAccess: userId ? { where: { userId } } : false,
-      },
     });
 
     if (!tour) {
       throw new NotFoundException('Tour not found');
     }
 
-    if (tour.isProtected && (!userId || tour.userAccess.length === 0)) {
-      throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+    // Check user access explicitly for protected tours
+    if (tour.isProtected) {
+      if (!userId) {
+        throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+      }
+      const userAccess = await this.prisma.userTourAccess.findFirst({
+        where: {
+          userId: userId,
+          tourId: tour.id,
+        },
+      });
+      if (!userAccess) {
+        throw new ForbiddenException('Access denied. Redeem a voucher to access this tour.');
+      }
     }
 
     const version = await this.prisma.tourVersion.findFirst({
