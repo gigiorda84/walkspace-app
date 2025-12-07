@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { UploadResponseDto } from './dto';
+import { UploadResponseDto, MediaFileListItemDto, MediaFileResponseDto } from './dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Express } from 'express';
@@ -125,5 +125,67 @@ export class MediaService {
     }
 
     return path.join(process.cwd(), mediaFile.storagePath);
+  }
+
+  async listFiles(type?: string): Promise<MediaFileListItemDto[]> {
+    const where = type ? { type } : {};
+
+    const files = await this.prisma.mediaFile.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return files.map((file) => ({
+      id: file.id,
+      type: file.type,
+      mimeType: file.mimeType,
+      fileSizeBytes: file.fileSizeBytes,
+      url: `${this.baseUrl}/media/${file.id}`,
+      createdAt: file.createdAt,
+    }));
+  }
+
+  async getFileById(fileId: string): Promise<MediaFileResponseDto> {
+    const mediaFile = await this.prisma.mediaFile.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!mediaFile) {
+      throw new NotFoundException('File not found');
+    }
+
+    return {
+      id: mediaFile.id,
+      type: mediaFile.type,
+      mimeType: mediaFile.mimeType,
+      fileSizeBytes: mediaFile.fileSizeBytes,
+      storagePath: mediaFile.storagePath,
+      url: `${this.baseUrl}/media/${mediaFile.id}`,
+      createdAt: mediaFile.createdAt,
+    };
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    const mediaFile = await this.prisma.mediaFile.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!mediaFile) {
+      throw new NotFoundException('File not found');
+    }
+
+    // Delete physical file from disk
+    const fullPath = path.join(process.cwd(), mediaFile.storagePath);
+    try {
+      await fs.unlink(fullPath);
+    } catch (error) {
+      // File might not exist on disk, continue with database deletion
+      console.warn(`Could not delete file from disk: ${fullPath}`, error);
+    }
+
+    // Delete database record
+    await this.prisma.mediaFile.delete({
+      where: { id: fileId },
+    });
   }
 }

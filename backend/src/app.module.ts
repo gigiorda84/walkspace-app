@@ -13,6 +13,8 @@ import { ToursModule } from './tours/tours.module';
 import { MediaModule } from './media/media.module';
 import { VouchersModule } from './vouchers/vouchers.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AdminToursModule } from './admin/tours/admin-tours.module';
+import { AdminMediaModule } from './admin/media/admin-media.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     MediaModule,
     VouchersModule,
     AnalyticsModule,
+    AdminToursModule,
+    AdminMediaModule,
   ],
   controllers: [AppController],
   providers: [
