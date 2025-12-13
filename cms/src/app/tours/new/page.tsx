@@ -56,7 +56,7 @@ export default function NewTourPage() {
           actions={
             <Link
               href="/tours"
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700"
             >
               <ArrowLeft size={18} />
               <span>Back to Tours</span>
@@ -89,7 +89,7 @@ export default function NewTourPage() {
                           message: 'Slug must be lowercase letters, numbers, and hyphens only',
                         },
                       })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-900"
                       placeholder="rome-ancient-sounds"
                     />
                     {errors.slug && (
@@ -105,7 +105,7 @@ export default function NewTourPage() {
                       type="text"
                       id="city"
                       {...register('city', { required: 'City is required' })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-900"
                       placeholder="Rome"
                     />
                     {errors.city && (
@@ -128,7 +128,7 @@ export default function NewTourPage() {
                           required: 'Duration is required',
                           min: { value: 1, message: 'Duration must be at least 1 minute' },
                         })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-900"
                         placeholder="60"
                       />
                       {errors.durationMinutes && (
@@ -150,7 +150,7 @@ export default function NewTourPage() {
                           required: 'Distance is required',
                           min: { value: 0.1, message: 'Distance must be at least 0.1 km' },
                         })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-900"
                         placeholder="3.5"
                       />
                       {errors.distanceKm && (

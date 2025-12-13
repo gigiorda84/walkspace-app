@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import Map, { MapRef, Marker, Source, Layer } from 'react-map-gl';
-import type { MapLayerMouseEvent } from 'react-map-gl';
+import Map, { MapRef, Marker, Source, Layer } from 'react-map-gl/maplibre';
+import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface MapPoint {
