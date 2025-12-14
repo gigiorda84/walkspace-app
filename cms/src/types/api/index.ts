@@ -35,9 +35,9 @@ export interface CmsUser {
 export interface Tour {
   id: string;
   slug: string;
-  city: string;
-  durationMinutes: number;
-  distanceKm: number;
+  defaultCity: string;
+  defaultDurationMinutes: number;
+  defaultDistanceKm: number;
   isProtected: boolean;
   createdAt: string;
   updatedAt: string;

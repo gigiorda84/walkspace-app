@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tantml:react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Edit, Plus, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
@@ -34,7 +34,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
       <MainLayout>
         <PageHeader
           title={tour?.slug || 'Tour Details'}
-          description={tour?.city || ''}
+          description={tour?.defaultCity || ''}
           actions={
             <div className="flex items-center space-x-3">
               <Link
@@ -77,15 +77,15 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">City</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{tour.city}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">{tour.defaultCity}</dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Duration</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{tour.durationMinutes} minutes</dd>
+                      <dd className="mt-1 text-sm text-gray-900">{tour.defaultDurationMinutes} minutes</dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Distance</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{tour.distanceKm} km</dd>
+                      <dd className="mt-1 text-sm text-gray-900">{tour.defaultDistanceKm} km</dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Status</dt>

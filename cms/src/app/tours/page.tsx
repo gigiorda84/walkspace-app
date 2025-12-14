@@ -34,9 +34,9 @@ export default function ToursPage() {
     mutationFn: async (tour: Tour) => {
       const clonedData = {
         slug: `${tour.slug}-copy`,
-        city: tour.city,
-        durationMinutes: tour.durationMinutes,
-        distanceKm: tour.distanceKm,
+        defaultCity: tour.defaultCity,
+        defaultDurationMinutes: tour.defaultDurationMinutes,
+        defaultDistanceKm: tour.defaultDistanceKm,
         isProtected: tour.isProtected,
       };
       return toursApi.createTour(clonedData);
@@ -140,13 +140,13 @@ export default function ToursPage() {
                         <div className="text-sm font-medium text-gray-900">{tour.slug}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{tour.city}</div>
+                        <div className="text-sm text-gray-900">{tour.defaultCity}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{tour.durationMinutes} min</div>
+                        <div className="text-sm text-gray-900">{tour.defaultDurationMinutes} min</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{tour.distanceKm} km</div>
+                        <div className="text-sm text-gray-900">{tour.defaultDistanceKm} km</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

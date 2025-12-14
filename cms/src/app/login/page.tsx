@@ -22,13 +22,11 @@ export default function LoginPage() {
       setIsLoading(true);
       setError('');
 
-      const response = await apiClient.post<LoginResponse>('/auth/login', data);
-      const { accessToken, refreshToken, user } = response.data;
+      const response = await apiClient.post('/admin/auth/login', data);
+      const { accessToken, user } = response.data;
 
       // Update auth context (which also stores in localStorage)
-      // Note: We'll use the useAuth hook in a future update
       localStorage.setItem('auth_token', accessToken);
-      localStorage.setItem('refresh_token', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
 
       // Redirect to tours page

@@ -14,9 +14,9 @@ import { toursApi } from '@/lib/api/tours';
 
 type TourFormData = {
   slug: string;
-  city: string;
-  durationMinutes: number;
-  distanceKm: number;
+  defaultCity: string;
+  defaultDurationMinutes: number;
+  defaultDistanceKm: number;
   isProtected: boolean;
 };
 
@@ -43,9 +43,9 @@ export default function EditTourPage({ params }: { params: Promise<{ id: string 
     if (tour) {
       reset({
         slug: tour.slug,
-        city: tour.city,
-        durationMinutes: tour.durationMinutes,
-        distanceKm: tour.distanceKm,
+        defaultCity: tour.defaultCity,
+        defaultDurationMinutes: tour.defaultDurationMinutes,
+        defaultDistanceKm: tour.defaultDistanceKm,
         isProtected: tour.isProtected,
       });
     }
@@ -123,47 +123,48 @@ export default function EditTourPage({ params }: { params: Promise<{ id: string 
                     </div>
 
                     <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="defaultCity" className="block text-sm font-medium text-gray-700">
                         City *
                       </label>
                       <input
                         type="text"
-                        id="city"
-                        {...register('city', { required: 'City is required' })}
+                        id="defaultCity"
+                        {...register('defaultCity', { required: 'City is required' })}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
                       />
-                      {errors.city && (
-                        <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
+                      {errors.defaultCity && (
+                        <p className="mt-1 text-sm text-red-600">{errors.defaultCity.message}</p>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label
-                          htmlFor="durationMinutes"
+                          htmlFor="defaultDurationMinutes"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Duration (minutes) *
                         </label>
                         <input
                           type="number"
-                          id="durationMinutes"
-                          {...register('durationMinutes', {
+                          id="defaultDurationMinutes"
+                          {...register('defaultDurationMinutes', {
                             required: 'Duration is required',
                             min: { value: 1, message: 'Duration must be at least 1 minute' },
+                            valueAsNumber: true,
                           })}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
                         />
-                        {errors.durationMinutes && (
+                        {errors.defaultDurationMinutes && (
                           <p className="mt-1 text-sm text-red-600">
-                            {errors.durationMinutes.message}
+                            {errors.defaultDurationMinutes.message}
                           </p>
                         )}
                       </div>
 
                       <div>
                         <label
-                          htmlFor="distanceKm"
+                          htmlFor="defaultDistanceKm"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Distance (km) *
@@ -171,15 +172,16 @@ export default function EditTourPage({ params }: { params: Promise<{ id: string 
                         <input
                           type="number"
                           step="0.1"
-                          id="distanceKm"
-                          {...register('distanceKm', {
+                          id="defaultDistanceKm"
+                          {...register('defaultDistanceKm', {
                             required: 'Distance is required',
                             min: { value: 0.1, message: 'Distance must be at least 0.1 km' },
+                            valueAsNumber: true,
                           })}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
                         />
-                        {errors.distanceKm && (
-                          <p className="mt-1 text-sm text-red-600">{errors.distanceKm.message}</p>
+                        {errors.defaultDistanceKm && (
+                          <p className="mt-1 text-sm text-red-600">{errors.defaultDistanceKm.message}</p>
                         )}
                       </div>
                     </div>
