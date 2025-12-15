@@ -68,9 +68,22 @@ export default function TourPointsPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
+        <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
+          <div className="flex items-center text-sm text-gray-500">
+            <Link href="/tours" className="hover:text-gray-700">
+              Tours
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/tours/${tourId}`} className="hover:text-gray-700">
+              {tour?.slug || 'Tour'}
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-900 font-medium">Points</span>
+          </div>
+        </div>
         <PageHeader
-          title={`Tour Points - ${tour?.slug || 'Tour'}`}
-          description="Manage tour points and their multilingual content"
+          title="Tour Points"
+          description={`Manage waypoints and content for ${tour?.slug || 'this tour'}`}
           actions={
             <Link
               href={`/tours/${tourId}/points/new`}

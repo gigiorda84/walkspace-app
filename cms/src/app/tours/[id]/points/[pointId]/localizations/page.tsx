@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import Link from 'next/link';
 import { Save, Globe, Folder, X } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -11,6 +12,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { MediaBrowserModal } from '@/components/media/MediaBrowserModal';
 import { pointLocalizationsApi } from '@/lib/api/point-localizations';
 import { pointsApi } from '@/lib/api/points';
+import { toursApi } from '@/lib/api/tours';
 import { versionsApi } from '@/lib/api/versions';
 import { MediaFile } from '@/types/api';
 
@@ -143,12 +145,35 @@ export default function PointLocalizationsPage() {
     saveMutation.mutate(data);
   };
 
+  // Fetch tour details for breadcrumb
+  const { data: tour } = useQuery({
+    queryKey: ['tour', tourId],
+    queryFn: () => toursApi.getTour(tourId),
+  });
+
   return (
     <ProtectedRoute>
       <MainLayout>
+        <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
+          <div className="flex items-center text-sm text-gray-500">
+            <Link href="/tours" className="hover:text-gray-700">
+              Tours
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/tours/${tourId}`} className="hover:text-gray-700">
+              {tour?.slug || 'Tour'}
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/tours/${tourId}/points`} className="hover:text-gray-700">
+              Points
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-900 font-medium">Point {point?.sequenceOrder || ''} Localizations</span>
+          </div>
+        </div>
         <PageHeader
           title={`Point ${point?.sequenceOrder || ''} Localizations`}
-          description="Manage multilingual content for this tour point"
+          description={`Manage multilingual content for ${tour?.slug || 'this tour'}`}
         />
 
         <div className="p-8">

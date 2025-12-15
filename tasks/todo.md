@@ -1,170 +1,132 @@
-# Phase 8: Analytics Dashboard - TODO
+# Task: Create Comprehensive Tour Points Editor
 
-## Status
-- **Current Phase:** Phase 8 - Analytics Dashboard 📊
-- **Previous Phases:** 1-7 Complete ✅
-- **Timeline:** ~13-16 hours estimated
+## Context
+User wants a single page to edit all point content for a tour:
+- Title for each point
+- Optional description
+- Audio track
+- Subtitles
+- Optional photo
 
----
+This is the main editor for creating/editing tour content.
 
-## Overview
+## Current State
+- Points are managed separately on `/tours/[id]/points/page.tsx`
+- Localizations are edited individually on `/tours/[id]/points/[pointId]/localizations/page.tsx`
+- User has to navigate to each point separately to edit content
 
-Build a comprehensive analytics dashboard to track user engagement, tour performance, and voucher redemption metrics. This will provide content managers with insights into how their tours are performing.
+## Goal
+Create a unified editor page where all points and their content can be edited in one view.
 
-**See detailed plan:** `tasks/phase-8-plan.md`
+## Plan
 
----
+### Todo Items
 
-## Backend Tasks
+- [ ] Create comprehensive tour editor page at `/tours/[id]/editor/page.tsx`
+  - Show all points in a list/table
+  - For each point, show editable fields for selected language:
+    - Title (required)
+    - Description (optional)
+    - Audio track (browse/upload)
+    - Subtitles (browse/upload)
+    - Photo/image (optional, browse/upload)
+  - Language selector at top to switch between languages
+  - Save changes per point or save all at once
+  - Show which points are complete vs incomplete
 
-### 1. Analytics Admin Service
-- [ ] Create `admin-analytics.service.ts`
-- [ ] Implement `getOverviewStats()` method
-- [ ] Implement `getTourAnalytics()` method
-- [ ] Implement `getUserActivityStats()` method
-- [ ] Implement `getVoucherStats()` method
-- [ ] Implement `getEvents()` method with filters
-- [ ] Implement `exportAnalytics()` CSV export
-- [ ] Add database indexes for performance
-- [ ] Test all aggregation queries
+- [ ] Add navigation to the editor from tour detail page
+  - Add "Edit Tour Content" button on tour detail page
+  - Should be prominent primary action
 
-### 2. Analytics Admin Controller
-- [ ] Create `admin-analytics.controller.ts`
-- [ ] Add `GET /admin/analytics/overview` endpoint
-- [ ] Add `GET /admin/analytics/tours/:tourId` endpoint
-- [ ] Add `GET /admin/analytics/users` endpoint
-- [ ] Add `GET /admin/analytics/vouchers` endpoint
-- [ ] Add `GET /admin/analytics/events` endpoint
-- [ ] Add `GET /admin/analytics/export` endpoint
-- [ ] Add role-based access control
-- [ ] Test all endpoints with Postman
+- [ ] Test the complete flow
+  - Navigate to tour editor
+  - Select a language
+  - Edit point content
+  - Associate media files
+  - Save changes
+  - Verify data persists
 
-### 3. DTOs and Validation
-- [ ] Create `OverviewStatsDto`
-- [ ] Create `TourAnalyticsDto`
-- [ ] Create `UserActivityStatsDto`
-- [ ] Create `VoucherStatsDto`
-- [ ] Create `EventFilterDto`
-- [ ] Add validation decorators
-
----
-
-## Frontend Tasks
-
-### 1. Install Dependencies
-- [ ] Install recharts for charts
-- [ ] Install date-fns for date manipulation
-- [ ] Review and test dependencies
-
-### 2. Analytics API Client
-- [ ] Create `cms/src/lib/api/analytics.ts`
-- [ ] Add `getOverview()` method
-- [ ] Add `getTourAnalytics()` method
-- [ ] Add `getUserStats()` method
-- [ ] Add `getVoucherStats()` method
-- [ ] Add `getEvents()` method
-- [ ] Add `exportAnalytics()` method
-- [ ] Add TypeScript types
-- [ ] Test API integration
-
-### 3. Chart Components
-- [ ] Create `LineChart.tsx` component
-- [ ] Create `BarChart.tsx` component
-- [ ] Create `PieChart.tsx` component
-- [ ] Create `StatCard.tsx` component
-- [ ] Style components with Tailwind
-- [ ] Test with sample data
-
-### 4. Analytics Dashboard Page (`/analytics`)
-- [ ] Create page route
-- [ ] Add StatCard components for overview metrics
-- [ ] Add DateRangeSelector component
-- [ ] Add LineChart for signups over time
-- [ ] Add BarChart for active users
-- [ ] Add TopToursTable component
-- [ ] Add RecentActivityFeed component
-- [ ] Add loading states
-- [ ] Add error handling
-- [ ] Add empty states
-- [ ] Test responsive design
-
-### 5. Date Range Selector
-- [ ] Create `DateRangeSelector.tsx`
-- [ ] Add preset ranges (7d, 30d, 90d, All)
-- [ ] Add custom date picker
-- [ ] Update URL params
-- [ ] Persist selection in localStorage
-- [ ] Test date filtering
-
-### 6. Export Functionality
-- [ ] Create `ExportButton.tsx`
-- [ ] Add CSV export button
-- [ ] Show loading state during export
-- [ ] Handle file download
-- [ ] Add success/error notifications
-- [ ] Test export with real data
-
-### 7. Tour Analytics Detail Page (Optional)
-- [ ] Create `/analytics/tours/[tourId]` page
-- [ ] Add tour-specific metrics
-- [ ] Add completion rate display
-- [ ] Add point trigger statistics
-- [ ] Add daily activity chart
-- [ ] Test with multiple tours
-
----
-
-## Testing
-
-### Backend Testing
-- [ ] Test overview stats endpoint
-- [ ] Test tour analytics endpoint
-- [ ] Test user stats endpoint
-- [ ] Test voucher stats endpoint
-- [ ] Test date range filtering
-- [ ] Test CSV export format
-- [ ] Verify query performance (< 1 sec)
-- [ ] Test with large datasets
-
-### Frontend Testing
-- [ ] Test dashboard loads correctly
-- [ ] Test charts render with data
-- [ ] Test date range selector updates data
-- [ ] Test top tours table
-- [ ] Test export downloads CSV
-- [ ] Test loading states
-- [ ] Test error handling
-- [ ] Test responsive design (mobile/tablet)
-- [ ] Test empty states
-
-### Integration Testing
-- [ ] Test end-to-end data flow
-- [ ] Verify analytics event ingestion works
-- [ ] Test real-time data updates
-- [ ] Verify all metrics calculate correctly
-
----
-
-## Performance Optimization
-
-- [ ] Add database indexes on analytics_events table
-- [ ] Implement query caching (optional)
-- [ ] Test dashboard load time (target < 2 sec)
-- [ ] Optimize expensive aggregation queries
-- [ ] Consider materialized views for complex stats
-
----
-
-## Review
-(To be completed after implementation)
-
----
+## Design Considerations
+- Keep it simple and focused
+- Use accordion or expandable cards for each point
+- Show visual indicators for completed points (has title + audio)
+- Make media selection easy with media browser
+- Auto-save or clear save buttons
 
 ## Notes
-- Backend analytics_events table already exists ✅
-- Event ingestion endpoint `POST /analytics/events` working ✅
-- Focus on creating read endpoints for aggregated data
-- Start simple with overview stats, add complexity later
-- Cache results for better performance
-- Ensure GDPR compliance (anonymized data)
-- Consider data retention policy
+- This will be the primary interface for content creators
+- Should work well with the existing points and localization APIs
+- Consider adding bulk operations later (copy from one language to another)
+
+## Review Section
+
+### Implementation Complete ✅
+
+**Files Created (1):**
+- `/cms/src/app/tours/[id]/editor/page.tsx` - Comprehensive tour content editor
+
+**Files Modified (1):**
+- `/cms/src/app/tours/[id]/page.tsx` - Added prominent "Open Editor" button
+
+### Features Implemented
+
+#### 1. Comprehensive Tour Editor (`/tours/[id]/editor`)
+
+**Key Features:**
+- **Language selector** - Switch between tour languages (Italian, French, English)
+- **Expandable point cards** - Each point can be expanded/collapsed
+- **Complete status indicators** - Visual checkmark when point has title + audio
+- **All content fields per point:**
+  - Title (required)
+  - Description (optional textarea)
+  - Audio track (browse media library)
+  - Subtitles (browse media library)
+  - Photo (optional, browse media library)
+- **Individual save buttons** - Save each point independently
+- **Breadcrumb navigation** - Tours → Tour Name → Content Editor
+
+**Smart Error Handling:**
+- Shows helpful message if no language versions exist
+- Shows helpful message if no points exist
+- Provides links to create versions/points
+
+#### 2. Tour Detail Page Enhancement
+
+**Added:**
+- Prominent gradient CTA banner with "Open Editor" button
+- Only shows when tour has both versions AND points
+- Clear description: "Add titles, descriptions, audio tracks, and photos to your tour points"
+
+### User Flow
+
+1. **Navigate to Tour** → View tour details
+2. **Click "Open Editor"** → Opens comprehensive editor
+3. **Select Language** → Choose which language to edit
+4. **Expand Point** → Click to expand any point
+5. **Edit Content:**
+   - Enter title
+   - Add optional description
+   - Browse & select audio file
+   - Browse & select subtitle file
+   - Browse & select photo (optional)
+6. **Save** → Click "Save Point" to persist changes
+7. **Visual Feedback** → Checkmark appears when point is complete
+
+### Technical Implementation
+
+- Uses accordion pattern for space efficiency
+- Fetches all localizations in parallel for performance
+- Maintains local state for editing before save
+- Integrates with existing MediaBrowserModal component
+- Uses existing API endpoints (no backend changes needed)
+- Follows existing code patterns and styling
+
+### Benefits
+
+✅ **Streamlined workflow** - Edit all point content in one place
+✅ **Clear progress tracking** - See which points are complete at a glance
+✅ **Efficient** - No need to navigate between multiple pages
+✅ **User-friendly** - Expandable cards keep interface clean
+✅ **Complete** - All fields accessible: title, description, audio, subtitles, photo
+
+This is now the **primary interface** for content creators to build their tours!

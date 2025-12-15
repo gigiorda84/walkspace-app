@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Edit, Plus, MapPin } from 'lucide-react';
+import { ArrowLeft, Edit, Plus, MapPin, FileEdit } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -64,6 +64,27 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
 
           {!isLoading && tour && (
             <>
+              {/* Content Editor CTA */}
+              {versions && versions.length > 0 && points && points.length > 0 && (
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-white">
+                      <h3 className="text-lg font-semibold mb-1">Edit Tour Content</h3>
+                      <p className="text-indigo-100 text-sm">
+                        Add titles, descriptions, audio tracks, and photos to your tour points
+                      </p>
+                    </div>
+                    <Link
+                      href={`/tours/${id}/editor`}
+                      className="flex items-center space-x-2 px-6 py-3 bg-white text-indigo-600 rounded-md hover:bg-indigo-50 font-medium shadow-md transition-colors"
+                    >
+                      <FileEdit size={20} />
+                      <span>Open Editor</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               {/* Tour Info */}
               <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
