@@ -378,6 +378,31 @@ export class AdminToursService {
     };
   }
 
+  async unpublishVersion(tourId: string, versionId: string): Promise<VersionResponseDto> {
+    // Verify version exists and belongs to tour
+    const existing = await this.prisma.tourVersion.findUnique({
+      where: { id: versionId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Version not found');
+    }
+
+    if (existing.tourId !== tourId) {
+      throw new BadRequestException('Version does not belong to this tour');
+    }
+
+    const version = await this.prisma.tourVersion.update({
+      where: { id: versionId },
+      data: { status: 'draft' },
+    });
+
+    return {
+      ...version,
+      status: 'draft' as const,
+    };
+  }
+
   async deleteVersion(tourId: string, versionId: string): Promise<void> {
     // Verify version exists and belongs to tour
     const version = await this.prisma.tourVersion.findUnique({
@@ -594,6 +619,37 @@ export class AdminToursService {
   }
 
   // ==================== LOCALIZATION MANAGEMENT ====================
+
+  async getLocalizationsByPoint(tourId: string, pointId: string): Promise<LocalizationResponseDto[]> {
+    // Verify point exists and belongs to tour
+    const point = await this.prisma.tourPoint.findUnique({
+      where: { id: pointId },
+    });
+
+    if (!point) {
+      throw new NotFoundException('Point not found');
+    }
+
+    if (point.tourId !== tourId) {
+      throw new BadRequestException('Point does not belong to this tour');
+    }
+
+    const localizations = await this.prisma.tourPointLocalization.findMany({
+      where: { tourPointId: pointId },
+    });
+
+    return localizations.map((loc) => ({
+      id: loc.id,
+      tourPointId: loc.tourPointId,
+      tourVersionId: loc.tourVersionId,
+      language: loc.language,
+      title: loc.title,
+      description: loc.description,
+      audioFileId: loc.audioFileId,
+      imageFileId: loc.imageFileId,
+      subtitleFileId: loc.subtitleFileId,
+    }));
+  }
 
   async createLocalization(tourId: string, pointId: string, dto: CreateLocalizationDto): Promise<LocalizationResponseDto> {
     // Verify point exists and belongs to tour

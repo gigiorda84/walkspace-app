@@ -219,6 +219,29 @@ export class AdminToursController {
     return this.adminToursService.publishVersion(tourId, versionId);
   }
 
+  @Post(':tourId/versions/:versionId/unpublish')
+  @ApiOperation({
+    summary: '[CMS] Unpublish version',
+    description: 'Change version status from published to draft.'
+  })
+  @ApiParam({ name: 'tourId', description: 'Tour ID (UUID)' })
+  @ApiParam({ name: 'versionId', description: 'Version ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Version unpublished successfully',
+    type: VersionResponseDto
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Version not found'
+  })
+  async unpublishVersion(
+    @Param('tourId') tourId: string,
+    @Param('versionId') versionId: string,
+  ): Promise<VersionResponseDto> {
+    return this.adminToursService.unpublishVersion(tourId, versionId);
+  }
+
   @Delete(':tourId/versions/:versionId')
   @ApiOperation({
     summary: '[CMS] Delete version',
@@ -341,6 +364,29 @@ export class AdminToursController {
   }
 
   // ==================== LOCALIZATION ENDPOINTS ====================
+
+  @Get(':tourId/points/:pointId/localizations')
+  @ApiOperation({
+    summary: '[CMS] Get point localizations',
+    description: 'Get all localizations for a specific point across all languages.'
+  })
+  @ApiParam({ name: 'tourId', description: 'Tour ID (UUID)' })
+  @ApiParam({ name: 'pointId', description: 'Point ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Localizations retrieved successfully',
+    type: [LocalizationResponseDto]
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Point not found'
+  })
+  async getLocalizationsByPoint(
+    @Param('tourId') tourId: string,
+    @Param('pointId') pointId: string,
+  ): Promise<LocalizationResponseDto[]> {
+    return this.adminToursService.getLocalizationsByPoint(tourId, pointId);
+  }
 
   @Post(':tourId/points/:pointId/localizations')
   @ApiOperation({

@@ -5,6 +5,9 @@ export class MediaFileResponseDto {
   fileSizeBytes: number;
   storagePath: string;
   url: string;
+  version: number;
+  isActive: boolean;
+  originalFilename?: string;
   createdAt: Date;
 }
 
@@ -14,5 +17,8 @@ export class MediaFileListItemDto {
   mimeType: string;
   fileSizeBytes: number;
   url: string;
+  version: number;
+  isActive: boolean;
+  originalFilename?: string;
   createdAt: Date;
 }

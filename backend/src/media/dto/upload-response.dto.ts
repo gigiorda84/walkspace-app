@@ -5,5 +5,6 @@ export class UploadResponseDto {
   mimeType: string;
   size: number;
   url: string;
+  version?: number;
   uploadedAt: Date;
 }

@@ -53,6 +53,9 @@ export class MediaService {
         mimeType: file.mimetype,
         fileSizeBytes: file.size,
         storagePath,
+        originalFilename: file.originalname,
+        version: 1,
+        isActive: true,
       },
     });
 
@@ -63,6 +66,7 @@ export class MediaService {
       mimeType: file.mimetype,
       size: file.size,
       url: `${this.baseUrl}/media/${mediaFile.id}`,
+      version: mediaFile.version,
       uploadedAt: mediaFile.createdAt,
     };
   }
@@ -141,6 +145,9 @@ export class MediaService {
       mimeType: file.mimeType,
       fileSizeBytes: file.fileSizeBytes,
       url: `${this.baseUrl}/media/${file.id}`,
+      version: file.version,
+      isActive: file.isActive,
+      originalFilename: file.originalFilename ?? undefined,
       createdAt: file.createdAt,
     }));
   }
@@ -161,6 +168,9 @@ export class MediaService {
       fileSizeBytes: mediaFile.fileSizeBytes,
       storagePath: mediaFile.storagePath,
       url: `${this.baseUrl}/media/${mediaFile.id}`,
+      version: mediaFile.version,
+      isActive: mediaFile.isActive,
+      originalFilename: mediaFile.originalFilename ?? undefined,
       createdAt: mediaFile.createdAt,
     };
   }
@@ -187,5 +197,66 @@ export class MediaService {
     await this.prisma.mediaFile.delete({
       where: { id: fileId },
     });
+  }
+
+  async uploadNewVersion(
+    oldFileId: string,
+    file: Express.Multer.File,
+  ): Promise<UploadResponseDto> {
+    // Get the old media file
+    const oldMediaFile = await this.prisma.mediaFile.findUnique({
+      where: { id: oldFileId },
+    });
+
+    if (!oldMediaFile) {
+      throw new NotFoundException('Original file not found');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    // Validate file type matches original
+    this.validateFileType(file, oldMediaFile.type as 'audio' | 'image' | 'subtitle' | 'video');
+    this.validateFileSize(file, oldMediaFile.type as 'audio' | 'image' | 'subtitle' | 'video');
+
+    // Generate unique filename with version suffix
+    const fileExtension = path.extname(file.originalname);
+    const newVersion = oldMediaFile.version + 1;
+    const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-v${newVersion}${fileExtension}`;
+    const storagePath = `uploads/${filename}`;
+    const fullPath = path.join(this.uploadDir, filename);
+
+    // Save file to disk
+    await fs.writeFile(fullPath, file.buffer);
+
+    // Mark old version as inactive
+    await this.prisma.mediaFile.update({
+      where: { id: oldFileId },
+      data: { isActive: false },
+    });
+
+    // Create new MediaFile record
+    const newMediaFile = await this.prisma.mediaFile.create({
+      data: {
+        type: oldMediaFile.type,
+        mimeType: file.mimetype,
+        fileSizeBytes: file.size,
+        storagePath,
+        originalFilename: file.originalname,
+        version: newVersion,
+        isActive: true,
+      },
+    });
+
+    return {
+      id: newMediaFile.id,
+      filename,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      url: `${this.baseUrl}/media/${newMediaFile.id}`,
+      uploadedAt: newMediaFile.createdAt,
+    };
   }
 }

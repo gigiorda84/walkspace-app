@@ -136,12 +136,15 @@ model TourPointLocalization {
 // ============================================================================
 
 model MediaFile {
-  id            String   @id @default(uuid())
-  type          String   // "audio", "image", "subtitle", "video"
-  mimeType      String   @map("mime_type")
-  fileSizeBytes Int      @map("file_size_bytes")
-  storagePath   String   @map("storage_path")
-  createdAt     DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  type             String   // "audio", "image", "subtitle", "video"
+  mimeType         String   @map("mime_type")
+  fileSizeBytes    Int      @map("file_size_bytes")
+  storagePath      String   @map("storage_path")
+  version          Int      @default(1)
+  isActive         Boolean  @default(true) @map("is_active")
+  originalFilename String?  @map("original_filename")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   tourCoverImages       Tour[]                   @relation("TourCoverImage")
   tourVideos            Tour[]                   @relation("TourVideo")

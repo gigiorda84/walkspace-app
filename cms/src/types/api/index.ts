@@ -81,12 +81,14 @@ export interface TourPointLocalization {
 // Media types
 export interface MediaFile {
   id: string;
-  filename: string;
-  originalFilename: string;
+  type: 'audio' | 'image' | 'subtitle';
   mimeType: string;
-  sizeBytes: number;
-  storageUrl: string;
-  uploadedBy: string;
+  fileSizeBytes: number;
+  url: string;
+  version: number;
+  isActive: boolean;
+  originalFilename?: string;
+  filename?: string;
   createdAt: string;
 }
 
