@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { Tour, TourVersion, TourPoint, ApiResponse, PaginatedResponse } from '@/types/api';
 
+// Tours API endpoints
 export const toursApi = {
   // Get all tours
   async getAllTours(): Promise<Tour[]> {

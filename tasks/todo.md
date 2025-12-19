@@ -1,132 +1,395 @@
-# Task: Create Comprehensive Tour Points Editor
+# Backend Reliability & Scalability Plan
 
-## Context
-User wants a single page to edit all point content for a tour:
-- Title for each point
-- Optional description
-- Audio track
-- Subtitles
-- Optional photo
+## Current Status ✅
 
-This is the main editor for creating/editing tour content.
+**Backend:** Running successfully on http://localhost:3000
+**Database:** PostgreSQL connected and healthy
+**Recent Fixes:**
+1. ✅ Edit Point API - Added field mappings (latitude/longitude aliases)
+2. ✅ Point Localizations - Removed invalid tourVersionId field
 
-## Current State
-- Points are managed separately on `/tours/[id]/points/page.tsx`
-- Localizations are edited individually on `/tours/[id]/points/[pointId]/localizations/page.tsx`
-- User has to navigate to each point separately to edit content
+---
 
-## Goal
-Create a unified editor page where all points and their content can be edited in one view.
+## Root Cause Analysis: Why Backend Wasn't Starting
 
-## Plan
+### Investigation Timeline
+1. **Initial Problem:** Backend compiled but wouldn't bind to port 3000
+2. **Discovery:** TypeScript build errors due to missing DTO fields
+3. **Root Cause:** We added fields to service response but forgot to update DTO type definition
+4. **Fix:** Updated `PointResponseDto` to include optional CMS-friendly fields
+5. **Result:** Build succeeded, backend started successfully
 
-### Todo Items
+### Why It's Working Now
+- ✅ TypeScript compilation passes (no DTO mismatches)
+- ✅ Prisma client properly generated
+- ✅ Database connection working (`DATABASE_URL` valid)
+- ✅ Port 3000 available (no conflicts)
+- ✅ All NestJS modules loading correctly
 
-- [ ] Create comprehensive tour editor page at `/tours/[id]/editor/page.tsx`
-  - Show all points in a list/table
-  - For each point, show editable fields for selected language:
-    - Title (required)
-    - Description (optional)
-    - Audio track (browse/upload)
-    - Subtitles (browse/upload)
-    - Photo/image (optional, browse/upload)
-  - Language selector at top to switch between languages
-  - Save changes per point or save all at once
-  - Show which points are complete vs incomplete
+---
 
-- [ ] Add navigation to the editor from tour detail page
-  - Add "Edit Tour Content" button on tour detail page
-  - Should be prominent primary action
+## Backend Resilience Improvements Plan
 
-- [ ] Test the complete flow
-  - Navigate to tour editor
-  - Select a language
-  - Edit point content
-  - Associate media files
-  - Save changes
-  - Verify data persists
+### Phase 1: Immediate Diagnostic Improvements (High Priority)
 
-## Design Considerations
-- Keep it simple and focused
-- Use accordion or expandable cards for each point
-- Show visual indicators for completed points (has title + audio)
-- Make media selection easy with media browser
-- Auto-save or clear save buttons
+#### 1.1 Add Startup Error Logging
+**File:** `/backend/src/main.ts`
+**Goal:** Catch and log ALL startup failures clearly
 
-## Notes
-- This will be the primary interface for content creators
-- Should work well with the existing points and localization APIs
-- Consider adding bulk operations later (copy from one language to another)
+**Changes:**
+```typescript
+async function bootstrap() {
+  try {
+    const app = await NestFactory.create(AppModule);
+    // ... existing code ...
+    await app.listen(process.env.PORT ?? 3000);
+    console.log(`🚀 Server running on http://localhost:${process.env.PORT ?? 3000}`);
+  } catch (error) {
+    console.error('❌ FATAL: Failed to start backend server');
+    console.error('Error details:', error);
+    process.exit(1);
+  }
+}
+bootstrap().catch((error) => {
+  console.error('❌ FATAL: Bootstrap function failed');
+  console.error('Error details:', error);
+  process.exit(1);
+});
+```
+
+**Why:** Silent failures make debugging impossible
+
+---
+
+#### 1.2 Add Database Connection Health Check
+**File:** `/backend/src/app.module.ts` or create `/backend/src/health/health.module.ts`
+**Goal:** Verify database connection on startup
+
+**Approach:**
+1. Add Prisma connection test in AppModule `onModuleInit()`
+2. Log connection success/failure clearly
+3. Fail fast if database unreachable
+
+**Benefits:**
+- Immediate feedback if PostgreSQL is down
+- Clear error messages about connection string issues
+- Prevent silent hangs waiting for DB
+
+---
+
+#### 1.3 Environment Variable Validation
+**File:** Create `/backend/src/config/env.validation.ts`
+**Goal:** Validate all required env vars on startup
+
+**Required Variables:**
+- `DATABASE_URL` - Must be valid PostgreSQL connection string
+- `JWT_SECRET` - Must exist and be non-empty
+- `JWT_REFRESH_SECRET` - Must exist and be non-empty
+- `PORT` - Optional, defaults to 3000
+- `CORS_ORIGIN` - Optional, defaults to http://localhost:3001
+
+**Implementation:**
+```typescript
+import { plainToInstance } from 'class-transformer';
+import { IsString, IsNotEmpty, IsOptional, validateSync } from 'class-validator';
+
+class EnvironmentVariables {
+  @IsString()
+  @IsNotEmpty()
+  DATABASE_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_REFRESH_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  PORT?: string;
+
+  @IsOptional()
+  @IsString()
+  CORS_ORIGIN?: string;
+}
+
+export function validateEnv(config: Record<string, unknown>) {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
+
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    throw new Error(`❌ Environment validation failed:\n${errors.toString()}`);
+  }
+
+  return validatedConfig;
+}
+```
+
+**Why:** Fail fast with clear message instead of mysterious runtime errors
+
+---
+
+### Phase 2: Development Experience Improvements (Medium Priority)
+
+#### 2.1 Add Unified Start Script
+**File:** `/backend/package.json`
+**Goal:** Single command that handles all startup tasks
+
+**Add script:**
+```json
+{
+  "scripts": {
+    "dev": "npm run prisma:generate && npm run build && npm run start:dev",
+    "dev:fresh": "npm run prisma:generate && rm -rf dist && npm run build && npm run start:dev"
+  }
+}
+```
+
+**Why:** Ensures Prisma client is always up-to-date before starting
+
+---
+
+#### 2.2 Add Pre-flight Checks Script
+**File:** Create `/backend/scripts/preflight.sh`
+**Goal:** Check all prerequisites before starting
+
+```bash
+#!/bin/bash
+set -e
+
+echo "🔍 Running pre-flight checks..."
+
+# Check PostgreSQL
+if ! pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
+  echo "❌ PostgreSQL is not running on localhost:5432"
+  exit 1
+fi
+echo "✅ PostgreSQL is running"
+
+# Check database exists
+if ! psql -h localhost -U juicy -lqt | cut -d \| -f 1 | grep -qw walkspace; then
+  echo "❌ Database 'walkspace' does not exist"
+  echo "   Run: createdb walkspace"
+  exit 1
+fi
+echo "✅ Database 'walkspace' exists"
+
+# Check .env file
+if [ ! -f .env ]; then
+  echo "❌ .env file not found"
+  echo "   Copy .env.example to .env and configure"
+  exit 1
+fi
+echo "✅ .env file exists"
+
+# Check node_modules
+if [ ! -d node_modules ]; then
+  echo "❌ node_modules not found"
+  echo "   Run: npm install"
+  exit 1
+fi
+echo "✅ node_modules exists"
+
+echo "✅ All pre-flight checks passed"
+```
+
+**Usage:**
+```json
+{
+  "scripts": {
+    "prestart:dev": "bash scripts/preflight.sh"
+  }
+}
+```
+
+---
+
+#### 2.3 Improve Build Error Reporting
+**File:** `/backend/tsconfig.json`
+**Goal:** Get clearer TypeScript error messages
+
+**Add/modify:**
+```json
+{
+  "compilerOptions": {
+    "pretty": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+**Why:** Catch type errors earlier with better messages
+
+---
+
+### Phase 3: Monitoring & Observability (Low Priority, Future)
+
+#### 3.1 Structured Logging
+**Goal:** Replace console.log with proper logger (Winston/Pino)
+
+**Benefits:**
+- Log levels (debug, info, warn, error)
+- Structured JSON output
+- Log rotation
+- Easy filtering
+
+#### 3.2 Request Tracing
+**Goal:** Track request flow through the system
+
+**Implementation:**
+- Add request ID middleware
+- Log request ID on all operations
+- Track slow queries
+
+#### 3.3 Performance Monitoring
+**Goal:** Track backend performance metrics
+
+**Metrics to track:**
+- Request duration
+- Database query duration
+- Memory usage
+- Active connections
+
+---
+
+## Todo List
+
+### Immediate (Do Now)
+- [ ] 1.1 - Add startup error logging to main.ts
+- [ ] 1.2 - Add database health check on startup
+- [ ] 1.3 - Create environment variable validation
+- [ ] Test backend restart with new error handling
+- [ ] Document common startup errors and fixes
+
+### Short Term (This Week)
+- [ ] 2.1 - Add unified dev script to package.json
+- [ ] 2.2 - Create pre-flight checks script
+- [ ] 2.3 - Improve TypeScript strictness for better errors
+- [ ] Add README section: "Troubleshooting Backend Issues"
+
+### Long Term (Future Enhancements)
+- [ ] 3.1 - Implement structured logging with Winston
+- [ ] 3.2 - Add request tracing middleware
+- [ ] 3.3 - Set up performance monitoring
+- [ ] Add automated tests for startup sequence
+- [ ] Add Docker Compose for consistent dev environment
+
+---
+
+## Common Failure Modes & Solutions
+
+### Problem: "Cannot find module '@prisma/client'"
+**Cause:** Prisma client not generated after schema changes
+**Solution:** Run `npx prisma generate`
+
+### Problem: "Port 3000 already in use"
+**Cause:** Previous instance still running
+**Solution:**
+```bash
+lsof -ti :3000 | xargs kill -9
+```
+
+### Problem: "Database connection failed"
+**Cause:** PostgreSQL not running or wrong DATABASE_URL
+**Solution:**
+1. Check PostgreSQL: `pg_isready`
+2. Verify DATABASE_URL in .env
+3. Test connection: `psql <DATABASE_URL>`
+
+### Problem: "TypeScript build errors"
+**Cause:** Type mismatch between service and DTO
+**Solution:**
+1. Check DTO definitions match service responses
+2. Run `npm run build` to see all errors
+3. Fix type definitions before starting server
+
+### Problem: "Module not found" errors
+**Cause:** Missing dependencies or stale node_modules
+**Solution:**
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+---
+
+## Testing Checklist for Changes
+
+Before marking backend changes as complete:
+- [ ] `npm run build` succeeds with no errors
+- [ ] Backend starts and logs startup message
+- [ ] Health endpoint returns 200: `curl http://localhost:3000/health`
+- [ ] API docs accessible: http://localhost:3000/api/docs
+- [ ] Test a CMS endpoint: `curl http://localhost:3000/admin/tours`
+- [ ] Check logs for errors or warnings
+
+---
 
 ## Review Section
 
-### Implementation Complete ✅
+### Changes Implemented ✅
 
-**Files Created (1):**
-- `/cms/src/app/tours/[id]/editor/page.tsx` - Comprehensive tour content editor
+#### Edit Point API Fix
+**Files Modified:**
+1. `/backend/src/admin/tours/admin-tours.service.ts` (lines 558-583)
+2. `/backend/src/admin/tours/dto/point-response.dto.ts` (lines 13-28)
 
-**Files Modified (1):**
-- `/cms/src/app/tours/[id]/page.tsx` - Added prominent "Open Editor" button
+**Problem:** Frontend expected `{latitude, longitude, sequenceOrder, triggerRadiusMeters}` but backend returned `{lat, lng, order, defaultTriggerRadiusMeters}`
 
-### Features Implemented
+**Solution:** Return both field naming conventions for backwards compatibility
 
-#### 1. Comprehensive Tour Editor (`/tours/[id]/editor`)
+**Result:** ✅ API now returns both sets of fields, Edit Point page works
 
-**Key Features:**
-- **Language selector** - Switch between tour languages (Italian, French, English)
-- **Expandable point cards** - Each point can be expanded/collapsed
-- **Complete status indicators** - Visual checkmark when point has title + audio
-- **All content fields per point:**
-  - Title (required)
-  - Description (optional textarea)
-  - Audio track (browse media library)
-  - Subtitles (browse media library)
-  - Photo (optional, browse media library)
-- **Individual save buttons** - Save each point independently
-- **Breadcrumb navigation** - Tours → Tour Name → Content Editor
+**Example Response:**
+```json
+{
+  "id": "36ec77c0-da16-4a0e-a368-ee0e8e35a694",
+  "order": 1,
+  "lat": 41.90605789740962,
+  "lng": 12.48730194702341,
+  "defaultTriggerRadiusMeters": 150,
+  "sequenceOrder": 1,
+  "latitude": 41.90605789740962,
+  "longitude": 12.48730194702341,
+  "triggerRadiusMeters": 150
+}
+```
 
-**Smart Error Handling:**
-- Shows helpful message if no language versions exist
-- Shows helpful message if no points exist
-- Provides links to create versions/points
+---
 
-#### 2. Tour Detail Page Enhancement
+### Point Localizations Fix ✅
 
-**Added:**
-- Prominent gradient CTA banner with "Open Editor" button
-- Only shows when tour has both versions AND points
-- Clear description: "Add titles, descriptions, audio tracks, and photos to your tour points"
+**File Modified:** `/cms/src/app/tours/[id]/points/[pointId]/localizations/page.tsx`
 
-### User Flow
+**Problem:** 400 Bad Request when creating localization (sending invalid `tourVersionId`)
 
-1. **Navigate to Tour** → View tour details
-2. **Click "Open Editor"** → Opens comprehensive editor
-3. **Select Language** → Choose which language to edit
-4. **Expand Point** → Click to expand any point
-5. **Edit Content:**
-   - Enter title
-   - Add optional description
-   - Browse & select audio file
-   - Browse & select subtitle file
-   - Browse & select photo (optional)
-6. **Save** → Click "Save Point" to persist changes
-7. **Visual Feedback** → Checkmark appears when point is complete
+**Solution:** Removed `tourVersionId` from payload, backend auto-links via language
 
-### Technical Implementation
+**Result:** ✅ Verified working - 201 Created response, localization saved successfully
 
-- Uses accordion pattern for space efficiency
-- Fetches all localizations in parallel for performance
-- Maintains local state for editing before save
-- Integrates with existing MediaBrowserModal component
-- Uses existing API endpoints (no backend changes needed)
-- Follows existing code patterns and styling
+---
 
-### Benefits
+### Next Steps
 
-✅ **Streamlined workflow** - Edit all point content in one place
-✅ **Clear progress tracking** - See which points are complete at a glance
-✅ **Efficient** - No need to navigate between multiple pages
-✅ **User-friendly** - Expandable cards keep interface clean
-✅ **Complete** - All fields accessible: title, description, audio, subtitles, photo
+**User Action Required:**
+Choose which phase to implement:
+- **Option A:** Phase 1 only (startup error logging & validation) - ~1 hour
+- **Option B:** Phases 1 + 2 (add dev experience improvements) - ~2-3 hours
+- **Option C:** Review plan, test current fixes, defer improvements
 
-This is now the **primary interface** for content creators to build their tours!
+**Current Status:**
+- Both critical bugs fixed and working
+- Backend stable and running
+- CMS stable on Next.js 15.1.3
+- All features functional
+
+**Recommendation:** Option A (Phase 1) - Add safety nets to prevent silent failures in future

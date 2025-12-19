@@ -258,6 +258,27 @@ export class AdminToursService {
 
   // ==================== VERSION MANAGEMENT ====================
 
+  async getVersionsByTour(tourId: string): Promise<VersionResponseDto[]> {
+    // Verify tour exists
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    const versions = await this.prisma.tourVersion.findMany({
+      where: { tourId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return versions.map(v => ({
+      ...v,
+      status: v.status as 'published' | 'draft',
+    }));
+  }
+
   async createVersion(tourId: string, dto: CreateVersionDto): Promise<VersionResponseDto> {
     // Verify tour exists
     const tour = await this.prisma.tour.findUnique({
@@ -433,6 +454,33 @@ export class AdminToursService {
 
   // ==================== POINTS MANAGEMENT ====================
 
+  async getPointsByTour(tourId: string): Promise<PointResponseDto[]> {
+    // Verify tour exists
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    const points = await this.prisma.tourPoint.findMany({
+      where: { tourId },
+      include: {
+        localizations: true,
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    return points.map(p => ({
+      ...p,
+      sequenceOrder: p.order,
+      latitude: p.lat,
+      longitude: p.lng,
+      triggerRadiusMeters: p.defaultTriggerRadiusMeters,
+    }));
+  }
+
   async createPoint(tourId: string, dto: CreatePointDto): Promise<PointResponseDto> {
     // Verify tour exists
     const tour = await this.prisma.tour.findUnique({
@@ -514,6 +562,11 @@ export class AdminToursService {
       lat: point.lat,
       lng: point.lng,
       defaultTriggerRadiusMeters: point.defaultTriggerRadiusMeters,
+      // Add CMS-friendly field mappings
+      sequenceOrder: point.order,
+      latitude: point.lat,
+      longitude: point.lng,
+      triggerRadiusMeters: point.defaultTriggerRadiusMeters,
       createdAt: point.createdAt,
       updatedAt: point.updatedAt,
       localizations: point.localizations.map((loc) => ({

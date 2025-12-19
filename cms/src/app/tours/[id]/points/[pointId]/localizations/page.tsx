@@ -105,20 +105,28 @@ export default function PointLocalizationsPage() {
         throw new Error('Please select a version');
       }
 
+      // Clean up payload: convert empty strings to undefined for optional fields
+      const cleanPayload = {
+        title: data.title,
+        description: data.description,
+        audioFileId: data.audioFileId || undefined,
+        imageFileId: data.imageFileId || undefined,
+        subtitleFileId: data.subtitleFileId || undefined,
+      };
+
       if (currentLocalization) {
         // Update existing
         return pointLocalizationsApi.updateLocalization(
           tourId,
           pointId,
           currentLocalization.id,
-          data
+          cleanPayload
         );
       } else {
-        // Create new
+        // Create new - backend auto-links to version based on language
         return pointLocalizationsApi.createLocalization(tourId, pointId, {
-          ...data,
-          tourVersionId: selectedVersion,
           language: currentVersion.language,
+          ...cleanPayload,
         });
       }
     },

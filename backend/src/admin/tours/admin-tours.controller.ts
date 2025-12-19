@@ -123,6 +123,25 @@ export class AdminToursController {
 
   // ==================== VERSION ENDPOINTS ====================
 
+  @Get(':tourId/versions')
+  @ApiOperation({
+    summary: '[CMS] List tour versions',
+    description: 'Get all language versions for a specific tour.'
+  })
+  @ApiParam({ name: 'tourId', description: 'Tour ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Versions retrieved successfully',
+    type: [VersionResponseDto]
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Tour not found'
+  })
+  async getVersionsByTour(@Param('tourId') tourId: string): Promise<VersionResponseDto[]> {
+    return this.adminToursService.getVersionsByTour(tourId);
+  }
+
   @Post(':tourId/versions')
   @ApiOperation({
     summary: '[CMS] Create tour version',
@@ -266,6 +285,25 @@ export class AdminToursController {
   }
 
   // ==================== POINTS ENDPOINTS ====================
+
+  @Get(':tourId/points')
+  @ApiOperation({
+    summary: '[CMS] List tour points',
+    description: 'Get all GPS waypoints for a specific tour, ordered by sequence.'
+  })
+  @ApiParam({ name: 'tourId', description: 'Tour ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Points retrieved successfully',
+    type: [PointResponseDto]
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Tour not found'
+  })
+  async getPointsByTour(@Param('tourId') tourId: string): Promise<PointResponseDto[]> {
+    return this.adminToursService.getPointsByTour(tourId);
+  }
 
   @Post(':tourId/points')
   @ApiOperation({

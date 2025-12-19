@@ -17,6 +17,11 @@ export class PointResponseDto {
   lat: number;
   lng: number;
   defaultTriggerRadiusMeters: number;
+  // CMS-friendly field mappings
+  sequenceOrder?: number;
+  latitude?: number;
+  longitude?: number;
+  triggerRadiusMeters?: number;
   createdAt: Date;
   updatedAt: Date;
   localizations: LocalizationResponseDto[];

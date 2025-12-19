@@ -2,19 +2,15 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MapEditor } from '@/components/map/MapEditor';
+import { PointsManager } from '@/components/map/PointsManager';
 import { pointsApi } from '@/lib/api/points';
 import { toursApi } from '@/lib/api/tours';
-
-interface NewPointForm {
-  triggerRadiusMeters: number;
-}
 
 interface MapPoint {
   id: string;
@@ -30,15 +26,9 @@ export default function NewPointPage() {
   const tourId = params.id as string;
 
   const [error, setError] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<NewPointForm>({
-    defaultValues: {
-      triggerRadiusMeters: 150,
-    },
-  });
-
-  const triggerRadius = watch('triggerRadiusMeters');
+  const [points, setPoints] = useState<MapPoint[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savingProgress, setSavingProgress] = useState('');
 
   // Fetch tour details
   const { data: tour } = useQuery({
@@ -52,59 +42,47 @@ export default function NewPointPage() {
     queryFn: () => pointsApi.getPointsByTour(tourId),
   });
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data: NewPointForm & { latitude: number; longitude: number; sequenceOrder: number }) => {
-      return pointsApi.createPoint(tourId, data);
-    },
-    onSuccess: () => {
-      router.push(`/tours/${tourId}/points`);
-    },
-    onError: (err: Error) => {
-      setError(err.message || 'Failed to create point');
-    },
-  });
-
-  const onSubmit = (data: NewPointForm) => {
-    if (!selectedLocation) {
-      setError('Please select a location on the map');
+  // Bulk save handler
+  const onSubmit = async () => {
+    if (points.length === 0) {
+      setError('Please add at least one point on the map');
       return;
     }
 
     setError(null);
-    const nextSequenceOrder = existingPoints.length + 1;
+    setIsSaving(true);
+    let savedCount = 0;
 
-    createMutation.mutate({
-      ...data,
-      latitude: selectedLocation.lat,
-      longitude: selectedLocation.lng,
-      sequenceOrder: nextSequenceOrder,
-    });
-  };
+    try {
+      for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+        setSavingProgress(`Saving point ${i + 1} of ${points.length}...`);
 
-  // Convert selected location to MapPoint for display
-  const mapPoints: MapPoint[] = selectedLocation
-    ? [
-        {
-          id: 'new-point',
-          latitude: selectedLocation.lat,
-          longitude: selectedLocation.lng,
-          sequenceOrder: existingPoints.length + 1,
-          triggerRadiusMeters: triggerRadius,
-        },
-      ]
-    : [];
+        await pointsApi.createPoint(tourId, {
+          lat: point.latitude,
+          lng: point.longitude,
+          order: existingPoints.length + i + 1,
+          defaultTriggerRadiusMeters: point.triggerRadiusMeters,
+        });
 
-  const handleMapClick = (lat: number, lng: number) => {
-    setSelectedLocation({ lat, lng });
+        savedCount++;
+      }
+
+      // All points saved successfully
+      router.push(`/tours/${tourId}/points`);
+    } catch (err: any) {
+      setError(`Failed to save point ${savedCount + 1}: ${err.message || 'Unknown error'}`);
+      setIsSaving(false);
+      setSavingProgress('');
+    }
   };
 
   return (
     <ProtectedRoute>
       <MainLayout>
         <PageHeader
-          title="Add New Point"
-          description={`${tour?.slug || 'Tour'} - Point ${existingPoints.length + 1}`}
+          title="Add Points"
+          description={`Add multiple tour points for ${tour?.slug || 'this tour'}`}
         />
 
         <div className="p-8">
@@ -115,76 +93,49 @@ export default function NewPointPage() {
               </div>
             )}
 
+            {savingProgress && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-600">{savingProgress}</p>
+              </div>
+            )}
+
             {/* Map Section */}
             <div className="bg-white shadow-sm rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <MapPin size={20} className="mr-2" />
-                Select Location
+                Select Locations
               </h2>
               <p className="text-sm text-gray-500 mb-4">
-                Click on the map to select the location for this tour point
+                Click on the map to add multiple points. Drag markers to reposition, use the sidebar to manage.
               </p>
 
               <div className="h-[500px] border border-gray-200 rounded-lg overflow-hidden relative">
                 <MapEditor
-                  points={mapPoints}
-                  onPointsChange={(points) => {
-                    if (points.length > 0) {
-                      setSelectedLocation({
-                        lat: points[0].latitude,
-                        lng: points[0].longitude,
-                      });
-                    }
-                  }}
+                  points={points}
+                  onPointsChange={setPoints}
                   editable={true}
-                  center={
-                    selectedLocation
-                      ? [selectedLocation.lng, selectedLocation.lat]
-                      : undefined
-                  }
                 />
-
-                {selectedLocation && (
-                  <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs">
-                    <p className="font-medium text-gray-700 mb-1">Selected Location:</p>
-                    <p className="text-gray-600">
-                      Lat: {selectedLocation.lat.toFixed(6)}
-                    </p>
-                    <p className="text-gray-600">
-                      Lng: {selectedLocation.lng.toFixed(6)}
-                    </p>
-                  </div>
-                )}
+                <PointsManager
+                  points={points}
+                  onPointsChange={setPoints}
+                />
               </div>
             </div>
 
-            {/* Form Section */}
+            {/* Action Buttons */}
             <div className="bg-white shadow-sm rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Point Settings</h2>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Trigger Radius (meters) *
-                  </label>
-                  <input
-                    type="number"
-                    {...register('triggerRadiusMeters', {
-                      required: 'Trigger radius is required',
-                      min: { value: 50, message: 'Minimum radius is 50 meters' },
-                      max: { value: 500, message: 'Maximum radius is 500 meters' },
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="150"
-                  />
-                  {errors.triggerRadiusMeters && (
-                    <p className="mt-1 text-sm text-red-600">{errors.triggerRadiusMeters.message}</p>
-                  )}
-                  <p className="mt-1 text-xs text-gray-500">
-                    Distance in meters from the point at which the audio will trigger
+                  <h2 className="text-lg font-medium text-gray-900">
+                    {points.length === 0 ? 'No points added yet' : `${points.length} point${points.length > 1 ? 's' : ''} ready to save`}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {points.length === 0
+                      ? 'Click on the map to add your first point'
+                      : 'You can add more points or save now'}
                   </p>
                 </div>
-
-                <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+                <div className="flex items-center space-x-3">
                   <button
                     type="button"
                     onClick={() => router.back()}
@@ -193,14 +144,14 @@ export default function NewPointPage() {
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    disabled={createMutation.isPending || !selectedLocation}
+                    onClick={onSubmit}
+                    disabled={isSaving || points.length === 0}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
                   >
-                    {createMutation.isPending ? 'Creating...' : 'Create Point'}
+                    {isSaving ? 'Saving...' : 'Save All Points'}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>

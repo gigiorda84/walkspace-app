@@ -123,10 +123,9 @@ export default function TourEditorPage() {
       if (!selectedVersion) throw new Error('Version not found');
 
       const payload = {
-        tourVersionId: selectedVersion.id,
         language: selectedLanguage,
-        title: data.title,
-        description: data.description,
+        title: data.title || 'Untitled',
+        description: data.description || ' ',
         audioFileId: data.audioFileId || undefined,
         imageFileId: data.imageFileId || undefined,
         subtitleFileId: data.subtitleFileId || undefined,
