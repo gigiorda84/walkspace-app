@@ -93,10 +93,12 @@ export default function EditPointPage() {
     }
 
     setError(null);
+    // Map frontend field names to backend field names
     updateMutation.mutate({
-      ...data,
-      latitude: selectedLocation.lat,
-      longitude: selectedLocation.lng,
+      lat: selectedLocation.lat,
+      lng: selectedLocation.lng,
+      defaultTriggerRadiusMeters: Number(data.triggerRadiusMeters),
+      order: Number(data.sequenceOrder),
     });
   };
 
