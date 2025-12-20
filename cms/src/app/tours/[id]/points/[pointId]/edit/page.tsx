@@ -147,7 +147,7 @@ export default function EditPointPage() {
                 <MapPin size={20} className="mr-2" />
                 Location
               </h2>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-700 mb-4">
                 Click on the map or drag the marker to update the location
               </p>
 
@@ -257,7 +257,7 @@ export default function EditPointPage() {
                     {errors.triggerRadiusMeters && (
                       <p className="mt-1 text-sm text-red-600">{errors.triggerRadiusMeters.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-700">
                       Distance in meters from the point at which the audio will trigger
                     </p>
                   </div>
@@ -277,7 +277,7 @@ export default function EditPointPage() {
                     {errors.sequenceOrder && (
                       <p className="mt-1 text-sm text-red-600">{errors.sequenceOrder.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-700">
                       Order in which this point appears in the tour
                     </p>
                   </div>

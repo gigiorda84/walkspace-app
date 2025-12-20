@@ -200,7 +200,7 @@ export default function EditTourPage({ params }: { params: Promise<{ id: string 
                           <label htmlFor="isProtected" className="font-medium text-gray-700">
                             Protected Tour
                           </label>
-                          <p className="text-gray-500">
+                          <p className="text-gray-700">
                             Require a voucher code to access this tour
                           </p>
                         </div>

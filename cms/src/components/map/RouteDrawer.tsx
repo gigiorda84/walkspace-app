@@ -92,7 +92,7 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
       </div>
 
       {isDrawing && (
-        <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded">
+        <div className="text-xs text-gray-700 mt-2 p-2 bg-blue-50 rounded">
           <p className="font-medium">Drawing Mode:</p>
           <p className="mt-1">Click on the map to add route points</p>
         </div>

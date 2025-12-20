@@ -241,7 +241,7 @@ export default function TourEditorPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
-          <div className="flex items-center text-sm text-gray-500">
+          <div className="flex items-center text-sm text-gray-700">
             <Link href="/tours" className="hover:text-gray-700">
               Tours
             </Link>
@@ -309,14 +309,14 @@ export default function TourEditorPage() {
                             {data?.title || `Point ${point.sequenceOrder}`}
                           </h3>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-700">
                           {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       {saveMutation.isPending && saveMutation.variables === point.id && (
-                        <span className="text-sm text-gray-500">Saving...</span>
+                        <span className="text-sm text-gray-700">Saving...</span>
                       )}
                       {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </div>

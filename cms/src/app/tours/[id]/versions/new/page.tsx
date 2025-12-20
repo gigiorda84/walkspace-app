@@ -116,7 +116,7 @@ export default function NewVersionPage() {
 
             {availableLanguages.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">All languages have versions already.</p>
+                <p className="text-gray-700 mb-4">All languages have versions already.</p>
                 <button
                   onClick={() => router.back()}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
@@ -204,7 +204,7 @@ export default function NewVersionPage() {
                         </option>
                       ))}
                     </select>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-700">
                       If selected, the route polyline will be copied from the chosen version
                     </p>
                   </div>

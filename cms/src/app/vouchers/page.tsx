@@ -77,13 +77,13 @@ export default function VouchersPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Loading voucher batches...</p>
+              <p className="text-gray-700">Loading voucher batches...</p>
             </div>
           ) : batches.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Ticket size={48} className="mx-auto text-gray-400 mb-4" />
+              <Ticket size={48} className="mx-auto text-gray-600 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No voucher batches yet</h3>
-              <p className="text-gray-500 mb-4">Create your first voucher batch to generate access codes</p>
+              <p className="text-gray-700 mb-4">Create your first voucher batch to generate access codes</p>
               <Link
                 href="/vouchers/new"
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -97,19 +97,19 @@ export default function VouchersPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Batch Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Tour
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Codes
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -122,7 +122,7 @@ export default function VouchersPage() {
                           <div className="text-sm font-medium text-gray-900">
                             {batch.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-700">
                             {batch.description}
                           </div>
                         </div>
@@ -134,12 +134,12 @@ export default function VouchersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-900">
-                          <Ticket size={16} className="mr-2 text-gray-400" />
+                          <Ticket size={16} className="mr-2 text-gray-600" />
                           {batch.voucherCount || 0} codes
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-500">
+                        <div className="flex items-center text-sm text-gray-700">
                           <Calendar size={16} className="mr-2" />
                           {formatDate(batch.createdAt)}
                         </div>
@@ -173,7 +173,7 @@ export default function VouchersPage() {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Batches</p>
+                    <p className="text-sm font-medium text-gray-700">Total Batches</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{batches.length}</p>
                   </div>
                   <div className="p-3 bg-indigo-100 rounded-full">
@@ -185,7 +185,7 @@ export default function VouchersPage() {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Codes</p>
+                    <p className="text-sm font-medium text-gray-700">Total Codes</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
                       {batches.reduce((sum, b) => sum + (b.voucherCount || 0), 0)}
                     </p>
@@ -199,7 +199,7 @@ export default function VouchersPage() {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Protected Tours</p>
+                    <p className="text-sm font-medium text-gray-700">Protected Tours</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
                       {new Set(batches.map(b => b.tourId)).size}
                     </p>

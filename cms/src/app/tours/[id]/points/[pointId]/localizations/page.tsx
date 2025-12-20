@@ -163,7 +163,7 @@ export default function PointLocalizationsPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
-          <div className="flex items-center text-sm text-gray-500">
+          <div className="flex items-center text-sm text-gray-700">
             <Link href="/tours" className="hover:text-gray-700">
               Tours
             </Link>
@@ -200,7 +200,7 @@ export default function PointLocalizationsPage() {
               </h2>
 
               {versions.length === 0 ? (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   No versions available. Create tour versions first.
                 </p>
               ) : (
@@ -229,7 +229,7 @@ export default function PointLocalizationsPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{version.title}</p>
+                        <p className="text-xs text-gray-700 truncate">{version.title}</p>
                       </button>
                     );
                   })}

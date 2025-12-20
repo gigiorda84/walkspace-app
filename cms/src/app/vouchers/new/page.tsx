@@ -114,7 +114,7 @@ export default function NewVoucherBatchPage() {
                   Tour *
                 </label>
                 {isToursLoading ? (
-                  <p className="text-sm text-gray-500">Loading tours...</p>
+                  <p className="text-sm text-gray-700">Loading tours...</p>
                 ) : (
                   <select
                     {...register('tourId', { required: 'Tour is required' })}
@@ -169,7 +169,7 @@ export default function NewVoucherBatchPage() {
                   {errors.maxUsesPerCode && (
                     <p className="mt-1 text-sm text-red-600">{errors.maxUsesPerCode.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-700">
                     How many times each code can be redeemed
                   </p>
                 </div>
@@ -188,7 +188,7 @@ export default function NewVoucherBatchPage() {
                 {errors.expiresAt && (
                   <p className="mt-1 text-sm text-red-600">{errors.expiresAt.message}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-700">
                   Codes will expire at end of this date
                 </p>
               </div>
@@ -213,7 +213,7 @@ export default function NewVoucherBatchPage() {
                 {errors.codePrefix && (
                   <p className="mt-1 text-sm text-red-600">{errors.codePrefix.message}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-700">
                   Add a custom prefix to generated codes (e.g., SUMMER-ABC123)
                 </p>
               </div>

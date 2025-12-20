@@ -96,7 +96,7 @@ export default function VoucherBatchDetailPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Loading batch details...</p>
+              <p className="text-gray-700">Loading batch details...</p>
             </div>
           ) : (
             <>
@@ -105,21 +105,21 @@ export default function VoucherBatchDetailPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Batch Information</h3>
                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Tour</dt>
+                    <dt className="text-sm font-medium text-gray-700">Tour</dt>
                     <dd className="mt-1 text-sm text-gray-900">{tour?.slug || 'Unknown'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Created</dt>
+                    <dt className="text-sm font-medium text-gray-700">Created</dt>
                     <dd className="mt-1 text-sm text-gray-900">
                       {batch ? formatDate(batch.createdAt) : '-'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Total Codes</dt>
+                    <dt className="text-sm font-medium text-gray-700">Total Codes</dt>
                     <dd className="mt-1 text-sm text-gray-900">{totalCodes}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Used Codes</dt>
+                    <dt className="text-sm font-medium text-gray-700">Used Codes</dt>
                     <dd className="mt-1 text-sm text-gray-900">
                       {usedCodes} ({totalCodes > 0 ? Math.round((usedCodes / totalCodes) * 100) : 0}%)
                     </dd>
@@ -132,17 +132,17 @@ export default function VoucherBatchDetailPage() {
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-gray-500">Total</p>
+                      <p className="text-xs font-medium text-gray-700">Total</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{totalCodes}</p>
                     </div>
-                    <Ticket size={20} className="text-gray-400" />
+                    <Ticket size={20} className="text-gray-600" />
                   </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-gray-500">Active</p>
+                      <p className="text-xs font-medium text-gray-700">Active</p>
                       <p className="text-2xl font-bold text-green-600 mt-1">{activeCodes}</p>
                     </div>
                     <CheckCircle size={20} className="text-green-400" />
@@ -152,7 +152,7 @@ export default function VoucherBatchDetailPage() {
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-gray-500">Used</p>
+                      <p className="text-xs font-medium text-gray-700">Used</p>
                       <p className="text-2xl font-bold text-indigo-600 mt-1">{usedCodes}</p>
                     </div>
                     <CheckCircle size={20} className="text-indigo-400" />
@@ -162,7 +162,7 @@ export default function VoucherBatchDetailPage() {
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-gray-500">Expired</p>
+                      <p className="text-xs font-medium text-gray-700">Expired</p>
                       <p className="text-2xl font-bold text-red-600 mt-1">{expiredCodes}</p>
                     </div>
                     <XCircle size={20} className="text-red-400" />
@@ -178,24 +178,24 @@ export default function VoucherBatchDetailPage() {
 
                 {vouchers.length === 0 ? (
                   <div className="text-center py-12">
-                    <Ticket size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500">No voucher codes in this batch</p>
+                    <Ticket size={48} className="mx-auto text-gray-600 mb-4" />
+                    <p className="text-gray-700">No voucher codes in this batch</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Code
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Uses
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Expires
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Status
                           </th>
                         </tr>
@@ -218,7 +218,7 @@ export default function VoucherBatchDetailPage() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center text-sm text-gray-500">
+                                <div className="flex items-center text-sm text-gray-700">
                                   <Calendar size={14} className="mr-2" />
                                   {formatDate(voucher.expiresAt)}
                                 </div>

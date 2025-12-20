@@ -85,7 +85,7 @@ export function MediaBrowserModal({
                   </Dialog.Title>
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-600 hover:text-gray-600 transition-colors"
                   >
                     <X size={24} />
                   </button>
@@ -110,11 +110,11 @@ export function MediaBrowserModal({
 
                 {!isLoading && mediaFiles.length === 0 && (
                   <div className="text-center py-12">
-                    <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+                    <Upload size={48} className="mx-auto text-gray-600 mb-4" />
                     <p className="text-gray-600">
                       {searchQuery ? 'No files found matching your search' : 'No files available'}
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-700 mt-2">
                       Upload files in the Media Library first
                     </p>
                   </div>
@@ -142,17 +142,17 @@ export function MediaBrowserModal({
 
                           {file.type !== 'image' && (
                             <div className="w-full aspect-square mb-2 flex items-center justify-center bg-gray-100 rounded">
-                              <Icon size={48} className="text-gray-400 group-hover:text-blue-500" />
+                              <Icon size={48} className="text-gray-600 group-hover:text-blue-500" />
                             </div>
                           )}
 
                           <p className="text-sm font-medium text-gray-900 truncate w-full text-center">
                             {file.originalFilename || file.filename || 'Untitled'}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-700">
                             {formatFileSize(file.fileSizeBytes)}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-gray-600 mt-1">
                             v{file.version}
                           </p>
                         </button>

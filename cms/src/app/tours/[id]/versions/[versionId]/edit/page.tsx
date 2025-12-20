@@ -108,7 +108,7 @@ export default function EditVersionPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Loading version...</p>
+              <p className="text-gray-700">Loading version...</p>
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-6">
@@ -130,9 +130,9 @@ export default function EditVersionPage() {
                       type="text"
                       value={version ? LANGUAGE_LABELS[version.language] : ''}
                       disabled
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Language cannot be changed</p>
+                    <p className="mt-1 text-xs text-gray-700">Language cannot be changed</p>
                   </div>
 
                   <div>
@@ -201,7 +201,7 @@ export default function EditVersionPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-medium text-gray-900">Route Editor</h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-700 mt-1">
                       {routePolyline ? 'Route is set' : 'No route defined yet'}
                     </p>
                   </div>

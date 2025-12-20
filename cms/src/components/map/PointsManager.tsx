@@ -61,7 +61,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
       </h3>
 
       {points.length === 0 ? (
-        <p className="text-sm text-gray-500">No points yet. Click on the map to add points.</p>
+        <p className="text-sm text-gray-700">No points yet. Click on the map to add points.</p>
       ) : (
         <div className="space-y-2">
           {points.map((point, index) => (
@@ -80,7 +80,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       <MapPin className="inline w-3 h-3 mr-1" />
                       {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-700 mt-1">
                       Radius: {point.triggerRadiusMeters}m
                     </p>
                   </div>
@@ -93,7 +93,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       handleMoveUp(index);
                     }}
                     disabled={index === 0}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    className="p-1 text-gray-600 hover:text-gray-600 disabled:opacity-30"
                     title="Move up"
                   >
                     <ChevronUp size={14} />
@@ -104,7 +104,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       handleMoveDown(index);
                     }}
                     disabled={index === points.length - 1}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    className="p-1 text-gray-600 hover:text-gray-600 disabled:opacity-30"
                     title="Move down"
                   >
                     <ChevronDown size={14} />

@@ -169,7 +169,7 @@ export function MapEditor({
       {editable && (
         <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 text-sm">
           <p className="font-medium text-gray-700">Click on map to add points</p>
-          <p className="text-gray-500 text-xs mt-1">Drag markers to reposition</p>
+          <p className="text-gray-700 text-xs mt-1">Drag markers to reposition</p>
         </div>
       )}
     </div>
