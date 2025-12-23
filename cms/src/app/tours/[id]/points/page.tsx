@@ -69,12 +69,12 @@ export default function TourPointsPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
-          <div className="flex items-center text-sm text-gray-700">
-            <Link href="/tours" className="hover:text-gray-700">
+          <div className="flex items-center text-sm text-gray-900">
+            <Link href="/tours" className="hover:text-gray-900">
               Tours
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/tours/${tourId}`} className="hover:text-gray-700">
+            <Link href={`/tours/${tourId}`} className="hover:text-gray-900">
               {tour?.slug || 'Tour'}
             </Link>
             <span className="mx-2">/</span>
@@ -98,13 +98,13 @@ export default function TourPointsPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-700">Loading points...</p>
+              <p className="text-gray-900">Loading points...</p>
             </div>
           ) : points.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <MapPin size={48} className="mx-auto text-gray-600 mb-4" />
+              <MapPin size={48} className="mx-auto text-gray-900 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No points yet</h3>
-              <p className="text-gray-700 mb-4">Create your first tour point to get started.</p>
+              <p className="text-gray-900 mb-4">Create your first tour point to get started.</p>
               <Link
                 href={`/tours/${tourId}/points/new`}
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -124,12 +124,12 @@ export default function TourPointsPage() {
                       </div>
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
-                          <MapPin size={16} className="text-gray-600" />
+                          <MapPin size={16} className="text-gray-900" />
                           <p className="text-sm font-medium text-gray-900">
                             {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                           </p>
                         </div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-900">
                           Trigger radius: {point.triggerRadiusMeters}m
                         </p>
                       </div>
@@ -155,7 +155,7 @@ export default function TourPointsPage() {
                   {/* Localizations Section */}
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                      <h4 className="text-sm font-medium text-gray-900 flex items-center">
                         <Globe size={16} className="mr-2" />
                         Localizations
                       </h4>
@@ -169,7 +169,7 @@ export default function TourPointsPage() {
                     </div>
 
                     {versions.length === 0 ? (
-                      <p className="text-xs text-gray-700">
+                      <p className="text-xs text-gray-900">
                         Create tour versions first to add localizations
                       </p>
                     ) : (
@@ -180,7 +180,7 @@ export default function TourPointsPage() {
                             className="border border-gray-200 rounded-md p-3 hover:border-indigo-500"
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-sm font-medium text-gray-900">
                                 {LANGUAGE_LABELS[version.language]}
                               </span>
                               <Link
@@ -190,7 +190,7 @@ export default function TourPointsPage() {
                                 Manage
                               </Link>
                             </div>
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-gray-900">
                               Configure audio, image, and text content
                             </p>
                           </div>

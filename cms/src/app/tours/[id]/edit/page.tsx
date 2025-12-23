@@ -1,83 +1,391 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { use } from 'react';
+import { ArrowLeft, Folder, X, MapPin, Trash2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { MapEditor } from '@/components/map/MapEditor';
+import { MediaBrowserModal } from '@/components/media/MediaBrowserModal';
 import { toursApi } from '@/lib/api/tours';
+import { pointsApi } from '@/lib/api/points';
+import { versionsApi } from '@/lib/api/versions';
+import { pointLocalizationsApi } from '@/lib/api/point-localizations';
+import { MediaFile, TourPoint, TourPointLocalization } from '@/types/api';
 
-type TourFormData = {
-  slug: string;
-  defaultCity: string;
-  defaultDurationMinutes: number;
-  defaultDistanceKm: number;
-  isProtected: boolean;
+const LANGUAGE_LABELS: Record<string, string> = {
+  it: 'Italian',
+  fr: 'French',
+  en: 'English',
 };
 
-export default function EditTourPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [error, setError] = useState<string>('');
+interface MapPoint {
+  id: string;
+  latitude: number;
+  longitude: number;
+  sequenceOrder: number;
+  triggerRadiusMeters: number;
+}
 
-  const { data: tour, isLoading } = useQuery({
-    queryKey: ['tour', id],
-    queryFn: () => toursApi.getTour(id),
+interface PointContentData {
+  title: string;
+  description: string;
+  audioFileId: string;
+  imageFileId: string;
+  subtitleFileId: string;
+  localizationId?: string;
+}
+
+export default function UnifiedTourEditorPage() {
+  const params = useParams();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const tourId = params.id as string;
+  const pointRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Tour metadata state
+  const [tourData, setTourData] = useState({
+    slug: '',
+    defaultCity: '',
+    defaultDurationMinutes: 0,
+    defaultDistanceKm: 0,
+    isProtected: false,
   });
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<TourFormData>();
+  // Map & points state
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
+  const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
-  // Populate form with existing data
+  // Point content state (per language)
+  const [pointContent, setPointContent] = useState<Record<string, PointContentData>>({});
+
+  // Media browser state
+  const [mediaModalOpen, setMediaModalOpen] = useState<{
+    pointId: string;
+    type: 'audio' | 'image' | 'subtitle';
+  } | null>(null);
+
+  // Auto-save tracking
+  const [savingTour, setSavingTour] = useState(false);
+  const [lastSavedTour, setLastSavedTour] = useState('');
+
+  // Fetch tour
+  const { data: tour, isLoading: tourLoading } = useQuery({
+    queryKey: ['tour', tourId],
+    queryFn: () => toursApi.getTour(tourId),
+  });
+
+  // Fetch versions
+  const { data: versions = [] } = useQuery({
+    queryKey: ['tour-versions', tourId],
+    queryFn: () => versionsApi.getVersionsByTour(tourId),
+  });
+
+  // Fetch points
+  const { data: points = [], refetch: refetchPoints } = useQuery({
+    queryKey: ['tour-points', tourId],
+    queryFn: () => pointsApi.getPointsByTour(tourId),
+  });
+
+  // Fetch localizations for selected language
+  const { data: allLocalizations = [] } = useQuery({
+    queryKey: ['all-localizations', tourId, selectedLanguage],
+    queryFn: async () => {
+      if (!selectedLanguage || points.length === 0) return [];
+      const results = await Promise.all(
+        points.map((point) =>
+          pointLocalizationsApi.getLocalizationsByPoint(tourId, point.id)
+        )
+      );
+      return results.flat();
+    },
+    enabled: !!selectedLanguage && points.length > 0,
+  });
+
+  // Initialize tour metadata
   useEffect(() => {
     if (tour) {
-      reset({
+      setTourData({
         slug: tour.slug,
         defaultCity: tour.defaultCity,
         defaultDurationMinutes: tour.defaultDurationMinutes,
         defaultDistanceKm: tour.defaultDistanceKm,
         isProtected: tour.isProtected,
       });
+      setLastSavedTour(JSON.stringify(tour));
     }
-  }, [tour, reset]);
+  }, [tour]);
 
-  const updateMutation = useMutation({
-    mutationFn: (data: TourFormData) => toursApi.updateTour(id, data),
+  // Initialize map points from database
+  useEffect(() => {
+    if (points.length > 0) {
+      const mappedPoints: MapPoint[] = points.map((p) => ({
+        id: p.id,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        sequenceOrder: p.sequenceOrder,
+        triggerRadiusMeters: p.triggerRadiusMeters,
+      }));
+      setMapPoints(mappedPoints);
+    }
+  }, [points]);
+
+  // Initialize point content from localizations
+  useEffect(() => {
+    if (!selectedLanguage) return;
+
+    console.log('Updating content for language:', selectedLanguage);
+    console.log('Available localizations:', allLocalizations);
+
+    const newContent: Record<string, PointContentData> = {};
+    mapPoints.forEach((point) => {
+      const loc = allLocalizations.find(
+        (l) => l.tourPointId === point.id && l.language === selectedLanguage
+      );
+
+      newContent[point.id] = {
+        title: loc?.title || '',
+        description: loc?.description || '',
+        audioFileId: loc?.audioFileId || '',
+        imageFileId: loc?.imageFileId || '',
+        subtitleFileId: loc?.subtitleFileId || '',
+        localizationId: loc?.id,
+      };
+    });
+
+    console.log('New content:', newContent);
+    setPointContent(newContent);
+  }, [mapPoints, allLocalizations, selectedLanguage]);
+
+  // Set default language
+  useEffect(() => {
+    if (versions.length > 0 && !selectedLanguage) {
+      setSelectedLanguage(versions[0].language);
+    }
+  }, [versions, selectedLanguage]);
+
+  // Auto-save tour metadata mutation
+  const updateTourMutation = useMutation({
+    mutationFn: (data: typeof tourData) => toursApi.updateTour(tourId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tour', id] });
-      queryClient.invalidateQueries({ queryKey: ['tours'] });
-      router.push(`/tours/${id}`);
+      queryClient.invalidateQueries({ queryKey: ['tour', tourId] });
+      setLastSavedTour(JSON.stringify(tourData));
+      setSavingTour(false);
     },
-    onError: (err: any) => {
-      setError(err.response?.data?.message || 'Failed to update tour');
+    onError: () => {
+      setSavingTour(false);
     },
   });
 
-  const onSubmit = (data: TourFormData) => {
-    setError('');
-    updateMutation.mutate(data);
+  // Auto-save tour metadata on blur
+  const handleTourFieldBlur = () => {
+    const current = JSON.stringify(tourData);
+    if (current !== lastSavedTour && !savingTour) {
+      setSavingTour(true);
+      updateTourMutation.mutate(tourData);
+    }
   };
+
+  // Update point location mutation
+  const updatePointMutation = useMutation({
+    mutationFn: ({ pointId, data }: { pointId: string; data: any }) =>
+      pointsApi.updatePoint(tourId, pointId, data),
+    onSuccess: () => {
+      refetchPoints();
+    },
+  });
+
+  // Save/update point content mutation
+  const savePointContentMutation = useMutation({
+    mutationFn: async (pointId: string) => {
+      const content = pointContent[pointId];
+      if (!content) return;
+
+      const payload = {
+        language: selectedLanguage,
+        title: content.title || 'Untitled',
+        description: content.description || '',
+        audioFileId: content.audioFileId || undefined,
+        imageFileId: content.imageFileId || undefined,
+        subtitleFileId: content.subtitleFileId || undefined,
+      };
+
+      if (content.localizationId) {
+        return pointLocalizationsApi.updateLocalization(
+          tourId,
+          pointId,
+          content.localizationId,
+          payload
+        );
+      } else {
+        return pointLocalizationsApi.createLocalization(tourId, pointId, payload);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-localizations', tourId, selectedLanguage] });
+    },
+  });
+
+  // Handle map points change (add, remove, reorder, drag)
+  const handleMapPointsChange = async (newPoints: MapPoint[]) => {
+    setMapPoints(newPoints);
+
+    // If points were added
+    if (newPoints.length > mapPoints.length) {
+      const addedPoint = newPoints[newPoints.length - 1];
+      try {
+        const created = await pointsApi.createPoint(tourId, {
+          lat: addedPoint.latitude,
+          lng: addedPoint.longitude,
+          order: addedPoint.sequenceOrder,
+          defaultTriggerRadiusMeters: addedPoint.triggerRadiusMeters,
+        });
+
+        // Update the temp ID with real ID
+        setMapPoints((prev) =>
+          prev.map((p) => (p.id === addedPoint.id ? { ...p, id: created.id } : p))
+        );
+        refetchPoints();
+      } catch (error) {
+        console.error('Failed to create point:', error);
+      }
+    }
+
+    // If points were removed
+    else if (newPoints.length < mapPoints.length) {
+      const removedPoint = mapPoints.find((p) => !newPoints.find((np) => np.id === p.id));
+      if (removedPoint && !removedPoint.id.startsWith('temp-')) {
+        try {
+          await pointsApi.deletePoint(tourId, removedPoint.id);
+          refetchPoints();
+        } catch (error) {
+          console.error('Failed to delete point:', error);
+        }
+      }
+    }
+
+    // If point was dragged (coordinates changed)
+    else {
+      for (const newPoint of newPoints) {
+        const oldPoint = mapPoints.find((p) => p.id === newPoint.id);
+        if (
+          oldPoint &&
+          (oldPoint.latitude !== newPoint.latitude || oldPoint.longitude !== newPoint.longitude)
+        ) {
+          if (!newPoint.id.startsWith('temp-')) {
+            updatePointMutation.mutate({
+              pointId: newPoint.id,
+              data: {
+                lat: newPoint.latitude,
+                lng: newPoint.longitude,
+                order: newPoint.sequenceOrder,
+                defaultTriggerRadiusMeters: newPoint.triggerRadiusMeters,
+              },
+            });
+          }
+        }
+      }
+    }
+  };
+
+  // Handle marker click - scroll to point
+  const handleMarkerClick = (pointId: string) => {
+    setSelectedPointId(pointId);
+    const element = pointRefs.current[pointId];
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (pointId: string, type: 'audio' | 'image' | 'subtitle', file: MediaFile) => {
+    setPointContent((prev) => ({
+      ...prev,
+      [pointId]: {
+        ...prev[pointId],
+        [`${type}FileId`]: file.id,
+      },
+    }));
+    setMediaModalOpen(null);
+
+    // Auto-save after file selection
+    setTimeout(() => {
+      savePointContentMutation.mutate(pointId);
+    }, 100);
+  };
+
+  // Clear file
+  const clearFile = (pointId: string, type: 'audio' | 'image' | 'subtitle') => {
+    setPointContent((prev) => ({
+      ...prev,
+      [pointId]: {
+        ...prev[pointId],
+        [`${type}FileId`]: '',
+      },
+    }));
+
+    // Auto-save after clearing file
+    setTimeout(() => {
+      savePointContentMutation.mutate(pointId);
+    }, 100);
+  };
+
+  // Delete point
+  const handleDeletePoint = async (pointId: string) => {
+    if (!confirm('Delete this point? This will remove all content for all languages.')) {
+      return;
+    }
+
+    try {
+      // Delete from database
+      await pointsApi.deletePoint(tourId, pointId);
+
+      // Remove from local state and reorder
+      const updatedPoints = mapPoints
+        .filter(p => p.id !== pointId)
+        .map((p, index) => ({ ...p, sequenceOrder: index + 1 }));
+
+      setMapPoints(updatedPoints);
+
+      // Clear selection if deleted point was selected
+      if (selectedPointId === pointId) {
+        setSelectedPointId(null);
+      }
+
+      // Refetch points to sync with database
+      refetchPoints();
+    } catch (error) {
+      console.error('Failed to delete point:', error);
+      alert('Failed to delete point. Please try again.');
+    }
+  };
+
+  if (tourLoading) {
+    return (
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
       <MainLayout>
         <PageHeader
           title="Edit Tour"
-          description={tour?.slug || ''}
+          description={`Unified editor for ${tour?.slug || 'tour'}`}
           actions={
             <Link
-              href={`/tours/${id}`}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
+              href={`/tours/${tourId}`}
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-900"
             >
               <ArrowLeft size={18} />
               <span>Back</span>
@@ -85,149 +393,456 @@ export default function EditTourPage({ params }: { params: Promise<{ id: string 
           }
         />
 
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="p-4 lg:p-8 space-y-6">
+          {/* Tour Settings Section */}
+          <div className="bg-white shadow-sm rounded-lg p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Tour Settings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Slug</label>
+                <input
+                  type="text"
+                  value={tourData.slug}
+                  onChange={(e) => setTourData({ ...tourData, slug: e.target.value })}
+                  onBlur={handleTourFieldBlur}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">City</label>
+                <input
+                  type="text"
+                  value={tourData.defaultCity}
+                  onChange={(e) => setTourData({ ...tourData, defaultCity: e.target.value })}
+                  onBlur={handleTourFieldBlur}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Duration (min)</label>
+                <input
+                  type="number"
+                  value={tourData.defaultDurationMinutes}
+                  onChange={(e) =>
+                    setTourData({ ...tourData, defaultDurationMinutes: parseInt(e.target.value) || 0 })
+                  }
+                  onBlur={handleTourFieldBlur}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Distance (km)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={tourData.defaultDistanceKm}
+                  onChange={(e) =>
+                    setTourData({ ...tourData, defaultDistanceKm: parseFloat(e.target.value) || 0 })
+                  }
+                  onBlur={handleTourFieldBlur}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                />
+              </div>
+              <div className="flex items-center">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tourData.isProtected}
+                    onChange={(e) => {
+                      setTourData({ ...tourData, isProtected: e.target.checked });
+                      handleTourFieldBlur();
+                    }}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-900">Protected</span>
+                </label>
+              </div>
             </div>
-          ) : (
-            <div className="max-w-2xl mx-auto">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {error && (
-                  <div className="rounded-md bg-red-50 p-4">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
 
-                <div className="bg-white shadow sm:rounded-lg">
-                  <div className="px-4 py-5 sm:p-6 space-y-6">
-                    <div>
-                      <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
-                        Slug *
-                      </label>
-                      <input
-                        type="text"
-                        id="slug"
-                        {...register('slug', {
-                          required: 'Slug is required',
-                          pattern: {
-                            value: /^[a-z0-9-]+$/,
-                            message: 'Slug must be lowercase letters, numbers, and hyphens only',
-                          },
-                        })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                      />
-                      {errors.slug && (
-                        <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label htmlFor="defaultCity" className="block text-sm font-medium text-gray-700">
-                        City *
-                      </label>
-                      <input
-                        type="text"
-                        id="defaultCity"
-                        {...register('defaultCity', { required: 'City is required' })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                      />
-                      {errors.defaultCity && (
-                        <p className="mt-1 text-sm text-red-600">{errors.defaultCity.message}</p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="defaultDurationMinutes"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Duration (minutes) *
-                        </label>
-                        <input
-                          type="number"
-                          id="defaultDurationMinutes"
-                          {...register('defaultDurationMinutes', {
-                            required: 'Duration is required',
-                            min: { value: 1, message: 'Duration must be at least 1 minute' },
-                            valueAsNumber: true,
-                          })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                        />
-                        {errors.defaultDurationMinutes && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.defaultDurationMinutes.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="defaultDistanceKm"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Distance (km) *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          id="defaultDistanceKm"
-                          {...register('defaultDistanceKm', {
-                            required: 'Distance is required',
-                            min: { value: 0.1, message: 'Distance must be at least 0.1 km' },
-                            valueAsNumber: true,
-                          })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                        />
-                        {errors.defaultDistanceKm && (
-                          <p className="mt-1 text-sm text-red-600">{errors.defaultDistanceKm.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-start">
-                        <div className="flex items-center h-5">
-                          <input
-                            id="isProtected"
-                            type="checkbox"
-                            {...register('isProtected')}
-                            className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                          />
-                        </div>
-                        <div className="ml-3 text-sm">
-                          <label htmlFor="isProtected" className="font-medium text-gray-700">
-                            Protected Tour
-                          </label>
-                          <p className="text-gray-700">
-                            Require a voucher code to access this tour
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            {/* Language Selector */}
+            {versions.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Content Language
+                </label>
+                <div className="flex gap-2">
+                  {versions.map((version) => (
+                    <button
+                      key={version.id}
+                      type="button"
+                      onClick={() => {
+                        console.log('Language button clicked:', version.language);
+                        setSelectedLanguage(version.language);
+                      }}
+                      className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
+                        selectedLanguage === version.language
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      }`}
+                    >
+                      {LANGUAGE_LABELS[version.language]}
+                    </button>
+                  ))}
                 </div>
+              </div>
+            )}
 
-                <div className="flex items-center justify-end space-x-3">
-                  <Link
-                    href={`/tours/${id}`}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    Cancel
-                  </Link>
-                  <button
-                    type="submit"
-                    disabled={updateMutation.isPending}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
+            {savingTour && (
+              <p className="text-sm text-gray-900 mt-2">Saving tour settings...</p>
+            )}
+          </div>
+
+          {/* Main Editor: Map + Points */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: Map Editor */}
+            <div className="bg-white shadow-sm rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <MapPin size={20} className="mr-2" />
+                Map & Locations
+              </h2>
+              <p className="text-sm text-gray-900 mb-4">
+                Click to add points, drag markers to move them
+              </p>
+              <div className="h-[600px] border border-gray-200 rounded-lg overflow-hidden relative">
+                <MapEditor
+                  points={mapPoints}
+                  onPointsChange={handleMapPointsChange}
+                  editable={true}
+                  onMarkerClick={handleMarkerClick}
+                />
+              </div>
             </div>
-          )}
+
+            {/* Right: Point Content Editor */}
+            <div className="bg-white shadow-sm rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Point Content</h2>
+              {mapPoints.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-900">No points yet. Click on the map to add points.</p>
+                </div>
+              ) : (
+                <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                  {mapPoints.map((point) => {
+                    const content = pointContent[point.id] || {
+                      title: '',
+                      description: '',
+                      audioFileId: '',
+                      imageFileId: '',
+                      subtitleFileId: '',
+                    };
+                    const isSelected = selectedPointId === point.id;
+
+                    return (
+                      <div
+                        key={point.id}
+                        ref={(el) => {
+                          pointRefs.current[point.id] = el;
+                        }}
+                        className={`p-4 border-2 rounded-lg transition-colors ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        {/* Point Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                              {point.sequenceOrder}
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {content.title || `Point ${point.sequenceOrder}`}
+                              </h3>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeletePoint(point.id)}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                            title="Delete point"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        {/* Location & Dimensions */}
+                        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">Location & Dimensions</h4>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-900 mb-1">
+                                Latitude
+                              </label>
+                              <input
+                                type="number"
+                                step="0.000001"
+                                value={point.latitude}
+                                onChange={(e) => {
+                                  const newLat = parseFloat(e.target.value);
+                                  if (!isNaN(newLat)) {
+                                    const updatedPoints = mapPoints.map(p =>
+                                      p.id === point.id ? { ...p, latitude: newLat } : p
+                                    );
+                                    setMapPoints(updatedPoints);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  // Get the latest point values from state
+                                  const currentPoint = mapPoints.find(p => p.id === point.id);
+                                  if (currentPoint) {
+                                    updatePointMutation.mutate({
+                                      pointId: currentPoint.id,
+                                      data: {
+                                        lat: currentPoint.latitude,
+                                        lng: currentPoint.longitude,
+                                        order: currentPoint.sequenceOrder,
+                                        defaultTriggerRadiusMeters: currentPoint.triggerRadiusMeters,
+                                      },
+                                    });
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs text-gray-900"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-900 mb-1">
+                                Longitude
+                              </label>
+                              <input
+                                type="number"
+                                step="0.000001"
+                                value={point.longitude}
+                                onChange={(e) => {
+                                  const newLng = parseFloat(e.target.value);
+                                  if (!isNaN(newLng)) {
+                                    const updatedPoints = mapPoints.map(p =>
+                                      p.id === point.id ? { ...p, longitude: newLng } : p
+                                    );
+                                    setMapPoints(updatedPoints);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  // Get the latest point values from state
+                                  const currentPoint = mapPoints.find(p => p.id === point.id);
+                                  if (currentPoint) {
+                                    updatePointMutation.mutate({
+                                      pointId: currentPoint.id,
+                                      data: {
+                                        lat: currentPoint.latitude,
+                                        lng: currentPoint.longitude,
+                                        order: currentPoint.sequenceOrder,
+                                        defaultTriggerRadiusMeters: currentPoint.triggerRadiusMeters,
+                                      },
+                                    });
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs text-gray-900"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-900 mb-1">
+                                Radius (m)
+                              </label>
+                              <input
+                                type="number"
+                                min="50"
+                                max="500"
+                                step="10"
+                                value={point.triggerRadiusMeters}
+                                onChange={(e) => {
+                                  const newRadius = parseInt(e.target.value);
+                                  if (!isNaN(newRadius)) {
+                                    const updatedPoints = mapPoints.map(p =>
+                                      p.id === point.id ? { ...p, triggerRadiusMeters: newRadius } : p
+                                    );
+                                    setMapPoints(updatedPoints);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  // Get the latest point values from state
+                                  const currentPoint = mapPoints.find(p => p.id === point.id);
+                                  if (currentPoint) {
+                                    updatePointMutation.mutate({
+                                      pointId: currentPoint.id,
+                                      data: {
+                                        lat: currentPoint.latitude,
+                                        lng: currentPoint.longitude,
+                                        order: currentPoint.sequenceOrder,
+                                        defaultTriggerRadiusMeters: currentPoint.triggerRadiusMeters,
+                                      },
+                                    });
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs text-gray-900"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content Fields */}
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">
+                              Title *
+                            </label>
+                            <input
+                              type="text"
+                              value={content.title}
+                              onChange={(e) =>
+                                setPointContent({
+                                  ...pointContent,
+                                  [point.id]: { ...content, title: e.target.value },
+                                })
+                              }
+                              onBlur={() => {
+                                // Auto-save on blur if title is not empty
+                                if (content.title) {
+                                  savePointContentMutation.mutate(point.id);
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-gray-900"
+                              placeholder="Point title"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              value={content.description}
+                              onChange={(e) =>
+                                setPointContent({
+                                  ...pointContent,
+                                  [point.id]: { ...content, description: e.target.value },
+                                })
+                              }
+                              onBlur={() => {
+                                // Auto-save on blur if title exists
+                                if (content.title) {
+                                  savePointContentMutation.mutate(point.id);
+                                }
+                              }}
+                              rows={2}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-gray-900"
+                              placeholder="Point description"
+                            />
+                          </div>
+
+                          {/* Audio */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">Audio *</label>
+                            {content.audioFileId ? (
+                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
+                                <span className="text-sm text-gray-900">Audio selected</span>
+                                <button
+                                  onClick={() => clearFile(point.id, 'audio')}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setMediaModalOpen({ pointId: point.id, type: 'audio' })}
+                                className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
+                              >
+                                <Folder size={16} className="mr-2" />
+                                Browse Audio
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Subtitles */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">Subtitles</label>
+                            {content.subtitleFileId ? (
+                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
+                                <span className="text-sm text-gray-900">Subtitle selected</span>
+                                <button
+                                  onClick={() => clearFile(point.id, 'subtitle')}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setMediaModalOpen({ pointId: point.id, type: 'subtitle' })}
+                                className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
+                              >
+                                <Folder size={16} className="mr-2" />
+                                Browse Subtitles
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Image */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-1">Image</label>
+                            {content.imageFileId ? (
+                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
+                                <span className="text-sm text-gray-900">Image selected</span>
+                                <button
+                                  onClick={() => clearFile(point.id, 'image')}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setMediaModalOpen({ pointId: point.id, type: 'image' })}
+                                className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
+                              >
+                                <Folder size={16} className="mr-2" />
+                                Browse Images
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Auto-save status */}
+                          {savePointContentMutation.isPending && (
+                            <div className="text-sm text-gray-500 italic">
+                              Saving...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Media Browser Modals */}
+        {mediaModalOpen && (
+          <>
+            <MediaBrowserModal
+              isOpen={mediaModalOpen.type === 'audio'}
+              onClose={() => setMediaModalOpen(null)}
+              onSelect={(file) => handleFileSelect(mediaModalOpen.pointId, 'audio', file)}
+              fileType="audio"
+              title="Select Audio File"
+            />
+            <MediaBrowserModal
+              isOpen={mediaModalOpen.type === 'image'}
+              onClose={() => setMediaModalOpen(null)}
+              onSelect={(file) => handleFileSelect(mediaModalOpen.pointId, 'image', file)}
+              fileType="image"
+              title="Select Image File"
+            />
+            <MediaBrowserModal
+              isOpen={mediaModalOpen.type === 'subtitle'}
+              onClose={() => setMediaModalOpen(null)}
+              onSelect={(file) => handleFileSelect(mediaModalOpen.pointId, 'subtitle', file)}
+              fileType="subtitle"
+              title="Select Subtitle File"
+            />
+          </>
+        )}
       </MainLayout>
     </ProtectedRoute>
   );

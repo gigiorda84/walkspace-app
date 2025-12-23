@@ -108,7 +108,7 @@ export default function EditVersionPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-700">Loading version...</p>
+              <p className="text-gray-900">Loading version...</p>
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-6">
@@ -123,20 +123,20 @@ export default function EditVersionPage() {
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Version Details</h2>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Language
                     </label>
                     <input
                       type="text"
                       value={version ? LANGUAGE_LABELS[version.language] : ''}
                       disabled
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900"
                     />
-                    <p className="mt-1 text-xs text-gray-700">Language cannot be changed</p>
+                    <p className="mt-1 text-xs text-gray-900">Language cannot be changed</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Title *
                     </label>
                     <input
@@ -150,7 +150,7 @@ export default function EditVersionPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Description *
                     </label>
                     <textarea
@@ -164,7 +164,7 @@ export default function EditVersionPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Status
                     </label>
                     <select
@@ -180,7 +180,7 @@ export default function EditVersionPage() {
                     <button
                       type="button"
                       onClick={() => router.back()}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                      className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                     >
                       Cancel
                     </button>
@@ -201,7 +201,7 @@ export default function EditVersionPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-medium text-gray-900">Route Editor</h2>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm text-gray-900 mt-1">
                       {routePolyline ? 'Route is set' : 'No route defined yet'}
                     </p>
                   </div>

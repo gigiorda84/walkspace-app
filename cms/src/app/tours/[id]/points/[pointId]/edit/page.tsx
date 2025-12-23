@@ -149,7 +149,7 @@ export default function EditPointPage() {
                 <MapPin size={20} className="mr-2" />
                 Location
               </h2>
-              <p className="text-sm text-gray-700 mb-4">
+              <p className="text-sm text-gray-900 mb-4">
                 Click on the map or drag the marker to update the location
               </p>
 
@@ -174,11 +174,11 @@ export default function EditPointPage() {
 
                 {selectedLocation && (
                   <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs">
-                    <p className="font-medium text-gray-700 mb-1">Current Location:</p>
-                    <p className="text-gray-600">
+                    <p className="font-medium text-gray-900 mb-1">Current Location:</p>
+                    <p className="text-gray-900">
                       Lat: {selectedLocation.lat.toFixed(6)}
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-gray-900">
                       Lng: {selectedLocation.lng.toFixed(6)}
                     </p>
                   </div>
@@ -192,7 +192,7 @@ export default function EditPointPage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Latitude *
                     </label>
                     <input
@@ -217,7 +217,7 @@ export default function EditPointPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Longitude *
                     </label>
                     <input
@@ -244,7 +244,7 @@ export default function EditPointPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Trigger Radius (meters) *
                     </label>
                     <input
@@ -259,13 +259,13 @@ export default function EditPointPage() {
                     {errors.triggerRadiusMeters && (
                       <p className="mt-1 text-sm text-red-600">{errors.triggerRadiusMeters.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-700">
+                    <p className="mt-1 text-xs text-gray-900">
                       Distance in meters from the point at which the audio will trigger
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Sequence Order *
                     </label>
                     <input
@@ -279,7 +279,7 @@ export default function EditPointPage() {
                     {errors.sequenceOrder && (
                       <p className="mt-1 text-sm text-red-600">{errors.sequenceOrder.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-700">
+                    <p className="mt-1 text-xs text-gray-900">
                       Order in which this point appears in the tour
                     </p>
                   </div>
@@ -289,7 +289,7 @@ export default function EditPointPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                   >
                     Cancel
                   </button>

@@ -56,7 +56,7 @@ export default function NewTourPage() {
           actions={
             <Link
               href="/tours"
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-900"
             >
               <ArrowLeft size={18} />
               <span>Back to Tours</span>
@@ -76,7 +76,7 @@ export default function NewTourPage() {
               <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:p-6 space-y-6">
                   <div>
-                    <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="slug" className="block text-sm font-medium text-gray-900">
                       Slug *
                     </label>
                     <input
@@ -98,7 +98,7 @@ export default function NewTourPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="defaultCity" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="defaultCity" className="block text-sm font-medium text-gray-900">
                       City *
                     </label>
                     <input
@@ -117,7 +117,7 @@ export default function NewTourPage() {
                     <div>
                       <label
                         htmlFor="defaultDurationMinutes"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Duration (minutes) *
                       </label>
@@ -140,7 +140,7 @@ export default function NewTourPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="defaultDistanceKm" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="defaultDistanceKm" className="block text-sm font-medium text-gray-900">
                         Distance (km) *
                       </label>
                       <input
@@ -172,10 +172,10 @@ export default function NewTourPage() {
                         />
                       </div>
                       <div className="ml-3 text-sm">
-                        <label htmlFor="isProtected" className="font-medium text-gray-700">
+                        <label htmlFor="isProtected" className="font-medium text-gray-900">
                           Protected Tour
                         </label>
-                        <p className="text-gray-700">
+                        <p className="text-gray-900">
                           Require a voucher code to access this tour
                         </p>
                       </div>
@@ -187,7 +187,7 @@ export default function NewTourPage() {
               <div className="flex items-center justify-end space-x-3">
                 <Link
                   href="/tours"
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                 >
                   Cancel
                 </Link>

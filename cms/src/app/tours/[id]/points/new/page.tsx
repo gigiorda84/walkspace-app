@@ -105,7 +105,7 @@ export default function NewPointPage() {
                 <MapPin size={20} className="mr-2" />
                 Select Locations
               </h2>
-              <p className="text-sm text-gray-700 mb-4">
+              <p className="text-sm text-gray-900 mb-4">
                 Click on the map to add multiple points. Drag markers to reposition, use the sidebar to manage.
               </p>
 
@@ -129,7 +129,7 @@ export default function NewPointPage() {
                   <h2 className="text-lg font-medium text-gray-900">
                     {points.length === 0 ? 'No points added yet' : `${points.length} point${points.length > 1 ? 's' : ''} ready to save`}
                   </h2>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <p className="text-sm text-gray-900 mt-1">
                     {points.length === 0
                       ? 'Click on the map to add your first point'
                       : 'You can add more points or save now'}
@@ -139,7 +139,7 @@ export default function NewPointPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                   >
                     Cancel
                   </button>

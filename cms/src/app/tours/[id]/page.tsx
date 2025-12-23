@@ -93,23 +93,23 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                   </h3>
                   <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                     <div>
-                      <dt className="text-sm font-medium text-gray-700">Slug</dt>
+                      <dt className="text-sm font-medium text-gray-900">Slug</dt>
                       <dd className="mt-1 text-sm text-gray-900">{tour.slug}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-700">City</dt>
+                      <dt className="text-sm font-medium text-gray-900">City</dt>
                       <dd className="mt-1 text-sm text-gray-900">{tour.defaultCity}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-700">Duration</dt>
+                      <dt className="text-sm font-medium text-gray-900">Duration</dt>
                       <dd className="mt-1 text-sm text-gray-900">{tour.defaultDurationMinutes} minutes</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-700">Distance</dt>
+                      <dt className="text-sm font-medium text-gray-900">Distance</dt>
                       <dd className="mt-1 text-sm text-gray-900">{tour.defaultDistanceKm} km</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-700">Status</dt>
+                      <dt className="text-sm font-medium text-gray-900">Status</dt>
                       <dd className="mt-1">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -154,7 +154,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                               <h4 className="text-sm font-medium text-gray-900">
                                 {version.title} ({version.language.toUpperCase()})
                               </h4>
-                              <p className="mt-1 text-sm text-gray-700">{version.description}</p>
+                              <p className="mt-1 text-sm text-gray-900">{version.description}</p>
                               <span
                                 className={`mt-2 inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                                   version.status === 'published'
@@ -176,7 +176,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-700">No language versions yet.</p>
+                    <p className="text-sm text-gray-900">No language versions yet.</p>
                   )}
                 </div>
               </div>
@@ -215,7 +215,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                                 <MapPin className="inline w-4 h-4 mr-1" />
                                 {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                               </p>
-                              <p className="text-xs text-gray-700">
+                              <p className="text-xs text-gray-900">
                                 Radius: {point.triggerRadiusMeters}m
                               </p>
                             </div>
@@ -230,7 +230,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-700">No tour points yet.</p>
+                    <p className="text-sm text-gray-900">No tour points yet.</p>
                   )}
                 </div>
               </div>

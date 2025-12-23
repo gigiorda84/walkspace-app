@@ -94,13 +94,13 @@ export default function TourVersionsPage() {
         <div className="p-8">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-700">Loading versions...</p>
+              <p className="text-gray-900">Loading versions...</p>
             </div>
           ) : versions.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Globe size={48} className="mx-auto text-gray-600 mb-4" />
+              <Globe size={48} className="mx-auto text-gray-900 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No versions yet</h3>
-              <p className="text-gray-700 mb-4">Create your first language version to get started.</p>
+              <p className="text-gray-900 mb-4">Create your first language version to get started.</p>
               <Link
                 href={`/tours/${tourId}/versions/new`}
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -114,19 +114,19 @@ export default function TourVersionsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Language
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Route
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -136,16 +136,16 @@ export default function TourVersionsPage() {
                     <tr key={version.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <Globe size={16} className="text-gray-600 mr-2" />
+                          <Globe size={16} className="text-gray-900 mr-2" />
                           <span className="text-sm font-medium text-gray-900">
                             {LANGUAGE_LABELS[version.language] || version.language}
                           </span>
-                          <span className="ml-2 text-xs text-gray-700">({version.language})</span>
+                          <span className="ml-2 text-xs text-gray-900">({version.language})</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">{version.title}</div>
-                        <div className="text-sm text-gray-700 truncate max-w-md">
+                        <div className="text-sm text-gray-900 truncate max-w-md">
                           {version.description}
                         </div>
                       </td>
@@ -165,11 +165,11 @@ export default function TourVersionsPage() {
                           {version.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {version.routePolyline ? (
                           <span className="text-green-600">✓ Set</span>
                         ) : (
-                          <span className="text-gray-600">Not set</span>
+                          <span className="text-gray-900">Not set</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">

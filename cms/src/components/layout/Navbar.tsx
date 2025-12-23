@@ -20,18 +20,18 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
+            <div className="flex items-center space-x-2 text-sm text-gray-900">
               <User size={18} />
               <span>{user?.name || 'User'}</span>
               {user?.role && (
-                <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-900 rounded-full">
                   {user.role}
                 </span>
               )}
             </div>
             <button
               onClick={logout}
-              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:text-gray-900 hover:bg-gray-100"
             >
               <LogOut size={18} />
               <span>Logout</span>

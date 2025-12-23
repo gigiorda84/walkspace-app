@@ -50,7 +50,7 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
 
   return (
     <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 space-y-2">
-      <h3 className="text-sm font-medium text-gray-700">Route Tools</h3>
+      <h3 className="text-sm font-medium text-gray-900">Route Tools</h3>
 
       <div className="flex flex-col space-y-2">
         {!isDrawing ? (
@@ -82,7 +82,7 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
         )}
 
         {routePoints.length > 0 && !isDrawing && (
-          <div className="text-xs text-gray-600 mt-2">
+          <div className="text-xs text-gray-900 mt-2">
             <p>Route: {routePoints.length} points</p>
             <p className="mt-1">
               Distance: ~{(routePoints.length * 0.1).toFixed(1)} km
@@ -92,7 +92,7 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
       </div>
 
       {isDrawing && (
-        <div className="text-xs text-gray-700 mt-2 p-2 bg-blue-50 rounded">
+        <div className="text-xs text-gray-900 mt-2 p-2 bg-blue-50 rounded">
           <p className="font-medium">Drawing Mode:</p>
           <p className="mt-1">Click on the map to add route points</p>
         </div>

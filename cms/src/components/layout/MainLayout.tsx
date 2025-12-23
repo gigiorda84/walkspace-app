@@ -10,10 +10,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 bg-white">{children}</main>
-      </div>
+      <Sidebar />
+      <main className="bg-white">{children}</main>
     </div>
   );
 }

@@ -56,12 +56,8 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
 
   return (
     <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-h-96 overflow-y-auto w-80">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">
-        Tour Points ({points.length})
-      </h3>
-
       {points.length === 0 ? (
-        <p className="text-sm text-gray-700">No points yet. Click on the map to add points.</p>
+        <p className="text-sm text-gray-900">No points yet</p>
       ) : (
         <div className="space-y-2">
           {points.map((point, index) => (
@@ -76,11 +72,11 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                     {point.sequenceOrder}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-600 truncate">
+                    <p className="text-xs text-gray-900 truncate">
                       <MapPin className="inline w-3 h-3 mr-1" />
                       {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                     </p>
-                    <p className="text-xs text-gray-700 mt-1">
+                    <p className="text-xs text-gray-900 mt-1">
                       Radius: {point.triggerRadiusMeters}m
                     </p>
                   </div>
@@ -93,7 +89,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       handleMoveUp(index);
                     }}
                     disabled={index === 0}
-                    className="p-1 text-gray-600 hover:text-gray-600 disabled:opacity-30"
+                    className="p-1 text-gray-900 hover:text-gray-900 disabled:opacity-30"
                     title="Move up"
                   >
                     <ChevronUp size={14} />
@@ -104,7 +100,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       handleMoveDown(index);
                     }}
                     disabled={index === points.length - 1}
-                    className="p-1 text-gray-600 hover:text-gray-600 disabled:opacity-30"
+                    className="p-1 text-gray-900 hover:text-gray-900 disabled:opacity-30"
                     title="Move down"
                   >
                     <ChevronDown size={14} />
@@ -137,7 +133,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
 
               {editingId === point.id && (
                 <div className="mt-3 pt-3 border-t border-gray-200" onClick={(e) => e.stopPropagation()}>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-900 mb-1">
                     Trigger Radius (meters)
                   </label>
                   <div className="flex items-center space-x-2">
@@ -158,7 +154,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                      className="px-3 py-1 bg-gray-200 text-gray-900 text-xs rounded hover:bg-gray-300"
                     >
                       Cancel
                     </button>

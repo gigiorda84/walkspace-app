@@ -93,9 +93,9 @@ export default function ToursPage() {
 
           {tours && tours.length === 0 && (
             <div className="text-center py-12">
-              <MapPin className="mx-auto h-12 w-12 text-gray-600" />
+              <MapPin className="mx-auto h-12 w-12 text-gray-900" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No tours</h3>
-              <p className="mt-1 text-sm text-gray-700">Get started by creating a new tour.</p>
+              <p className="mt-1 text-sm text-gray-900">Get started by creating a new tour.</p>
               <div className="mt-6">
                 <Link
                   href="/tours/new"
@@ -113,22 +113,22 @@ export default function ToursPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Tour
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       City
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Duration
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Distance
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -178,7 +178,7 @@ export default function ToursPage() {
                           <button
                             onClick={() => handleCloneClick(tour)}
                             disabled={cloneMutation.isPending}
-                            className="text-gray-600 hover:text-gray-900 disabled:opacity-50"
+                            className="text-gray-900 hover:text-gray-900 disabled:opacity-50"
                             title="Duplicate"
                           >
                             <Copy size={18} />

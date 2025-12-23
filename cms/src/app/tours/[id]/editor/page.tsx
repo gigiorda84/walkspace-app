@@ -241,12 +241,12 @@ export default function TourEditorPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
-          <div className="flex items-center text-sm text-gray-700">
-            <Link href="/tours" className="hover:text-gray-700">
+          <div className="flex items-center text-sm text-gray-900">
+            <Link href="/tours" className="hover:text-gray-900">
               Tours
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/tours/${tourId}`} className="hover:text-gray-700">
+            <Link href={`/tours/${tourId}`} className="hover:text-gray-900">
               {tour?.slug || 'Tour'}
             </Link>
             <span className="mx-2">/</span>
@@ -271,7 +271,7 @@ export default function TourEditorPage() {
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     selectedLanguage === version.language
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
                 >
                   {LANGUAGE_LABELS[version.language]}
@@ -309,14 +309,14 @@ export default function TourEditorPage() {
                             {data?.title || `Point ${point.sequenceOrder}`}
                           </h3>
                         </div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-900">
                           {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       {saveMutation.isPending && saveMutation.variables === point.id && (
-                        <span className="text-sm text-gray-700">Saving...</span>
+                        <span className="text-sm text-gray-900">Saving...</span>
                       )}
                       {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </div>
@@ -327,7 +327,7 @@ export default function TourEditorPage() {
                     <div className="px-6 py-4 border-t border-gray-200 space-y-4">
                       {/* Title */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                           Title *
                         </label>
                         <input
@@ -341,7 +341,7 @@ export default function TourEditorPage() {
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                           Description (optional)
                         </label>
                         <textarea
@@ -355,7 +355,7 @@ export default function TourEditorPage() {
 
                       {/* Audio File */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                           Audio Track *
                         </label>
                         {data.audioFileId ? (
@@ -371,7 +371,7 @@ export default function TourEditorPage() {
                         ) : (
                           <button
                             onClick={() => setMediaModalOpen({ pointId: point.id, type: 'audio' })}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                           >
                             <Folder size={18} className="mr-2" />
                             Browse Audio Files
@@ -381,7 +381,7 @@ export default function TourEditorPage() {
 
                       {/* Subtitles */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                           Subtitles
                         </label>
                         {data.subtitleFileId ? (
@@ -397,7 +397,7 @@ export default function TourEditorPage() {
                         ) : (
                           <button
                             onClick={() => setMediaModalOpen({ pointId: point.id, type: 'subtitle' })}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                           >
                             <Folder size={18} className="mr-2" />
                             Browse Subtitle Files
@@ -407,7 +407,7 @@ export default function TourEditorPage() {
 
                       {/* Photo */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                           Photo (optional)
                         </label>
                         {data.imageFileId ? (
@@ -423,7 +423,7 @@ export default function TourEditorPage() {
                         ) : (
                           <button
                             onClick={() => setMediaModalOpen({ pointId: point.id, type: 'image' })}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                           >
                             <Folder size={18} className="mr-2" />
                             Browse Image Files

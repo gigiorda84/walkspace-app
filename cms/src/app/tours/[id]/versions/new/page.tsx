@@ -116,10 +116,10 @@ export default function NewVersionPage() {
 
             {availableLanguages.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-700 mb-4">All languages have versions already.</p>
+                <p className="text-gray-900 mb-4">All languages have versions already.</p>
                 <button
                   onClick={() => router.back()}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                 >
                   Go Back
                 </button>
@@ -127,7 +127,7 @@ export default function NewVersionPage() {
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Language *
                   </label>
                   <select
@@ -146,7 +146,7 @@ export default function NewVersionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Title *
                   </label>
                   <input
@@ -161,7 +161,7 @@ export default function NewVersionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -176,7 +176,7 @@ export default function NewVersionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Status
                   </label>
                   <select
@@ -190,7 +190,7 @@ export default function NewVersionPage() {
 
                 {versionsWithRoutes.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Copy Route From (Optional)
                     </label>
                     <select
@@ -204,7 +204,7 @@ export default function NewVersionPage() {
                         </option>
                       ))}
                     </select>
-                    <p className="mt-1 text-xs text-gray-700">
+                    <p className="mt-1 text-xs text-gray-900">
                       If selected, the route polyline will be copied from the chosen version
                     </p>
                   </div>
@@ -214,7 +214,7 @@ export default function NewVersionPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                   >
                     Cancel
                   </button>

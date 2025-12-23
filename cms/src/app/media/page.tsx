@@ -161,11 +161,11 @@ export default function MediaLibraryPage() {
                 : 'border-gray-300 hover:border-gray-400'
             }`}
           >
-            <Upload size={48} className="mx-auto text-gray-600 mb-4" />
+            <Upload size={48} className="mx-auto text-gray-900 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Upload Media Files
             </h3>
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-gray-900 mb-4">
               Drag and drop files here, or click to browse
             </p>
             <input
@@ -183,7 +183,7 @@ export default function MediaLibraryPage() {
               <Upload size={20} className="mr-2" />
               Browse Files
             </label>
-            <p className="text-xs text-gray-600 mt-3">
+            <p className="text-xs text-gray-900 mt-3">
               Audio (MP3, WAV up to 50MB) • Images (JPG, PNG up to 10MB) • Subtitles (SRT up to 1MB)
             </p>
           </div>
@@ -191,10 +191,10 @@ export default function MediaLibraryPage() {
           {/* Upload Progress */}
           {Object.entries(uploadProgress).length > 0 && (
             <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Uploading...</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Uploading...</h4>
               {Object.entries(uploadProgress).map(([fileId, progress]) => (
                 <div key={fileId} className="mb-2">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <div className="flex items-center justify-between text-xs text-gray-900 mb-1">
                     <span>{fileId.split('-')[0]}</span>
                     <span>{progress}%</span>
                   </div>
@@ -219,7 +219,7 @@ export default function MediaLibraryPage() {
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     selectedType === type
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -230,7 +230,7 @@ export default function MediaLibraryPage() {
 
             <div className="flex-1 max-w-md">
               <div className="relative">
-                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-900" />
                 <input
                   type="text"
                   placeholder="Search files..."
@@ -245,13 +245,13 @@ export default function MediaLibraryPage() {
           {/* Media Grid */}
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-gray-700">Loading media files...</p>
+              <p className="text-gray-900">Loading media files...</p>
             </div>
           ) : mediaFiles.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Upload size={48} className="mx-auto text-gray-600 mb-4" />
+              <Upload size={48} className="mx-auto text-gray-900 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No media files yet</h3>
-              <p className="text-gray-700">Upload your first file to get started</p>
+              <p className="text-gray-900">Upload your first file to get started</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -264,8 +264,8 @@ export default function MediaLibraryPage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <Icon size={20} className="text-gray-600" />
-                        <span className="text-xs font-medium text-gray-700 uppercase">
+                        <Icon size={20} className="text-gray-900" />
+                        <span className="text-xs font-medium text-gray-900 uppercase">
                           {FILE_TYPE_LABELS[file.type]}
                         </span>
                       </div>
@@ -311,17 +311,17 @@ export default function MediaLibraryPage() {
                     {/* Subtitle Preview (just show icon for now) */}
                     {file.type === 'subtitle' && (
                       <div className="mb-3 bg-gray-100 rounded p-4 flex items-center justify-center">
-                        <FileText size={32} className="text-gray-600" />
+                        <FileText size={32} className="text-gray-900" />
                       </div>
                     )}
 
                     <h4 className="text-sm font-medium text-gray-900 mb-1 truncate">
                       {file.type.charAt(0).toUpperCase() + file.type.slice(1)} File
                     </h4>
-                    <p className="text-xs text-gray-700 mb-2">
+                    <p className="text-xs text-gray-900 mb-2">
                       {formatFileSize(file.fileSizeBytes)} • {formatDate(file.createdAt)}
                     </p>
-                    <p className="text-xs text-gray-600 truncate font-mono">
+                    <p className="text-xs text-gray-900 truncate font-mono">
                       ID: {file.id}
                     </p>
                   </div>

@@ -41,6 +41,7 @@ export default function PointLocalizationsPage() {
   const versionId = searchParams.get('version');
 
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<string>(versionId || '');
   const [openModal, setOpenModal] = useState<'audio' | 'image' | 'subtitle' | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<{
@@ -133,9 +134,13 @@ export default function PointLocalizationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['point-localizations', tourId, pointId] });
       setError(null);
+      setSuccessMessage('Localization saved successfully!');
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: (err: Error) => {
       setError(err.message || 'Failed to save localization');
+      setSuccessMessage(null);
     },
   });
 
@@ -163,16 +168,16 @@ export default function PointLocalizationsPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="bg-white border-b border-gray-200 px-8 py-4 mb-6">
-          <div className="flex items-center text-sm text-gray-700">
-            <Link href="/tours" className="hover:text-gray-700">
+          <div className="flex items-center text-sm text-gray-900">
+            <Link href="/tours" className="hover:text-indigo-600">
               Tours
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/tours/${tourId}`} className="hover:text-gray-700">
+            <Link href={`/tours/${tourId}`} className="hover:text-indigo-600">
               {tour?.slug || 'Tour'}
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/tours/${tourId}/points`} className="hover:text-gray-700">
+            <Link href={`/tours/${tourId}/points`} className="hover:text-indigo-600">
               Points
             </Link>
             <span className="mx-2">/</span>
@@ -192,6 +197,12 @@ export default function PointLocalizationsPage() {
               </div>
             )}
 
+            {successMessage && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+              </div>
+            )}
+
             {/* Version Selector */}
             <div className="bg-white shadow-sm rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -200,7 +211,7 @@ export default function PointLocalizationsPage() {
               </h2>
 
               {versions.length === 0 ? (
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-gray-900">
                   No versions available. Create tour versions first.
                 </p>
               ) : (
@@ -229,7 +240,7 @@ export default function PointLocalizationsPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 truncate">{version.title}</p>
+                        <p className="text-sm text-gray-900 truncate">{version.title}</p>
                       </button>
                     );
                   })}
@@ -246,13 +257,13 @@ export default function PointLocalizationsPage() {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Title *
                     </label>
                     <input
                       type="text"
                       {...register('title', { required: 'Title is required' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-900 text-gray-900"
                       placeholder="Point title"
                     />
                     {errors.title && (
@@ -261,13 +272,13 @@ export default function PointLocalizationsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Description *
                     </label>
                     <textarea
                       {...register('description', { required: 'Description is required' })}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-900 text-gray-900"
                       placeholder="Point description or narration text"
                     />
                     {errors.description && (
@@ -276,7 +287,7 @@ export default function PointLocalizationsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Audio File
                     </label>
                     <input type="hidden" {...register('audioFileId')} />
@@ -297,7 +308,7 @@ export default function PointLocalizationsPage() {
                       <button
                         type="button"
                         onClick={() => setOpenModal('audio')}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                       >
                         <Folder size={18} className="mr-2" />
                         Browse Audio Files
@@ -306,7 +317,7 @@ export default function PointLocalizationsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Image File
                     </label>
                     <input type="hidden" {...register('imageFileId')} />
@@ -327,7 +338,7 @@ export default function PointLocalizationsPage() {
                       <button
                         type="button"
                         onClick={() => setOpenModal('image')}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                       >
                         <Folder size={18} className="mr-2" />
                         Browse Image Files
@@ -336,7 +347,7 @@ export default function PointLocalizationsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Subtitle File
                     </label>
                     <input type="hidden" {...register('subtitleFileId')} />
@@ -357,7 +368,7 @@ export default function PointLocalizationsPage() {
                       <button
                         type="button"
                         onClick={() => setOpenModal('subtitle')}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
                       >
                         <Folder size={18} className="mr-2" />
                         Browse Subtitle Files
@@ -369,7 +380,7 @@ export default function PointLocalizationsPage() {
                     <button
                       type="button"
                       onClick={() => router.back()}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                      className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
                     >
                       Back
                     </button>
