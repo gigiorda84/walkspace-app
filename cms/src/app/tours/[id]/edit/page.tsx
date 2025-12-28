@@ -55,6 +55,18 @@ export default function UnifiedTourEditorPage() {
     isProtected: false,
   });
 
+  // Version content state (title & description per language)
+  const [versionContent, setVersionContent] = useState({
+    title: '',
+    description: '',
+    coverImageFileId: '',
+    versionId: '',
+  });
+
+  // New language modal state
+  const [showAddLanguageModal, setShowAddLanguageModal] = useState(false);
+  const [newLanguage, setNewLanguage] = useState('');
+
   // Map & points state
   const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
@@ -68,6 +80,7 @@ export default function UnifiedTourEditorPage() {
     pointId: string;
     type: 'audio' | 'image' | 'subtitle';
   } | null>(null);
+  const [tourCoverModalOpen, setTourCoverModalOpen] = useState(false);
 
   // Auto-save tracking
   const [savingTour, setSavingTour] = useState(false);
@@ -168,6 +181,29 @@ export default function UnifiedTourEditorPage() {
     }
   }, [versions, selectedLanguage]);
 
+  // Load version content when language changes
+  useEffect(() => {
+    if (!selectedLanguage) return;
+
+    const version = versions.find(v => v.language === selectedLanguage);
+    if (version) {
+      setVersionContent({
+        title: version.title || '',
+        description: version.description || '',
+        coverImageFileId: version.coverImageFileId || '',
+        versionId: version.id,
+      });
+    } else {
+      // No version for this language yet
+      setVersionContent({
+        title: '',
+        description: '',
+        coverImageFileId: '',
+        versionId: '',
+      });
+    }
+  }, [selectedLanguage, versions]);
+
   // Auto-save tour metadata mutation
   const updateTourMutation = useMutation({
     mutationFn: (data: typeof tourData) => toursApi.updateTour(tourId, data),
@@ -178,6 +214,26 @@ export default function UnifiedTourEditorPage() {
     },
     onError: () => {
       setSavingTour(false);
+    },
+  });
+
+  // Create new version mutation
+  const createVersionMutation = useMutation({
+    mutationFn: (data: { language: string; title: string; description: string }) =>
+      versionsApi.createVersion(tourId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
+      setShowAddLanguageModal(false);
+      setNewLanguage('');
+    },
+  });
+
+  // Update version mutation
+  const updateVersionMutation = useMutation({
+    mutationFn: ({ versionId, data }: { versionId: string; data: any }) =>
+      versionsApi.updateVersion(tourId, versionId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
     },
   });
 
@@ -334,6 +390,95 @@ export default function UnifiedTourEditorPage() {
     }, 100);
   };
 
+  // Save version content (title & description)
+  const handleVersionContentBlur = () => {
+    if (!selectedLanguage) return;
+
+    if (versionContent.versionId) {
+      // Update existing version
+      updateVersionMutation.mutate({
+        versionId: versionContent.versionId,
+        data: {
+          title: versionContent.title,
+          description: versionContent.description,
+          coverImageFileId: versionContent.coverImageFileId || undefined,
+        },
+      });
+    } else if (versionContent.title) {
+      // Create new version if title is provided
+      createVersionMutation.mutate({
+        language: selectedLanguage,
+        title: versionContent.title,
+        description: versionContent.description,
+        coverImageFileId: versionContent.coverImageFileId || undefined,
+      });
+    }
+  };
+
+  // Handle tour cover image selection
+  const handleTourCoverSelect = (file: MediaFile) => {
+    setVersionContent((prev) => {
+      const updated = {
+        ...prev,
+        coverImageFileId: file.id,
+      };
+
+      // Auto-save with the updated state
+      setTimeout(() => {
+        if (updated.versionId) {
+          updateVersionMutation.mutate({
+            versionId: updated.versionId,
+            data: {
+              title: updated.title,
+              description: updated.description,
+              coverImageFileId: file.id,
+            },
+          });
+        }
+      }, 100);
+
+      return updated;
+    });
+    setTourCoverModalOpen(false);
+  };
+
+  // Clear tour cover image
+  const clearTourCover = () => {
+    setVersionContent((prev) => {
+      const updated = {
+        ...prev,
+        coverImageFileId: '',
+      };
+
+      // Auto-save with the updated state
+      setTimeout(() => {
+        if (updated.versionId) {
+          updateVersionMutation.mutate({
+            versionId: updated.versionId,
+            data: {
+              title: updated.title,
+              description: updated.description,
+              coverImageFileId: undefined,
+            },
+          });
+        }
+      }, 100);
+
+      return updated;
+    });
+  };
+
+  // Add new language
+  const handleAddLanguage = () => {
+    if (!newLanguage) return;
+
+    createVersionMutation.mutate({
+      language: newLanguage,
+      title: `New ${LANGUAGE_LABELS[newLanguage]} Tour`,
+      description: '',
+    });
+  };
+
   // Delete point
   const handleDeletePoint = async (pointId: string) => {
     if (!confirm('Delete this point? This will remove all content for all languages.')) {
@@ -460,11 +605,22 @@ export default function UnifiedTourEditorPage() {
             </div>
 
             {/* Language Selector */}
-            {versions.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-900">
                   Content Language
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setShowAddLanguageModal(!showAddLanguageModal)}
+                  className="px-3 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                >
+                  + Add Language
+                </button>
+              </div>
+
+              {/* Language Tabs */}
+              {versions.length > 0 ? (
                 <div className="flex gap-2">
                   {versions.map((version) => (
                     <button
@@ -484,13 +640,116 @@ export default function UnifiedTourEditorPage() {
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500 italic">No languages added yet. Click "+ Add Language" to start.</p>
+              )}
+
+              {/* Add Language Dropdown */}
+              {showAddLanguageModal && (
+                <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Add New Language</h3>
+                  <div className="flex gap-2">
+                    {Object.entries(LANGUAGE_LABELS)
+                      .filter(([lang]) => !versions.find(v => v.language === lang))
+                      .map(([lang, label]) => (
+                        <button
+                          key={lang}
+                          type="button"
+                          onClick={() => {
+                            setNewLanguage(lang);
+                            handleAddLanguage();
+                            setSelectedLanguage(lang);
+                          }}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    {Object.keys(LANGUAGE_LABELS).length === versions.length && (
+                      <p className="text-sm text-gray-500 italic">All languages already added</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {savingTour && (
               <p className="text-sm text-gray-900 mt-2">Saving tour settings...</p>
             )}
           </div>
+
+          {/* Tour Version Content (Title & Description) */}
+          {selectedLanguage && (
+            <div className="bg-white shadow-sm rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                Tour Content ({LANGUAGE_LABELS[selectedLanguage]})
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Tour Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={versionContent.title}
+                    onChange={(e) => setVersionContent({ ...versionContent, title: e.target.value })}
+                    onBlur={handleVersionContentBlur}
+                    placeholder="Enter tour title"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This title will appear in the mobile app</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Tour Description
+                  </label>
+                  <textarea
+                    value={versionContent.description}
+                    onChange={(e) => setVersionContent({ ...versionContent, description: e.target.value })}
+                    onBlur={handleVersionContentBlur}
+                    placeholder="Enter tour description"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Provide a detailed description of the tour</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Tour Cover Image
+                  </label>
+                  {versionContent.coverImageFileId ? (
+                    <div className="flex items-center justify-between p-3 border border-gray-300 rounded-md bg-gray-50">
+                      <span className="text-sm text-gray-900">Cover image selected</span>
+                      <button
+                        onClick={clearTourCover}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setTourCoverModalOpen(true)}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
+                    >
+                      <Folder size={16} className="mr-2" />
+                      Browse Images
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">This image will appear as the tour cover in the mobile app</p>
+                </div>
+
+                {(updateVersionMutation.isPending || createVersionMutation.isPending) && (
+                  <p className="text-sm text-gray-500 italic">Saving...</p>
+                )}
+                {updateVersionMutation.isSuccess && (
+                  <p className="text-sm text-green-600">✓ Saved</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Main Editor: Map + Points */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -695,10 +954,8 @@ export default function UnifiedTourEditorPage() {
                                 })
                               }
                               onBlur={() => {
-                                // Auto-save on blur if title is not empty
-                                if (content.title) {
-                                  savePointContentMutation.mutate(point.id);
-                                }
+                                // Auto-save on blur
+                                savePointContentMutation.mutate(point.id);
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-gray-900"
                               placeholder="Point title"
@@ -718,10 +975,8 @@ export default function UnifiedTourEditorPage() {
                                 })
                               }
                               onBlur={() => {
-                                // Auto-save on blur if title exists
-                                if (content.title) {
-                                  savePointContentMutation.mutate(point.id);
-                                }
+                                // Auto-save on blur
+                                savePointContentMutation.mutate(point.id);
                               }}
                               rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-gray-900"
@@ -843,6 +1098,15 @@ export default function UnifiedTourEditorPage() {
             />
           </>
         )}
+
+        {/* Tour Cover Image Modal */}
+        <MediaBrowserModal
+          isOpen={tourCoverModalOpen}
+          onClose={() => setTourCoverModalOpen(false)}
+          onSelect={handleTourCoverSelect}
+          fileType="image"
+          title="Select Tour Cover Image"
+        />
       </MainLayout>
     </ProtectedRoute>
   );

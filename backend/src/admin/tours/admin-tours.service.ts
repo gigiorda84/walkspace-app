@@ -316,6 +316,7 @@ export class AdminToursService {
         language: dto.language,
         title: dto.title,
         description: dto.description,
+        coverImageFileId: dto.coverImageFileId,
         startingPointLat: dto.startingPointLat,
         startingPointLng: dto.startingPointLng,
         routePolyline: dto.routePolyline,

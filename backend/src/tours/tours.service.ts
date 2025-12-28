@@ -48,7 +48,7 @@ export class ToursService {
         distanceKm: tour.defaultDistanceKm,
         languages,
         isProtected: tour.isProtected,
-        coverImageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
+        imageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
         hasAccess: userId ? tour.userAccess.length > 0 : undefined,
       };
     });
@@ -60,6 +60,9 @@ export class ToursService {
       include: {
         versions: {
           where: { language, status: 'published' },
+          include: {
+            coverImage: true,
+          },
         },
         coverImage: true,
       },
@@ -91,6 +94,10 @@ export class ToursService {
       select: { language: true },
     });
 
+    // Use version cover image if available, otherwise fall back to tour cover image
+    const coverImage = version.coverImage || tour.coverImage;
+    const imageUrl = coverImage ? `/media/${coverImage.storagePath}` : null;
+
     return {
       id: tour.id,
       slug: tour.slug,
@@ -101,7 +108,7 @@ export class ToursService {
       distanceKm: tour.defaultDistanceKm,
       languages: allVersions.map((v) => v.language),
       isProtected: tour.isProtected,
-      coverImageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
+      imageUrl,
       startingPoint: {
         lat: version.startingPointLat,
         lng: version.startingPointLng,

@@ -315,13 +315,13 @@ export default function MediaLibraryPage() {
                       </div>
                     )}
 
-                    <h4 className="text-sm font-medium text-gray-900 mb-1 truncate">
-                      {file.type.charAt(0).toUpperCase() + file.type.slice(1)} File
+                    <h4 className="text-sm font-medium text-gray-900 mb-1 truncate" title={file.originalFilename || 'Untitled'}>
+                      {file.originalFilename || `${file.type.charAt(0).toUpperCase() + file.type.slice(1)} File`}
                     </h4>
                     <p className="text-xs text-gray-900 mb-2">
                       {formatFileSize(file.fileSizeBytes)} • {formatDate(file.createdAt)}
                     </p>
-                    <p className="text-xs text-gray-900 truncate font-mono">
+                    <p className="text-xs text-gray-900 truncate font-mono" title={file.id}>
                       ID: {file.id}
                     </p>
                   </div>

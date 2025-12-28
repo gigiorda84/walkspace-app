@@ -49,6 +49,7 @@ export interface TourVersion {
   language: 'it' | 'fr' | 'en';
   title: string;
   description: string;
+  coverImageFileId: string | null;
   status: 'draft' | 'published';
   routePolyline: string | null;
   createdAt: string;

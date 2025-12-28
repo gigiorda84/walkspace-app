@@ -8,6 +8,6 @@ export class TourListItemDto {
   distanceKm: number;
   languages: string[];
   isProtected: boolean;
-  coverImageUrl: string | null;
+  imageUrl: string | null;
   hasAccess?: boolean; // Whether current user has access
 }

@@ -25,6 +25,7 @@ export const versionsApi = {
     language: string;
     title: string;
     description: string;
+    coverImageFileId?: string;
     routePolyline?: string;
     status?: 'draft' | 'published';
   }): Promise<TourVersion> {

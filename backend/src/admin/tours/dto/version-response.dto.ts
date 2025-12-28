@@ -4,6 +4,7 @@ export class VersionResponseDto {
   language: string;
   title: string;
   description: string;
+  coverImageFileId: string | null;
   status: 'draft' | 'published';
   versionNumber: number;
   startingPointLat: number;

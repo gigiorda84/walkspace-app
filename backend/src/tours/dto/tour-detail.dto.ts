@@ -8,7 +8,7 @@ export class TourDetailDto {
   distanceKm: number;
   languages: string[];
   isProtected: boolean;
-  coverImageUrl: string | null;
+  imageUrl: string | null;
   startingPoint: {
     lat: number;
     lng: number;

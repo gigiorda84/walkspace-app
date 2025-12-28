@@ -13,6 +13,10 @@ export class CreateVersionDto {
   @MinLength(1)
   description: string;
 
+  @IsString()
+  @IsOptional()
+  coverImageFileId?: string;
+
   @IsNumber()
   @Min(-90)
   @Max(90)

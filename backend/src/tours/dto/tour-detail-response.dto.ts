@@ -12,6 +12,7 @@ export class TourDetailResponseDto {
     language: string;
     title: string;
     description: string;
+    coverImageUrl?: string;
     duration: number;
     distance: number;
     status: string;

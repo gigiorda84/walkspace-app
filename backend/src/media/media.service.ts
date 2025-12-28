@@ -78,13 +78,18 @@ export class MediaService {
     const allowedMimeTypes = {
       audio: ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav'],
       image: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
-      subtitle: ['text/plain', 'application/x-subrip', 'text/srt'],
+      subtitle: ['text/plain', 'application/x-subrip', 'text/srt', 'application/octet-stream'],
       video: ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'],
     };
 
+    // Special handling for subtitle files - check file extension as fallback
+    if (type === 'subtitle' && file.originalname.toLowerCase().endsWith('.srt')) {
+      return; // Valid .srt file regardless of MIME type
+    }
+
     if (!allowedMimeTypes[type].includes(file.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type for ${type}. Allowed types: ${allowedMimeTypes[type].join(', ')}`,
+        `Invalid file type for ${type}. Allowed types: ${allowedMimeTypes[type].join(', ')}. Got: ${file.mimetype}`,
       );
     }
   }
