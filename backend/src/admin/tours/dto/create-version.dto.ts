@@ -10,8 +10,8 @@ export class CreateVersionDto {
   title: string;
 
   @IsString()
-  @MinLength(1)
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @IsString()
   @IsOptional()
@@ -20,12 +20,14 @@ export class CreateVersionDto {
   @IsNumber()
   @Min(-90)
   @Max(90)
-  startingPointLat: number;
+  @IsOptional()
+  startingPointLat?: number;
 
   @IsNumber()
   @Min(-180)
   @Max(180)
-  startingPointLng: number;
+  @IsOptional()
+  startingPointLng?: number;
 
   @IsString()
   @IsOptional()

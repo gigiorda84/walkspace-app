@@ -80,8 +80,8 @@ model TourVersion {
   coverImageFileId  String?  @map("cover_image_file_id")
   status            String   @default("draft") // "draft", "published", "archived"
   versionNumber     Int      @map("version_number")
-  startingPointLat  Float    @map("starting_point_lat")
-  startingPointLng  Float    @map("starting_point_lng")
+  startingPointLat  Float?   @map("starting_point_lat")
+  startingPointLng  Float?   @map("starting_point_lng")
   routePolyline     String?  @map("route_polyline") @db.Text
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")

@@ -208,11 +208,15 @@ export default function UnifiedTourEditorPage() {
   const updateTourMutation = useMutation({
     mutationFn: (data: typeof tourData) => toursApi.updateTour(tourId, data),
     onSuccess: () => {
+      console.log('✅ Tour metadata saved successfully');
       queryClient.invalidateQueries({ queryKey: ['tour', tourId] });
       setLastSavedTour(JSON.stringify(tourData));
       setSavingTour(false);
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('❌ Failed to save tour metadata:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      alert(`Failed to save tour: ${error.response?.data?.message || error.message}`);
       setSavingTour(false);
     },
   });
@@ -233,7 +237,13 @@ export default function UnifiedTourEditorPage() {
     mutationFn: ({ versionId, data }: { versionId: string; data: any }) =>
       versionsApi.updateVersion(tourId, versionId, data),
     onSuccess: () => {
+      console.log('✅ Version content saved successfully');
       queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Failed to save version content:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      alert(`Failed to save version: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -259,7 +269,10 @@ export default function UnifiedTourEditorPage() {
   const savePointContentMutation = useMutation({
     mutationFn: async (pointId: string) => {
       const content = pointContent[pointId];
-      if (!content) return;
+      if (!content) {
+        console.warn('⚠️ No content found for point:', pointId);
+        return;
+      }
 
       const payload = {
         language: selectedLanguage,
@@ -269,6 +282,8 @@ export default function UnifiedTourEditorPage() {
         imageFileId: content.imageFileId || undefined,
         subtitleFileId: content.subtitleFileId || undefined,
       };
+
+      console.log('💾 Saving point content:', { pointId, payload });
 
       if (content.localizationId) {
         return pointLocalizationsApi.updateLocalization(
@@ -282,7 +297,13 @@ export default function UnifiedTourEditorPage() {
       }
     },
     onSuccess: () => {
+      console.log('✅ Point content saved successfully');
       queryClient.invalidateQueries({ queryKey: ['all-localizations', tourId, selectedLanguage] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Failed to save point content:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      alert(`Failed to save point content: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -469,12 +490,14 @@ export default function UnifiedTourEditorPage() {
   };
 
   // Add new language
-  const handleAddLanguage = () => {
-    if (!newLanguage) return;
+  const handleAddLanguage = (lang?: string) => {
+    const languageToAdd = lang || newLanguage;
+    if (!languageToAdd) return;
 
+    console.log('📝 Creating version for language:', languageToAdd);
     createVersionMutation.mutate({
-      language: newLanguage,
-      title: `New ${LANGUAGE_LABELS[newLanguage]} Tour`,
+      language: languageToAdd,
+      title: `New ${LANGUAGE_LABELS[languageToAdd]} Tour`,
       description: '',
     });
   };
@@ -656,8 +679,7 @@ export default function UnifiedTourEditorPage() {
                           key={lang}
                           type="button"
                           onClick={() => {
-                            setNewLanguage(lang);
-                            handleAddLanguage();
+                            handleAddLanguage(lang);
                             setSelectedLanguage(lang);
                           }}
                           className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
