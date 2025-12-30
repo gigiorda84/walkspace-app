@@ -20,7 +20,7 @@ export class ToursService {
       include: {
         versions: {
           where: { status: 'published' },
-          select: { language: true, title: true, description: true },
+          select: { language: true, title: true, description: true, coverImage: true },
         },
         coverImage: true,
         userAccess: userId ? { where: { userId } } : false,
@@ -38,6 +38,9 @@ export class ToursService {
         languages.push(version.language);
       });
 
+      // Use tour-level cover image if available, otherwise fall back to first version's cover image
+      const coverImage = tour.coverImage || tour.versions.find((v) => v.coverImage)?.coverImage;
+
       return {
         id: tour.id,
         slug: tour.slug,
@@ -48,7 +51,7 @@ export class ToursService {
         distanceKm: tour.defaultDistanceKm,
         languages,
         isProtected: tour.isProtected,
-        imageUrl: tour.coverImage ? `/media/${tour.coverImage.storagePath}` : null,
+        imageUrl: coverImage ? `/media/${coverImage.storagePath}` : null,
         hasAccess: userId ? tour.userAccess.length > 0 : undefined,
       };
     });

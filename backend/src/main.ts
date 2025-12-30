@@ -2,12 +2,19 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   console.log('[DEBUG] Starting bootstrap...');
   console.log('[DEBUG] Creating NestFactory...');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   console.log('[DEBUG] NestFactory created successfully');
+
+  // Serve static files from media directory
+  app.useStaticAssets(join(__dirname, '..', 'media'), {
+    prefix: '/media/',
+  });
 
   // Enable CORS
   app.enableCors({
