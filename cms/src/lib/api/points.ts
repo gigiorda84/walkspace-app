@@ -27,14 +27,26 @@ export const pointsApi = {
     sequenceOrder: number;
     triggerRadiusMeters: number;
   }): Promise<TourPoint> {
-    const response = await apiClient.post<TourPoint>(`/admin/tours/${tourId}/points`, data);
+    // Transform frontend field names to backend field names
+    const backendData = {
+      lat: data.latitude,
+      lng: data.longitude,
+      order: data.sequenceOrder,
+      defaultTriggerRadiusMeters: data.triggerRadiusMeters,
+    };
+    const response = await apiClient.post<TourPoint>(`/admin/tours/${tourId}/points`, backendData);
     return response.data;
   },
 
   /**
    * Update a tour point
    */
-  async updatePoint(tourId: string, pointId: string, data: Partial<TourPoint>): Promise<TourPoint> {
+  async updatePoint(tourId: string, pointId: string, data: Partial<{
+    lat?: number;
+    lng?: number;
+    order?: number;
+    defaultTriggerRadiusMeters?: number;
+  }>): Promise<TourPoint> {
     const response = await apiClient.patch<TourPoint>(`/admin/tours/${tourId}/points/${pointId}`, data);
     return response.data;
   },

@@ -274,8 +274,7 @@ export default function UnifiedTourEditorPage() {
         return;
       }
 
-      const payload = {
-        language: selectedLanguage,
+      const basePayload = {
         title: content.title || 'Untitled',
         description: content.description || '',
         audioFileId: content.audioFileId || undefined,
@@ -283,17 +282,23 @@ export default function UnifiedTourEditorPage() {
         subtitleFileId: content.subtitleFileId || undefined,
       };
 
-      console.log('💾 Saving point content:', { pointId, payload });
-
       if (content.localizationId) {
+        // Update existing localization (no language property)
+        console.log('💾 Updating point content:', { pointId, payload: basePayload });
         return pointLocalizationsApi.updateLocalization(
           tourId,
           pointId,
           content.localizationId,
-          payload
+          basePayload
         );
       } else {
-        return pointLocalizationsApi.createLocalization(tourId, pointId, payload);
+        // Create new localization (include language property)
+        const createPayload = {
+          language: selectedLanguage,
+          ...basePayload,
+        };
+        console.log('💾 Creating point content:', { pointId, payload: createPayload });
+        return pointLocalizationsApi.createLocalization(tourId, pointId, createPayload);
       }
     },
     onSuccess: () => {
@@ -422,7 +427,7 @@ export default function UnifiedTourEditorPage() {
         data: {
           title: versionContent.title,
           description: versionContent.description,
-          coverImageFileId: versionContent.coverImageFileId || undefined,
+          coverImageFileId: versionContent.coverImageFileId || null,
         },
       });
     } else if (versionContent.title) {
@@ -431,7 +436,7 @@ export default function UnifiedTourEditorPage() {
         language: selectedLanguage,
         title: versionContent.title,
         description: versionContent.description,
-        coverImageFileId: versionContent.coverImageFileId || undefined,
+        coverImageFileId: versionContent.coverImageFileId || null,
       });
     }
   };
@@ -479,7 +484,7 @@ export default function UnifiedTourEditorPage() {
             data: {
               title: updated.title,
               description: updated.description,
-              coverImageFileId: undefined,
+              coverImageFileId: null,
             },
           });
         }

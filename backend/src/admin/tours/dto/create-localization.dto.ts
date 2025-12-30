@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MinLength } from 'class-validator';
+import { IsString, IsOptional, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateLocalizationDto {
   @IsString()
@@ -9,9 +9,11 @@ export class CreateLocalizationDto {
   @MinLength(1)
   title: string;
 
+  @ValidateIf((o) => o.description !== '' && o.description !== null && o.description !== undefined)
   @IsString()
   @MinLength(1)
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @IsString()
   @IsOptional()

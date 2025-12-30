@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsEnum, IsOptional, MinLength, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsOptional, MinLength, Min, Max, ValidateIf } from 'class-validator';
 
 export class UpdateVersionDto {
   @IsString()
@@ -11,9 +11,10 @@ export class UpdateVersionDto {
   @IsOptional()
   description?: string;
 
+  @ValidateIf((o) => o.coverImageFileId !== null)
   @IsString()
   @IsOptional()
-  coverImageFileId?: string;
+  coverImageFileId?: string | null;
 
   @IsNumber()
   @Min(-90)

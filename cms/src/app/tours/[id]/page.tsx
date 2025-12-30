@@ -75,7 +75,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                       </p>
                     </div>
                     <Link
-                      href={`/tours/${id}/editor`}
+                      href={`/tours/${id}/edit`}
                       className="flex items-center space-x-2 px-6 py-3 bg-white text-indigo-600 rounded-md hover:bg-indigo-50 font-medium shadow-md transition-colors"
                     >
                       <FileEdit size={20} />
@@ -189,11 +189,11 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                       Tour Points ({points?.length || 0})
                     </h3>
                     <Link
-                      href={`/tours/${id}/points/new`}
+                      href={`/tours/${id}/edit`}
                       className="flex items-center space-x-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
                     >
-                      <Plus size={16} />
-                      <span>Add Point</span>
+                      <Edit size={16} />
+                      <span>Edit in Unified Editor</span>
                     </Link>
                   </div>
 
@@ -221,7 +221,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ id: strin
                             </div>
                           </div>
                           <Link
-                            href={`/tours/${id}/points/${point.id}/edit`}
+                            href={`/tours/${id}/edit`}
                             className="text-indigo-600 hover:text-indigo-900"
                           >
                             <Edit size={18} />
