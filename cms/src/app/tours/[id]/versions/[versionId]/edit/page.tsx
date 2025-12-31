@@ -16,6 +16,7 @@ import { toursApi } from '@/lib/api/tours';
 interface EditVersionForm {
   title: string;
   description: string;
+  completionMessage?: string;
   status: 'draft' | 'published';
 }
 
@@ -64,6 +65,7 @@ export default function EditVersionPage() {
       reset({
         title: version.title,
         description: version.description,
+        completionMessage: version.completionMessage || '',
         status: version.status,
       });
       setRoutePolyline(version.routePolyline || null);
@@ -161,6 +163,21 @@ export default function EditVersionPage() {
                     {errors.description && (
                       <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
                     )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      Closing Message (optional)
+                    </label>
+                    <textarea
+                      {...register('completionMessage')}
+                      rows={3}
+                      placeholder="Message shown to users when they complete the tour (e.g., thank you message, social media CTA, donation request)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      This message appears on the completion screen in the mobile app
+                    </p>
                   </div>
 
                   <div>

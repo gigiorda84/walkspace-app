@@ -15,6 +15,10 @@ export class CreateVersionDto {
 
   @IsString()
   @IsOptional()
+  completionMessage?: string;
+
+  @IsString()
+  @IsOptional()
   coverImageFileId?: string;
 
   @IsNumber()

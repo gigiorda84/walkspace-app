@@ -59,6 +59,7 @@ export default function UnifiedTourEditorPage() {
   const [versionContent, setVersionContent] = useState({
     title: '',
     description: '',
+    completionMessage: '',
     coverImageFileId: '',
     versionId: '',
   });
@@ -190,6 +191,7 @@ export default function UnifiedTourEditorPage() {
       setVersionContent({
         title: version.title || '',
         description: version.description || '',
+        completionMessage: version.completionMessage || '',
         coverImageFileId: version.coverImageFileId || '',
         versionId: version.id,
       });
@@ -198,6 +200,7 @@ export default function UnifiedTourEditorPage() {
       setVersionContent({
         title: '',
         description: '',
+        completionMessage: '',
         coverImageFileId: '',
         versionId: '',
       });
@@ -427,6 +430,7 @@ export default function UnifiedTourEditorPage() {
         data: {
           title: versionContent.title,
           description: versionContent.description,
+          completionMessage: versionContent.completionMessage,
           coverImageFileId: versionContent.coverImageFileId || null,
         },
       });
@@ -436,6 +440,7 @@ export default function UnifiedTourEditorPage() {
         language: selectedLanguage,
         title: versionContent.title,
         description: versionContent.description,
+        completionMessage: versionContent.completionMessage,
         coverImageFileId: versionContent.coverImageFileId || null,
       });
     }
@@ -457,6 +462,7 @@ export default function UnifiedTourEditorPage() {
             data: {
               title: updated.title,
               description: updated.description,
+              completionMessage: updated.completionMessage,
               coverImageFileId: file.id,
             },
           });
@@ -484,6 +490,7 @@ export default function UnifiedTourEditorPage() {
             data: {
               title: updated.title,
               description: updated.description,
+              completionMessage: updated.completionMessage,
               coverImageFileId: null,
             },
           });
@@ -766,6 +773,21 @@ export default function UnifiedTourEditorPage() {
                     </button>
                   )}
                   <p className="text-xs text-gray-500 mt-1">This image will appear as the tour cover in the mobile app</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Closing Message (optional)
+                  </label>
+                  <textarea
+                    value={versionContent.completionMessage}
+                    onChange={(e) => setVersionContent({ ...versionContent, completionMessage: e.target.value })}
+                    onBlur={handleVersionContentBlur}
+                    placeholder="Message shown to users when they complete the tour (e.g., thank you message, social media CTA, donation request)"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This message appears on the completion screen in the mobile app</p>
                 </div>
 
                 {(updateVersionMutation.isPending || createVersionMutation.isPending) && (

@@ -16,6 +16,11 @@ async function bootstrap() {
     prefix: '/media/',
   });
 
+  // Serve uploaded files
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/media/uploads/',
+  });
+
   // Enable CORS
   app.enableCors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
