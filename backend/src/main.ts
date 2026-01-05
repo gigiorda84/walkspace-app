@@ -75,7 +75,7 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 
   console.log(`🚀 Server running on http://localhost:${process.env.PORT ?? 3000}`);
   console.log(`📚 API Documentation: http://localhost:${process.env.PORT ?? 3000}/api/docs`);

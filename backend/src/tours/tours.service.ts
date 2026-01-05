@@ -20,7 +20,7 @@ export class ToursService {
       include: {
         versions: {
           where: { status: 'published' },
-          select: { language: true, title: true, description: true, coverImage: true },
+          select: { language: true, title: true, description: true, completionMessage: true, coverImage: true },
         },
         coverImage: true,
         userAccess: userId ? { where: { userId } } : false,
@@ -30,11 +30,15 @@ export class ToursService {
     return tours.map((tour) => {
       const title: Record<string, string> = {};
       const descriptionPreview: Record<string, string> = {};
+      const completionMessage: Record<string, string> = {};
       const languages: string[] = [];
 
       tour.versions.forEach((version) => {
         title[version.language] = version.title;
         descriptionPreview[version.language] = version.description.substring(0, 200) + '...';
+        if (version.completionMessage) {
+          completionMessage[version.language] = version.completionMessage;
+        }
         languages.push(version.language);
       });
 
@@ -46,6 +50,7 @@ export class ToursService {
         slug: tour.slug,
         title,
         descriptionPreview,
+        completionMessage: Object.keys(completionMessage).length > 0 ? completionMessage : undefined,
         city: tour.defaultCity,
         durationMinutes: tour.defaultDurationMinutes,
         distanceKm: tour.defaultDistanceKm,
@@ -106,6 +111,7 @@ export class ToursService {
       slug: tour.slug,
       title: version.title,
       description: version.description,
+      completionMessage: version.completionMessage,
       city: tour.defaultCity,
       durationMinutes: tour.defaultDurationMinutes,
       distanceKm: tour.defaultDistanceKm,

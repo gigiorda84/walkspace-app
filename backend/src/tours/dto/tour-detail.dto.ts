@@ -3,6 +3,7 @@ export class TourDetailDto {
   slug: string;
   title: string;
   description: string;
+  completionMessage?: string;
   city: string;
   durationMinutes: number;
   distanceKm: number;
