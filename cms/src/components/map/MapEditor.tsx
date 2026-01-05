@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import Map, { MapRef, Marker, Source, Layer } from 'react-map-gl/maplibre';
+import Map, { MapRef, Marker, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import circle from '@turf/circle';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -37,6 +37,7 @@ export function MapEditor({
 }: MapEditorProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [viewState, setViewState] = useState({
     longitude: center[0],
     latitude: center[1],
@@ -44,7 +45,7 @@ export function MapEditor({
   });
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
-    if (!editable || !onPointsChange) return;
+    if (!editable || !onPointsChange || isDragging) return;
 
     const { lng, lat } = event.lngLat;
     const newPoint: MapPoint = {
@@ -119,6 +120,9 @@ export function MapEditor({
         mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
         style={{ width: '100%', height: '100%' }}
       >
+        {/* Zoom controls */}
+        <NavigationControl position="top-right" showCompass={false} />
+
         {/* Route polyline */}
         {routeCoordinates.length > 0 && (
           <Source
@@ -186,6 +190,12 @@ export function MapEditor({
                 longitude={point.longitude}
                 latitude={point.latitude}
                 draggable={editable}
+                onDragStart={() => {
+                  setIsDragging(true);
+                }}
+                onDrag={() => {
+                  setIsDragging(true);
+                }}
                 onDragEnd={(event) => {
                   if (!onPointsChange) return;
                   const updatedPoints = points.map((p) =>
@@ -194,6 +204,8 @@ export function MapEditor({
                       : p
                   );
                   onPointsChange(updatedPoints);
+                  // Reset dragging state after a small delay to prevent click event
+                  setTimeout(() => setIsDragging(false), 100);
                 }}
               >
                 <div
