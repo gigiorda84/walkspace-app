@@ -401,6 +401,28 @@ export class AdminToursController {
     return { message: 'Point deleted successfully' };
   }
 
+  @Post(':tourId/points/reorder')
+  @ApiOperation({
+    summary: '[CMS] Reorder tour points',
+    description: 'Update the sequence order of tour points. Provide array of point IDs in desired order.'
+  })
+  @ApiParam({ name: 'tourId', description: 'Tour ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Points reordered successfully',
+    type: [PointResponseDto]
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Tour not found'
+  })
+  async reorderPoints(
+    @Param('tourId') tourId: string,
+    @Body() body: { pointIds: string[] },
+  ): Promise<PointResponseDto[]> {
+    return this.adminToursService.reorderPoints(tourId, body.pointIds);
+  }
+
   // ==================== LOCALIZATION ENDPOINTS ====================
 
   @Get(':tourId/points/:pointId/localizations')

@@ -48,7 +48,7 @@ export function MapEditor({
 
     const { lng, lat } = event.lngLat;
     const newPoint: MapPoint = {
-      id: `point-${Date.now()}`,
+      id: `temp-${Date.now()}`,
       latitude: lat,
       longitude: lng,
       sequenceOrder: points.length + 1,

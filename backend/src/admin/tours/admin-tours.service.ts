@@ -672,6 +672,42 @@ export class AdminToursService {
     });
   }
 
+  async reorderPoints(tourId: string, pointIds: string[]): Promise<PointResponseDto[]> {
+    // Verify tour exists
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: tourId },
+    });
+
+    if (!tour) {
+      throw new NotFoundException('Tour not found');
+    }
+
+    // Update order for each point in a transaction
+    // Use two-step approach to avoid unique constraint violations:
+    // 1. Set all to negative temporary values
+    // 2. Set to final positive values
+    await this.prisma.$transaction(async (prisma) => {
+      // Step 1: Set all points to negative temporary order values
+      for (let i = 0; i < pointIds.length; i++) {
+        await prisma.tourPoint.update({
+          where: { id: pointIds[i] },
+          data: { order: -(i + 1) },
+        });
+      }
+
+      // Step 2: Set all points to final positive order values
+      for (let i = 0; i < pointIds.length; i++) {
+        await prisma.tourPoint.update({
+          where: { id: pointIds[i] },
+          data: { order: i + 1 },
+        });
+      }
+    });
+
+    // Return updated points
+    return this.getPointsByTour(tourId);
+  }
+
   // ==================== LOCALIZATION MANAGEMENT ====================
 
   async getLocalizationsByPoint(tourId: string, pointId: string): Promise<LocalizationResponseDto[]> {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Folder, X, MapPin, Trash2 } from 'lucide-react';
+import { ArrowLeft, Folder, X, MapPin, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -324,10 +324,10 @@ export default function UnifiedTourEditorPage() {
       const addedPoint = newPoints[newPoints.length - 1];
       try {
         const created = await pointsApi.createPoint(tourId, {
-          lat: addedPoint.latitude,
-          lng: addedPoint.longitude,
-          order: addedPoint.sequenceOrder,
-          defaultTriggerRadiusMeters: addedPoint.triggerRadiusMeters,
+          latitude: addedPoint.latitude,
+          longitude: addedPoint.longitude,
+          sequenceOrder: addedPoint.sequenceOrder,
+          triggerRadiusMeters: addedPoint.triggerRadiusMeters,
         });
 
         // Update the temp ID with real ID
@@ -335,8 +335,11 @@ export default function UnifiedTourEditorPage() {
           prev.map((p) => (p.id === addedPoint.id ? { ...p, id: created.id } : p))
         );
         refetchPoints();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to create point:', error);
+        // Remove the temporary point if creation failed
+        setMapPoints((prev) => prev.filter((p) => p.id !== addedPoint.id));
+        alert(`Failed to create point: ${error?.response?.data?.message || error.message || 'Unknown error'}`);
       }
     }
 
@@ -521,8 +524,10 @@ export default function UnifiedTourEditorPage() {
     }
 
     try {
-      // Delete from database
-      await pointsApi.deletePoint(tourId, pointId);
+      // Only call API if point exists in database (not a temporary point)
+      if (!pointId.startsWith('temp-')) {
+        await pointsApi.deletePoint(tourId, pointId);
+      }
 
       // Remove from local state and reorder
       const updatedPoints = mapPoints
@@ -536,11 +541,65 @@ export default function UnifiedTourEditorPage() {
         setSelectedPointId(null);
       }
 
-      // Refetch points to sync with database
-      refetchPoints();
+      // Refetch points to sync with database (only if it was a real point)
+      if (!pointId.startsWith('temp-')) {
+        refetchPoints();
+      }
     } catch (error) {
       console.error('Failed to delete point:', error);
       alert('Failed to delete point. Please try again.');
+    }
+  };
+
+  // Move point up in order
+  const handleMovePointUp = async (pointId: string, currentIndex: number) => {
+    if (currentIndex === 0) return; // Already at the top
+
+    const newPoints = [...mapPoints];
+    const temp = newPoints[currentIndex];
+    newPoints[currentIndex] = newPoints[currentIndex - 1];
+    newPoints[currentIndex - 1] = temp;
+
+    // Update sequence order
+    const reorderedPoints = newPoints.map((p, idx) => ({ ...p, sequenceOrder: idx + 1 }));
+    setMapPoints(reorderedPoints);
+
+    // Only call API if all points are saved (no temp IDs)
+    const allSaved = reorderedPoints.every(p => !p.id.startsWith('temp-'));
+    if (allSaved) {
+      try {
+        await pointsApi.reorderPoints(tourId, reorderedPoints.map(p => p.id));
+        refetchPoints();
+      } catch (error) {
+        console.error('Failed to reorder points:', error);
+        alert('Failed to reorder points. Please try again.');
+      }
+    }
+  };
+
+  // Move point down in order
+  const handleMovePointDown = async (pointId: string, currentIndex: number) => {
+    if (currentIndex === mapPoints.length - 1) return; // Already at the bottom
+
+    const newPoints = [...mapPoints];
+    const temp = newPoints[currentIndex];
+    newPoints[currentIndex] = newPoints[currentIndex + 1];
+    newPoints[currentIndex + 1] = temp;
+
+    // Update sequence order
+    const reorderedPoints = newPoints.map((p, idx) => ({ ...p, sequenceOrder: idx + 1 }));
+    setMapPoints(reorderedPoints);
+
+    // Only call API if all points are saved (no temp IDs)
+    const allSaved = reorderedPoints.every(p => !p.id.startsWith('temp-'));
+    if (allSaved) {
+      try {
+        await pointsApi.reorderPoints(tourId, reorderedPoints.map(p => p.id));
+        refetchPoints();
+      } catch (error) {
+        console.error('Failed to reorder points:', error);
+        alert('Failed to reorder points. Please try again.');
+      }
     }
   };
 
@@ -830,7 +889,7 @@ export default function UnifiedTourEditorPage() {
                 </div>
               ) : (
                 <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-                  {mapPoints.map((point) => {
+                  {mapPoints.map((point, idx) => {
                     const content = pointContent[point.id] || {
                       title: '',
                       description: '',
@@ -864,13 +923,39 @@ export default function UnifiedTourEditorPage() {
                               </h3>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeletePoint(point.id)}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                            title="Delete point"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => handleMovePointUp(point.id, idx)}
+                              disabled={idx === 0}
+                              className={`p-2 rounded-md transition-colors ${
+                                idx === 0
+                                  ? 'text-gray-300 cursor-not-allowed'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                              title="Move up"
+                            >
+                              <ArrowUp size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleMovePointDown(point.id, idx)}
+                              disabled={idx === mapPoints.length - 1}
+                              className={`p-2 rounded-md transition-colors ${
+                                idx === mapPoints.length - 1
+                                  ? 'text-gray-300 cursor-not-allowed'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                              title="Move down"
+                            >
+                              <ArrowDown size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePoint(point.id)}
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                              title="Delete point"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
 
                         {/* Location & Dimensions */}
