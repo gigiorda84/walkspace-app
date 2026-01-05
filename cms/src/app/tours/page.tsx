@@ -128,6 +128,12 @@ export default function ToursPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                      Languages
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                      Points
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                       Actions
                     </th>
@@ -151,23 +157,37 @@ export default function ToursPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            tour.isProtected
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
+                            tour.publishedVersionsCount && tour.publishedVersionsCount > 0
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {tour.isProtected ? 'Protected' : 'Public'}
+                          {tour.publishedVersionsCount && tour.publishedVersionsCount > 0 ? 'Published' : 'Draft'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-1">
+                          {tour.languages && tour.languages.length > 0 ? (
+                            tour.languages.map((lang) => (
+                              <span
+                                key={lang}
+                                className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
+                              >
+                                {lang.toUpperCase()}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {tour.pointsCount !== undefined ? tour.pointsCount : '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <Link
-                            href={`/tours/${tour.id}`}
-                            className="text-indigo-600 hover:text-indigo-900"
-                            title="View details"
-                          >
-                            <MapPin size={18} />
-                          </Link>
                           <Link
                             href={`/tours/${tour.id}/edit`}
                             className="text-indigo-600 hover:text-indigo-900"

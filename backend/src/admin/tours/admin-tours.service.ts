@@ -13,6 +13,7 @@ export class AdminToursService {
           select: {
             id: true,
             status: true,
+            language: true,
           },
         },
         points: {
@@ -38,6 +39,7 @@ export class AdminToursService {
       versionsCount: tour.versions.length,
       publishedVersionsCount: tour.versions.filter((v) => v.status === 'published').length,
       pointsCount: tour.points.length,
+      languages: [...new Set(tour.versions.map((v) => v.language))],
     }));
   }
 
@@ -389,9 +391,24 @@ export class AdminToursService {
       throw new BadRequestException('Version does not belong to this tour');
     }
 
-    const version = await this.prisma.tourVersion.update({
-      where: { id: versionId },
-      data: { status: 'published' },
+    // Use a transaction to ensure only one published version per language
+    const version = await this.prisma.$transaction(async (tx) => {
+      // First, unpublish any other versions with the same language
+      await tx.tourVersion.updateMany({
+        where: {
+          tourId,
+          language: existing.language,
+          id: { not: versionId },
+          status: 'published',
+        },
+        data: { status: 'draft' },
+      });
+
+      // Then publish the target version
+      return tx.tourVersion.update({
+        where: { id: versionId },
+        data: { status: 'published' },
+      });
     });
 
     return {

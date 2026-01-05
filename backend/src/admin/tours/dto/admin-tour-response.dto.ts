@@ -39,4 +39,5 @@ export class AdminTourListItemDto {
   versionsCount: number;
   publishedVersionsCount: number;
   pointsCount: number;
+  languages: string[];
 }

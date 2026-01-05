@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Folder, X, MapPin, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Folder, X, MapPin, Trash2, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MapEditor } from '@/components/map/MapEditor';
 import { MediaBrowserModal } from '@/components/media/MediaBrowserModal';
+import { MediaFilePreview } from '@/components/media/MediaFilePreview';
 import { toursApi } from '@/lib/api/tours';
 import { pointsApi } from '@/lib/api/points';
 import { versionsApi } from '@/lib/api/versions';
@@ -63,6 +64,9 @@ export default function UnifiedTourEditorPage() {
     coverImageFileId: '',
     versionId: '',
   });
+
+  // Version status state
+  const [versionStatus, setVersionStatus] = useState<'draft' | 'published'>('draft');
 
   // New language modal state
   const [showAddLanguageModal, setShowAddLanguageModal] = useState(false);
@@ -195,6 +199,7 @@ export default function UnifiedTourEditorPage() {
         coverImageFileId: version.coverImageFileId || '',
         versionId: version.id,
       });
+      setVersionStatus(version.status);
     } else {
       // No version for this language yet
       setVersionContent({
@@ -247,6 +252,27 @@ export default function UnifiedTourEditorPage() {
       console.error('❌ Failed to save version content:', error);
       console.error('Error details:', error.response?.data || error.message);
       alert(`Failed to save version: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  // Publish/unpublish version mutation
+  const publishMutation = useMutation({
+    mutationFn: ({ versionId, action }: { versionId: string; action: 'publish' | 'unpublish' }) => {
+      if (action === 'publish') {
+        return versionsApi.publishVersion(tourId, versionId);
+      } else {
+        return versionsApi.unpublishVersion(tourId, versionId);
+      }
+    },
+    onSuccess: (data) => {
+      console.log('✅ Version status updated successfully');
+      setVersionStatus(data.status);
+      queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
+      queryClient.invalidateQueries({ queryKey: ['tours'] });
+    },
+    onError: (error: any) => {
+      console.error('❌ Failed to update version status:', error);
+      alert(`Failed to update status: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -623,7 +649,7 @@ export default function UnifiedTourEditorPage() {
           description={`Unified editor for ${tour?.slug || 'tour'}`}
           actions={
             <Link
-              href={`/tours/${tourId}`}
+              href="/tours"
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-900"
             >
               <ArrowLeft size={18} />
@@ -715,24 +741,60 @@ export default function UnifiedTourEditorPage() {
 
               {/* Language Tabs */}
               {versions.length > 0 ? (
-                <div className="flex gap-2">
-                  {versions.map((version) => (
-                    <button
-                      key={version.id}
-                      type="button"
-                      onClick={() => {
-                        console.log('Language button clicked:', version.language);
-                        setSelectedLanguage(version.language);
-                      }}
-                      className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
-                        selectedLanguage === version.language
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                      }`}
-                    >
-                      {LANGUAGE_LABELS[version.language]}
-                    </button>
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-2">
+                      {versions.map((version) => (
+                        <button
+                          key={version.id}
+                          type="button"
+                          onClick={() => {
+                            console.log('Language button clicked:', version.language);
+                            setSelectedLanguage(version.language);
+                          }}
+                          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
+                            selectedLanguage === version.language
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                          }`}
+                        >
+                          {LANGUAGE_LABELS[version.language]}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Status Badge */}
+                    {selectedLanguage && versionContent.versionId && (
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        versionStatus === 'published'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {versionStatus === 'published' ? '✓ Published' : 'Draft'}
+                      </span>
+                    )}
+
+                    {/* Publish/Unpublish Button */}
+                    {selectedLanguage && versionContent.versionId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const action = versionStatus === 'published' ? 'unpublish' : 'publish';
+                          publishMutation.mutate({ versionId: versionContent.versionId, action });
+                        }}
+                        disabled={publishMutation.isPending}
+                        className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
+                          versionStatus === 'published'
+                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50'
+                            : 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50'
+                        }`}
+                      >
+                        {publishMutation.isPending ? 'Saving...' : (
+                          versionStatus === 'published' ? 'Unpublish' : 'Publish'
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">No languages added yet. Click "+ Add Language" to start.</p>
@@ -777,6 +839,24 @@ export default function UnifiedTourEditorPage() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">
                 Tour Content ({LANGUAGE_LABELS[selectedLanguage]})
               </h2>
+
+              {/* Warning Alert for Published Versions */}
+              {versionStatus === 'published' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">
+                        You are editing a published version
+                      </p>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        Changes will be immediately visible to users viewing this tour in the mobile app.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -1122,15 +1202,11 @@ export default function UnifiedTourEditorPage() {
                           <div>
                             <label className="block text-sm font-medium text-gray-900 mb-1">Audio *</label>
                             {content.audioFileId ? (
-                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
-                                <span className="text-sm text-gray-900">Audio selected</span>
-                                <button
-                                  onClick={() => clearFile(point.id, 'audio')}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <X size={16} />
-                                </button>
-                              </div>
+                              <MediaFilePreview
+                                fileId={content.audioFileId}
+                                type="audio"
+                                onRemove={() => clearFile(point.id, 'audio')}
+                              />
                             ) : (
                               <button
                                 onClick={() => setMediaModalOpen({ pointId: point.id, type: 'audio' })}
@@ -1146,15 +1222,11 @@ export default function UnifiedTourEditorPage() {
                           <div>
                             <label className="block text-sm font-medium text-gray-900 mb-1">Subtitles</label>
                             {content.subtitleFileId ? (
-                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
-                                <span className="text-sm text-gray-900">Subtitle selected</span>
-                                <button
-                                  onClick={() => clearFile(point.id, 'subtitle')}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <X size={16} />
-                                </button>
-                              </div>
+                              <MediaFilePreview
+                                fileId={content.subtitleFileId}
+                                type="subtitle"
+                                onRemove={() => clearFile(point.id, 'subtitle')}
+                              />
                             ) : (
                               <button
                                 onClick={() => setMediaModalOpen({ pointId: point.id, type: 'subtitle' })}
@@ -1170,15 +1242,11 @@ export default function UnifiedTourEditorPage() {
                           <div>
                             <label className="block text-sm font-medium text-gray-900 mb-1">Image</label>
                             {content.imageFileId ? (
-                              <div className="flex items-center justify-between p-2 border border-gray-300 rounded-md bg-gray-50">
-                                <span className="text-sm text-gray-900">Image selected</span>
-                                <button
-                                  onClick={() => clearFile(point.id, 'image')}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <X size={16} />
-                                </button>
-                              </div>
+                              <MediaFilePreview
+                                fileId={content.imageFileId}
+                                type="image"
+                                onRemove={() => clearFile(point.id, 'image')}
+                              />
                             ) : (
                               <button
                                 onClick={() => setMediaModalOpen({ pointId: point.id, type: 'image' })}

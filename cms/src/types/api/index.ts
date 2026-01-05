@@ -41,6 +41,10 @@ export interface Tour {
   isProtected: boolean;
   createdAt: string;
   updatedAt: string;
+  versionsCount?: number;
+  publishedVersionsCount?: number;
+  pointsCount?: number;
+  languages?: string[];
 }
 
 export interface TourVersion {
