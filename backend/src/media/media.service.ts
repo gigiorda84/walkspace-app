@@ -1,31 +1,21 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { UploadResponseDto, MediaFileListItemDto, MediaFileResponseDto } from './dto';
-import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Express } from 'express';
+import { StorageService } from '../common/storage.service';
 
 @Injectable()
 export class MediaService {
-  private readonly uploadDir = path.join(process.cwd(), 'uploads');
-  private readonly baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-
-  constructor(private readonly prisma: PrismaService) {
-    // Ensure upload directory exists
-    this.ensureUploadDir();
-  }
-
-  private async ensureUploadDir() {
-    try {
-      await fs.access(this.uploadDir);
-    } catch {
-      await fs.mkdir(this.uploadDir, { recursive: true });
-    }
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
 
   async uploadFile(
     file: Express.Multer.File,
     type: 'audio' | 'image' | 'subtitle' | 'video',
+    language?: string,
   ): Promise<UploadResponseDto> {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -40,16 +30,19 @@ export class MediaService {
     // Generate unique filename
     const fileExtension = path.extname(file.originalname);
     const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
-    const storagePath = `uploads/${filename}`;
-    const fullPath = path.join(this.uploadDir, filename);
 
-    // Save file to disk
-    await fs.writeFile(fullPath, file.buffer);
+    // Upload to storage (local or cloud)
+    const { storagePath, url } = await this.storageService.uploadFile(
+      file.buffer,
+      filename,
+      file.mimetype,
+    );
 
     // Create MediaFile record in database
     const mediaFile = await this.prisma.mediaFile.create({
       data: {
         type,
+        language: language || null,
         mimeType: file.mimetype,
         fileSizeBytes: file.size,
         storagePath,
@@ -65,8 +58,9 @@ export class MediaService {
       originalName: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
-      url: `${this.baseUrl}/media/${mediaFile.id}`,
+      url: await this.storageService.getSignedUrl(storagePath),
       version: mediaFile.version,
+      language: mediaFile.language ?? undefined,
       uploadedAt: mediaFile.createdAt,
     };
   }
@@ -121,7 +115,7 @@ export class MediaService {
       throw new BadRequestException('File not found');
     }
 
-    return `${this.baseUrl}/media/${fileId}`;
+    return this.storageService.getSignedUrl(mediaFile.storagePath);
   }
 
   async getFilePath(fileId: string): Promise<string> {
@@ -133,28 +127,37 @@ export class MediaService {
       throw new BadRequestException('File not found');
     }
 
-    return path.join(process.cwd(), mediaFile.storagePath);
+    if (this.storageService.isCloudStorage()) {
+      throw new BadRequestException('Cannot get file path for cloud storage, use getFileUrl instead');
+    }
+
+    return this.storageService.getLocalFilePath(mediaFile.storagePath);
   }
 
-  async listFiles(type?: string): Promise<MediaFileListItemDto[]> {
-    const where = type ? { type } : {};
+  async listFiles(type?: string, language?: string): Promise<MediaFileListItemDto[]> {
+    const where: any = {};
+    if (type) where.type = type;
+    if (language) where.language = language;
 
     const files = await this.prisma.mediaFile.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
 
-    return files.map((file) => ({
-      id: file.id,
-      type: file.type,
-      mimeType: file.mimeType,
-      fileSizeBytes: file.fileSizeBytes,
-      url: `${this.baseUrl}/media/${file.id}`,
-      version: file.version,
-      isActive: file.isActive,
-      originalFilename: file.originalFilename ?? undefined,
-      createdAt: file.createdAt,
-    }));
+    return Promise.all(
+      files.map(async (file) => ({
+        id: file.id,
+        type: file.type,
+        language: file.language ?? undefined,
+        mimeType: file.mimeType,
+        fileSizeBytes: file.fileSizeBytes,
+        url: await this.storageService.getSignedUrl(file.storagePath),
+        version: file.version,
+        isActive: file.isActive,
+        originalFilename: file.originalFilename ?? undefined,
+        createdAt: file.createdAt,
+      })),
+    );
   }
 
   async getFileById(fileId: string): Promise<MediaFileResponseDto> {
@@ -169,10 +172,11 @@ export class MediaService {
     return {
       id: mediaFile.id,
       type: mediaFile.type,
+      language: mediaFile.language ?? undefined,
       mimeType: mediaFile.mimeType,
       fileSizeBytes: mediaFile.fileSizeBytes,
       storagePath: mediaFile.storagePath,
-      url: `${this.baseUrl}/media/${mediaFile.id}`,
+      url: await this.storageService.getSignedUrl(mediaFile.storagePath),
       version: mediaFile.version,
       isActive: mediaFile.isActive,
       originalFilename: mediaFile.originalFilename ?? undefined,
@@ -189,14 +193,8 @@ export class MediaService {
       throw new NotFoundException('File not found');
     }
 
-    // Delete physical file from disk
-    const fullPath = path.join(process.cwd(), mediaFile.storagePath);
-    try {
-      await fs.unlink(fullPath);
-    } catch (error) {
-      // File might not exist on disk, continue with database deletion
-      console.warn(`Could not delete file from disk: ${fullPath}`, error);
-    }
+    // Delete physical file from storage
+    await this.storageService.deleteFile(mediaFile.storagePath);
 
     // Delete database record
     await this.prisma.mediaFile.delete({
@@ -229,11 +227,13 @@ export class MediaService {
     const fileExtension = path.extname(file.originalname);
     const newVersion = oldMediaFile.version + 1;
     const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-v${newVersion}${fileExtension}`;
-    const storagePath = `uploads/${filename}`;
-    const fullPath = path.join(this.uploadDir, filename);
 
-    // Save file to disk
-    await fs.writeFile(fullPath, file.buffer);
+    // Upload to storage (local or cloud)
+    const { storagePath } = await this.storageService.uploadFile(
+      file.buffer,
+      filename,
+      file.mimetype,
+    );
 
     // Mark old version as inactive
     await this.prisma.mediaFile.update({
@@ -245,6 +245,7 @@ export class MediaService {
     const newMediaFile = await this.prisma.mediaFile.create({
       data: {
         type: oldMediaFile.type,
+        language: oldMediaFile.language,
         mimeType: file.mimetype,
         fileSizeBytes: file.size,
         storagePath,
@@ -260,7 +261,8 @@ export class MediaService {
       originalName: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
-      url: `${this.baseUrl}/media/${newMediaFile.id}`,
+      url: await this.storageService.getSignedUrl(storagePath),
+      language: newMediaFile.language ?? undefined,
       uploadedAt: newMediaFile.createdAt,
     };
   }

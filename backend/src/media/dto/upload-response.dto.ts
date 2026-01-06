@@ -6,5 +6,6 @@ export class UploadResponseDto {
   size: number;
   url: string;
   version?: number;
+  language?: string;
   uploadedAt: Date;
 }

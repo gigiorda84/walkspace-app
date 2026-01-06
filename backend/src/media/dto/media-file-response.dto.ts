@@ -1,6 +1,7 @@
 export class MediaFileResponseDto {
   id: string;
   type: string;
+  language?: string;
   mimeType: string;
   fileSizeBytes: number;
   storagePath: string;
@@ -14,6 +15,7 @@ export class MediaFileResponseDto {
 export class MediaFileListItemDto {
   id: string;
   type: string;
+  language?: string;
   mimeType: string;
   fileSizeBytes: number;
   url: string;

@@ -4,12 +4,18 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as helmet from 'helmet';
 
 async function bootstrap() {
   console.log('[DEBUG] Starting bootstrap...');
   console.log('[DEBUG] Creating NestFactory...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   console.log('[DEBUG] NestFactory created successfully');
+
+  // Security headers (production)
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+  }
 
   // Serve static files from media directory
   app.useStaticAssets(join(__dirname, '..', 'media'), {
@@ -22,8 +28,12 @@ async function bootstrap() {
   });
 
   // Enable CORS
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : 'http://localhost:3001';
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+    origin: corsOrigins,
     credentials: true,
   });
 

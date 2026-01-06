@@ -231,7 +231,7 @@ export default function UnifiedTourEditorPage() {
 
   // Create new version mutation
   const createVersionMutation = useMutation({
-    mutationFn: (data: { language: string; title: string; description: string }) =>
+    mutationFn: (data: { language: string; title: string; description: string; completionMessage?: string; coverImageFileId?: string }) =>
       versionsApi.createVersion(tourId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
@@ -321,8 +321,9 @@ export default function UnifiedTourEditorPage() {
           basePayload
         );
       } else {
-        // Create new localization (include language property)
+        // Create new localization (include language and tourVersionId)
         const createPayload = {
+          tourVersionId: versionContent.versionId,
           language: selectedLanguage,
           ...basePayload,
         };
@@ -469,8 +470,8 @@ export default function UnifiedTourEditorPage() {
         language: selectedLanguage,
         title: versionContent.title,
         description: versionContent.description,
-        completionMessage: versionContent.completionMessage,
-        coverImageFileId: versionContent.coverImageFileId || null,
+        completionMessage: versionContent.completionMessage || undefined,
+        coverImageFileId: versionContent.coverImageFileId || undefined,
       });
     }
   };
