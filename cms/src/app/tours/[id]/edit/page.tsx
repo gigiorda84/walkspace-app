@@ -303,13 +303,20 @@ export default function UnifiedTourEditorPage() {
         return;
       }
 
-      const basePayload = {
-        title: content.title || 'Untitled',
-        description: content.description || '',
-        audioFileId: content.audioFileId || undefined,
-        imageFileId: content.imageFileId || undefined,
-        subtitleFileId: content.subtitleFileId || undefined,
+      // Helper to remove undefined/empty values from payload
+      const cleanPayload = (obj: any) => {
+        return Object.fromEntries(
+          Object.entries(obj).filter(([_, v]) => v !== undefined && v !== '')
+        );
       };
+
+      const basePayload = cleanPayload({
+        title: content.title || 'Untitled',
+        description: content.description,
+        audioFileId: content.audioFileId,
+        imageFileId: content.imageFileId,
+        subtitleFileId: content.subtitleFileId,
+      });
 
       if (content.localizationId) {
         // Update existing localization (no language property)
@@ -322,10 +329,10 @@ export default function UnifiedTourEditorPage() {
         );
       } else {
         // Create new localization (include language only - backend derives tourVersionId)
-        const createPayload = {
+        const createPayload = cleanPayload({
           language: selectedLanguage,
           ...basePayload,
-        };
+        });
         console.log('💾 Creating point content:', { pointId, payload: createPayload });
         return pointLocalizationsApi.createLocalization(tourId, pointId, createPayload);
       }
