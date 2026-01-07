@@ -15,6 +15,7 @@ import { VouchersModule } from './vouchers/vouchers.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AdminToursModule } from './admin/tours/admin-tours.module';
 import { AdminMediaModule } from './admin/media/admin-media.module';
+import { SetupModule } from './setup/setup.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AdminMediaModule } from './admin/media/admin-media.module';
     AnalyticsModule,
     AdminToursModule,
     AdminMediaModule,
+    SetupModule,
   ],
   controllers: [AppController],
   providers: [
