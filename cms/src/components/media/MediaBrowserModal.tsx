@@ -152,6 +152,12 @@ export function MediaBrowserModal({
                           <p className="text-xs text-gray-900">
                             {formatFileSize(file.fileSizeBytes)}
                           </p>
+                          {/* Language badge for subtitle files */}
+                          {file.language && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 rounded uppercase mt-1">
+                              {file.language}
+                            </span>
+                          )}
                           <p className="text-xs text-gray-900 mt-1">
                             v{file.version}
                           </p>

@@ -33,7 +33,6 @@ export const pointLocalizationsApi = {
     tourId: string,
     pointId: string,
     data: {
-      tourVersionId: string;
       language: string;
       title: string;
       description: string;

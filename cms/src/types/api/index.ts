@@ -88,6 +88,7 @@ export interface TourPointLocalization {
 export interface MediaFile {
   id: string;
   type: 'audio' | 'image' | 'subtitle';
+  language?: 'en' | 'fr' | 'it';
   mimeType: string;
   fileSizeBytes: number;
   url: string;

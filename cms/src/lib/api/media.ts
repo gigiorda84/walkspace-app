@@ -7,10 +7,12 @@ export const mediaApi = {
    */
   async getAllMedia(filters?: {
     type?: 'audio' | 'image' | 'subtitle';
+    language?: 'en' | 'fr' | 'it';
     search?: string;
   }): Promise<MediaFile[]> {
     const params = new URLSearchParams();
     if (filters?.type) params.append('type', filters.type);
+    if (filters?.language) params.append('language', filters.language);
     if (filters?.search) params.append('search', filters.search);
 
     const response = await apiClient.get<MediaFile[]>(`/admin/media?${params.toString()}`);
@@ -30,6 +32,7 @@ export const mediaApi = {
    */
   async uploadMedia(
     file: File,
+    language?: 'en' | 'fr' | 'it',
     onProgress?: (progress: number) => void
   ): Promise<MediaFile> {
     const formData = new FormData();
@@ -47,8 +50,14 @@ export const mediaApi = {
       type = 'subtitle';
     }
 
+    // Build query string
+    const params = new URLSearchParams({ type });
+    if (language) {
+      params.append('language', language);
+    }
+
     const response = await apiClient.post<MediaFile>(
-      `/admin/media/upload?type=${type}`,
+      `/admin/media/upload?${params.toString()}`,
       formData,
       {
         headers: {

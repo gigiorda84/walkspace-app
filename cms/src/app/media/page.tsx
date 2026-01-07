@@ -31,6 +31,9 @@ export default function MediaLibraryPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<MediaFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
+  const [pendingSubtitleFile, setPendingSubtitleFile] = useState<File | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'fr' | 'it'>('en');
 
   // Fetch media files
   const { data: mediaFiles = [], isLoading } = useQuery({
@@ -43,11 +46,11 @@ export default function MediaLibraryPage() {
 
   // Upload mutation
   const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, language }: { file: File; language?: 'en' | 'fr' | 'it' }) => {
       const fileId = `${file.name}-${Date.now()}`;
       setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
 
-      const result = await mediaApi.uploadMedia(file, (progress) => {
+      const result = await mediaApi.uploadMedia(file, language, (progress) => {
         setUploadProgress(prev => ({ ...prev, [fileId]: progress }));
       });
 
@@ -61,6 +64,8 @@ export default function MediaLibraryPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media'] });
+      setLanguageDialogOpen(false);
+      setPendingSubtitleFile(null);
     },
   });
 
@@ -108,7 +113,14 @@ export default function MediaLibraryPage() {
         return;
       }
 
-      uploadMutation.mutate(file);
+      // If it's a subtitle file, open language selector dialog
+      if (fileType === 'subtitle') {
+        setPendingSubtitleFile(file);
+        setLanguageDialogOpen(true);
+      } else {
+        // For non-subtitle files, upload directly without language
+        uploadMutation.mutate({ file });
+      }
     });
   }, [uploadMutation]);
 
@@ -268,6 +280,12 @@ export default function MediaLibraryPage() {
                         <span className="text-xs font-medium text-gray-900 uppercase">
                           {FILE_TYPE_LABELS[file.type]}
                         </span>
+                        {/* Language badge for subtitle files */}
+                        {file.language && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 rounded uppercase">
+                            {file.language}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center space-x-1">
                         <button
@@ -344,6 +362,72 @@ export default function MediaLibraryPage() {
           confirmLabel="Delete"
           isLoading={deleteMutation.isPending}
         />
+
+        {/* Language Selection Dialog for Subtitles */}
+        {languageDialogOpen && pendingSubtitleFile && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Select Subtitle Language
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Choose the language for: <span className="font-medium">{pendingSubtitleFile.name}</span>
+              </p>
+
+              <div className="space-y-2 mb-6">
+                {[
+                  { value: 'en', label: 'English', flag: '🇬🇧' },
+                  { value: 'fr', label: 'Français', flag: '🇫🇷' },
+                  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
+                ].map((lang) => (
+                  <label
+                    key={lang.value}
+                    className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedLanguage === lang.value
+                        ? 'border-indigo-600 bg-indigo-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="language"
+                      value={lang.value}
+                      checked={selectedLanguage === lang.value}
+                      onChange={(e) => setSelectedLanguage(e.target.value as 'en' | 'fr' | 'it')}
+                      className="mr-3"
+                    />
+                    <span className="text-2xl mr-3">{lang.flag}</span>
+                    <span className="text-sm font-medium text-gray-900">{lang.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setLanguageDialogOpen(false);
+                    setPendingSubtitleFile(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  disabled={uploadMutation.isPending}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (pendingSubtitleFile) {
+                      uploadMutation.mutate({ file: pendingSubtitleFile, language: selectedLanguage });
+                    }
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                  disabled={uploadMutation.isPending}
+                >
+                  {uploadMutation.isPending ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </MainLayout>
     </ProtectedRoute>
   );

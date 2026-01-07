@@ -321,9 +321,8 @@ export default function UnifiedTourEditorPage() {
           basePayload
         );
       } else {
-        // Create new localization (include language and tourVersionId)
+        // Create new localization (include language only - backend derives tourVersionId)
         const createPayload = {
-          tourVersionId: versionContent.versionId,
           language: selectedLanguage,
           ...basePayload,
         };
