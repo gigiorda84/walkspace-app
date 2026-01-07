@@ -303,14 +303,23 @@ export default function UnifiedTourEditorPage() {
         return;
       }
 
-      // Helper to remove undefined/empty values from payload
-      const cleanPayload = (obj: any) => {
-        return Object.fromEntries(
-          Object.entries(obj).filter(([_, v]) => v !== undefined && v !== '')
-        );
+      // Helper to remove undefined values and empty optional fields
+      const cleanOptionalFields = (obj: any) => {
+        const cleaned: any = {};
+        for (const [key, value] of Object.entries(obj)) {
+          // Always keep title and language (required fields)
+          if (key === 'title' || key === 'language') {
+            cleaned[key] = value;
+          }
+          // For optional fields, only include if they have a value
+          else if (value !== undefined && value !== '' && value !== null) {
+            cleaned[key] = value;
+          }
+        }
+        return cleaned;
       };
 
-      const basePayload = cleanPayload({
+      const basePayload = cleanOptionalFields({
         title: content.title || 'Untitled',
         description: content.description,
         audioFileId: content.audioFileId,
@@ -330,7 +339,7 @@ export default function UnifiedTourEditorPage() {
         );
       } else {
         // Create new localization (include language only - backend derives tourVersionId)
-        const createPayload = cleanPayload({
+        const createPayload = cleanOptionalFields({
           language: selectedLanguage,
           ...basePayload,
         });
