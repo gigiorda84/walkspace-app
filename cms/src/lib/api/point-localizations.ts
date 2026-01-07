@@ -55,7 +55,13 @@ export const pointLocalizationsApi = {
     tourId: string,
     pointId: string,
     localizationId: string,
-    data: Partial<TourPointLocalization>
+    data: {
+      title?: string;
+      description?: string;
+      audioFileId?: string;
+      imageFileId?: string;
+      subtitleFileId?: string;
+    }
   ): Promise<TourPointLocalization> {
     const response = await apiClient.patch<TourPointLocalization>(
       `/admin/tours/${tourId}/points/${pointId}/localizations/${localizationId}`,
