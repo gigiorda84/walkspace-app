@@ -13,6 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from '../../media/media.service';
 import { UploadResponseDto, MediaFileListItemDto, MediaFileResponseDto } from '../../media/dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import type { Express as ExpressNamespace } from 'express';
 
 @Controller('admin/media')
 @Public()
@@ -22,8 +23,9 @@ export class AdminMediaController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: ExpressNamespace.Multer.File,
     @Query('type') type: 'audio' | 'image' | 'subtitle' | 'video',
+    @Query('language') language?: string,
   ): Promise<UploadResponseDto> {
     if (!type || !['audio', 'image', 'subtitle', 'video'].includes(type)) {
       throw new BadRequestException(
@@ -31,18 +33,34 @@ export class AdminMediaController {
       );
     }
 
-    return this.mediaService.uploadFile(file, type);
+    // Validate language if provided
+    if (language && !['en', 'fr', 'it'].includes(language)) {
+      throw new BadRequestException(
+        'Invalid language parameter. Must be one of: en, fr, it',
+      );
+    }
+
+    return this.mediaService.uploadFile(file, type, language);
   }
 
   @Get()
-  async listFiles(@Query('type') type?: string): Promise<MediaFileListItemDto[]> {
+  async listFiles(
+    @Query('type') type?: string,
+    @Query('language') language?: string,
+  ): Promise<MediaFileListItemDto[]> {
     if (type && !['audio', 'image', 'subtitle', 'video'].includes(type)) {
       throw new BadRequestException(
         'Invalid type parameter. Must be one of: audio, image, subtitle, video',
       );
     }
 
-    return this.mediaService.listFiles(type);
+    if (language && !['en', 'fr', 'it'].includes(language)) {
+      throw new BadRequestException(
+        'Invalid language parameter. Must be one of: en, fr, it',
+      );
+    }
+
+    return this.mediaService.listFiles(type, language);
   }
 
   @Get(':id')
