@@ -4,7 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 
 async function bootstrap() {
   console.log('[DEBUG] Starting bootstrap...');

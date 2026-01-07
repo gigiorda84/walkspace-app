@@ -141,6 +141,7 @@ model TourPointLocalization {
 model MediaFile {
   id               String   @id @default(uuid())
   type             String   // "audio", "image", "subtitle", "video"
+  language         String?  // Optional: "en", "fr", "it" (primarily for subtitles)
   mimeType         String   @map("mime_type")
   fileSizeBytes    Int      @map("file_size_bytes")
   storagePath      String   @map("storage_path")
