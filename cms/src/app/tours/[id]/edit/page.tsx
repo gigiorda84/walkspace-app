@@ -321,6 +321,7 @@ export default function UnifiedTourEditorPage() {
       if (content.localizationId) {
         // Update existing localization (no language property)
         console.log('💾 Updating point content:', { pointId, payload: basePayload });
+        console.log('Payload JSON:', JSON.stringify(basePayload, null, 2));
         return pointLocalizationsApi.updateLocalization(
           tourId,
           pointId,
@@ -334,6 +335,7 @@ export default function UnifiedTourEditorPage() {
           ...basePayload,
         });
         console.log('💾 Creating point content:', { pointId, payload: createPayload });
+        console.log('Payload JSON:', JSON.stringify(createPayload, null, 2));
         return pointLocalizationsApi.createLocalization(tourId, pointId, createPayload);
       }
     },
@@ -343,8 +345,12 @@ export default function UnifiedTourEditorPage() {
     },
     onError: (error: any) => {
       console.error('❌ Failed to save point content:', error);
-      console.error('Error details:', error.response?.data || error.message);
-      alert(`Failed to save point content: ${error.response?.data?.message || error.message}`);
+      console.error('Full error response:', JSON.stringify(error.response?.data, null, 2));
+      const errorMsg = Array.isArray(error.response?.data?.message)
+        ? error.response.data.message.join(', ')
+        : error.response?.data?.message || error.message;
+      console.error('Error message:', errorMsg);
+      alert(`Failed to save point content: ${errorMsg}`);
     },
   });
 
