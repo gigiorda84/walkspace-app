@@ -831,7 +831,7 @@ export class AdminToursService {
         tourVersionId: tourVersion.id,
         language: dto.language,
         title: dto.title,
-        description: dto.description || '',
+        description: dto.description,
         audioFileId: dto.audioFileId,
         imageFileId: dto.imageFileId,
         subtitleFileId: dto.subtitleFileId,
