@@ -28,29 +28,34 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired, try to refresh
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
-          const { accessToken } = response.data;
-          localStorage.setItem('auth_token', accessToken);
+      // Don't handle 401 on login page - let the page handle it
+      const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
 
-          // Retry the original request
-          error.config.headers.Authorization = `Bearer ${accessToken}`;
-          return apiClient.request(error.config);
-        } catch (refreshError) {
-          // Refresh failed, redirect to login
+      if (!isLoginPage) {
+        // Token expired, try to refresh
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          try {
+            const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+              refreshToken,
+            });
+            const { accessToken } = response.data;
+            localStorage.setItem('auth_token', accessToken);
+
+            // Retry the original request
+            error.config.headers.Authorization = `Bearer ${accessToken}`;
+            return apiClient.request(error.config);
+          } catch (refreshError) {
+            // Refresh failed, redirect to login
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
+          }
+        } else {
+          // No refresh token, redirect to login
           localStorage.removeItem('auth_token');
-          localStorage.removeItem('refresh_token');
           window.location.href = '/login';
         }
-      } else {
-        // No refresh token, redirect to login
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
