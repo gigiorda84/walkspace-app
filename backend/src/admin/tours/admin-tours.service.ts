@@ -831,7 +831,7 @@ export class AdminToursService {
         tourVersionId: tourVersion.id,
         language: dto.language,
         title: dto.title,
-        description: dto.description,
+        description: dto.description || '',
         audioFileId: dto.audioFileId,
         imageFileId: dto.imageFileId,
         subtitleFileId: dto.subtitleFileId,
@@ -900,9 +900,17 @@ export class AdminToursService {
       }
     }
 
+    // Remove undefined values from dto to avoid Prisma errors
+    const updateData: any = {};
+    if (dto.title !== undefined) updateData.title = dto.title;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.audioFileId !== undefined) updateData.audioFileId = dto.audioFileId;
+    if (dto.imageFileId !== undefined) updateData.imageFileId = dto.imageFileId;
+    if (dto.subtitleFileId !== undefined) updateData.subtitleFileId = dto.subtitleFileId;
+
     const localization = await this.prisma.tourPointLocalization.update({
       where: { id: localizationId },
-      data: dto,
+      data: updateData,
     });
 
     return {
