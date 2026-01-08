@@ -16,11 +16,13 @@ export class StorageService {
   private readonly bucket: string | null;
   private readonly uploadDir: string;
   private readonly baseUrl: string;
+  private readonly publicR2Url: string | null;
 
   constructor() {
     this.storageProvider = process.env.STORAGE_PROVIDER || 'local';
     this.uploadDir = path.join(process.cwd(), process.env.UPLOAD_PATH || 'uploads');
     this.baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    this.publicR2Url = process.env.PUBLIC_R2_URL || null;
 
     if (this.storageProvider === 's3') {
       // Initialize S3 client for production (works with S3, R2, Spaces)
@@ -129,24 +131,31 @@ export class StorageService {
    * Get a signed URL for a file (for cloud storage) or regular URL (for local)
    */
   async getSignedUrl(storagePath: string, expiresIn: number = 3600): Promise<string> {
-    if (this.storageProvider === 's3' && this.s3Client && this.bucket) {
-      // Generate signed URL for S3/R2
-      try {
-        const command = new GetObjectCommand({
-          Bucket: this.bucket,
-          Key: storagePath,
-        });
-
-        return await getSignedUrl(this.s3Client, command, { expiresIn });
-      } catch (error) {
-        console.error('Error generating signed URL:', error);
-        throw new InternalServerErrorException('Failed to generate file URL');
+    if (this.storageProvider === 's3') {
+      // If public R2 URL is configured, use it instead of signed URLs
+      if (this.publicR2Url) {
+        return `${this.publicR2Url}/${storagePath}`;
       }
-    } else {
-      // Return local URL
-      const filename = path.basename(storagePath);
-      return `${this.baseUrl}/media/uploads/${filename}`;
+
+      // Otherwise generate signed URL for S3/R2
+      if (this.s3Client && this.bucket) {
+        try {
+          const command = new GetObjectCommand({
+            Bucket: this.bucket,
+            Key: storagePath,
+          });
+
+          return await getSignedUrl(this.s3Client, command, { expiresIn });
+        } catch (error) {
+          console.error('Error generating signed URL:', error);
+          throw new InternalServerErrorException('Failed to generate file URL');
+        }
+      }
     }
+
+    // Return local URL
+    const filename = path.basename(storagePath);
+    return `${this.baseUrl}/media/uploads/${filename}`;
   }
 
   /**
