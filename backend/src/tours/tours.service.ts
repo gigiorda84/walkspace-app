@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { StorageService } from '../common/storage.service';
 import {
   TourListItemDto,
   TourDetailDto,
@@ -13,7 +14,10 @@ import {
 
 @Injectable()
 export class ToursService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
 
   async listTours(userId?: string): Promise<TourListItemDto[]> {
     const tours = await this.prisma.tour.findMany({
@@ -27,39 +31,44 @@ export class ToursService {
       },
     });
 
-    return tours.map((tour) => {
-      const title: Record<string, string> = {};
-      const descriptionPreview: Record<string, string> = {};
-      const completionMessage: Record<string, string> = {};
-      const languages: string[] = [];
+    return Promise.all(
+      tours.map(async (tour) => {
+        const title: Record<string, string> = {};
+        const descriptionPreview: Record<string, string> = {};
+        const completionMessage: Record<string, string> = {};
+        const languages: string[] = [];
 
-      tour.versions.forEach((version) => {
-        title[version.language] = version.title;
-        descriptionPreview[version.language] = version.description.substring(0, 200) + '...';
-        if (version.completionMessage) {
-          completionMessage[version.language] = version.completionMessage;
-        }
-        languages.push(version.language);
-      });
+        tour.versions.forEach((version) => {
+          title[version.language] = version.title;
+          descriptionPreview[version.language] = version.description.substring(0, 200) + '...';
+          if (version.completionMessage) {
+            completionMessage[version.language] = version.completionMessage;
+          }
+          languages.push(version.language);
+        });
 
-      // Use tour-level cover image if available, otherwise fall back to first version's cover image
-      const coverImage = tour.coverImage || tour.versions.find((v) => v.coverImage)?.coverImage;
+        // Use tour-level cover image if available, otherwise fall back to first version's cover image
+        const coverImage = tour.coverImage || tour.versions.find((v) => v.coverImage)?.coverImage;
+        const imageUrl = coverImage
+          ? await this.storageService.getSignedUrl(coverImage.storagePath, 86400)
+          : null;
 
-      return {
-        id: tour.id,
-        slug: tour.slug,
-        title,
-        descriptionPreview,
-        completionMessage: Object.keys(completionMessage).length > 0 ? completionMessage : undefined,
-        city: tour.defaultCity,
-        durationMinutes: tour.defaultDurationMinutes,
-        distanceKm: tour.defaultDistanceKm,
-        languages,
-        isProtected: tour.isProtected,
-        imageUrl: coverImage ? `/media/${coverImage.storagePath}` : null,
-        hasAccess: userId ? tour.userAccess.length > 0 : undefined,
-      };
-    });
+        return {
+          id: tour.id,
+          slug: tour.slug,
+          title,
+          descriptionPreview,
+          completionMessage: Object.keys(completionMessage).length > 0 ? completionMessage : undefined,
+          city: tour.defaultCity,
+          durationMinutes: tour.defaultDurationMinutes,
+          distanceKm: tour.defaultDistanceKm,
+          languages,
+          isProtected: tour.isProtected,
+          imageUrl,
+          hasAccess: userId ? tour.userAccess.length > 0 : undefined,
+        };
+      }),
+    );
   }
 
   async getTourDetails(tourId: string, language: string, userId?: string): Promise<TourDetailDto> {
@@ -104,7 +113,9 @@ export class ToursService {
 
     // Use version cover image if available, otherwise fall back to tour cover image
     const coverImage = version.coverImage || tour.coverImage;
-    const imageUrl = coverImage ? `/media/${coverImage.storagePath}` : null;
+    const imageUrl = coverImage
+      ? await this.storageService.getSignedUrl(coverImage.storagePath, 86400)
+      : null;
 
     return {
       id: tour.id,
@@ -186,34 +197,47 @@ export class ToursService {
     const images: ImageFileDto[] = [];
     const subtitles: SubtitleFileDto[] = [];
 
-    points.forEach((point) => {
+    // Generate signed URLs for all media files
+    for (const point of points) {
       const localization = point.localizations[0];
       if (localization) {
         if (localization.audioFile) {
+          const fileUrl = await this.storageService.getSignedUrl(
+            localization.audioFile.storagePath,
+            86400, // 24 hours expiry
+          );
           audio.push({
             pointId: point.id,
             order: point.order,
-            fileUrl: `/media/${localization.audioFile.storagePath}`,
+            fileUrl,
             fileSizeBytes: localization.audioFile.fileSizeBytes,
           });
         }
         if (localization.imageFile) {
+          const fileUrl = await this.storageService.getSignedUrl(
+            localization.imageFile.storagePath,
+            86400, // 24 hours expiry
+          );
           images.push({
             pointId: point.id,
-            fileUrl: `/media/${localization.imageFile.storagePath}`,
+            fileUrl,
             fileSizeBytes: localization.imageFile.fileSizeBytes,
           });
         }
         if (localization.subtitleFile) {
+          const fileUrl = await this.storageService.getSignedUrl(
+            localization.subtitleFile.storagePath,
+            86400, // 24 hours expiry
+          );
           subtitles.push({
             pointId: point.id,
             language,
-            fileUrl: `/media/${localization.subtitleFile.storagePath}`,
+            fileUrl,
             fileSizeBytes: localization.subtitleFile.fileSizeBytes,
           });
         }
       }
-    });
+    }
 
     // Mock offline map configuration
     const offlineMap: OfflineMapDto = {
