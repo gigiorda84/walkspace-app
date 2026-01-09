@@ -59,10 +59,10 @@ export default function NewPointPage() {
         setSavingProgress(`Saving point ${i + 1} of ${points.length}...`);
 
         await pointsApi.createPoint(tourId, {
-          lat: point.latitude,
-          lng: point.longitude,
-          order: existingPoints.length + i + 1,
-          defaultTriggerRadiusMeters: point.triggerRadiusMeters,
+          latitude: point.latitude,
+          longitude: point.longitude,
+          sequenceOrder: existingPoints.length + i + 1,
+          triggerRadiusMeters: point.triggerRadiusMeters,
         });
 
         savedCount++;
