@@ -40,8 +40,8 @@ export function MediaFilePreview({ fileId, type, onRemove }: MediaFilePreviewPro
     );
   }
 
-  // Construct the correct URL using the media file ID
-  const fileUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/media/${file.id}`;
+  // Use the signed URL provided by the backend
+  const fileUrl = file.url;
 
   return (
     <div className="border border-gray-300 rounded-md bg-white">

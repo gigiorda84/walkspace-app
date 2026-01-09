@@ -74,7 +74,14 @@ export default function EditPointPage() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: EditPointForm) => {
-      return pointsApi.updatePoint(tourId, pointId, data);
+      // Transform frontend field names to backend field names
+      const backendData = {
+        lat: data.latitude,
+        lng: data.longitude,
+        order: data.sequenceOrder,
+        defaultTriggerRadiusMeters: data.triggerRadiusMeters,
+      };
+      return pointsApi.updatePoint(tourId, pointId, backendData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-points', tourId] });
