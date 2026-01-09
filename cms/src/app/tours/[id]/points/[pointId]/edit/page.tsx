@@ -100,12 +100,12 @@ export default function EditPointPage() {
     }
 
     setError(null);
-    // Map frontend field names to backend field names
+    // Pass frontend field names - mutation will transform them
     updateMutation.mutate({
-      lat: selectedLocation.lat,
-      lng: selectedLocation.lng,
-      defaultTriggerRadiusMeters: Number(data.triggerRadiusMeters),
-      order: Number(data.sequenceOrder),
+      latitude: selectedLocation.lat,
+      longitude: selectedLocation.lng,
+      triggerRadiusMeters: Number(data.triggerRadiusMeters),
+      sequenceOrder: Number(data.sequenceOrder),
     });
   };
 
