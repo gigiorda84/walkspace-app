@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-interface GeolocationPosition {
+interface UserPosition {
   latitude: number;
   longitude: number;
   accuracy: number;
@@ -12,7 +12,7 @@ interface UseGeolocationOptions {
 }
 
 export function useGeolocation(options: UseGeolocationOptions = {}) {
-  const [position, setPosition] = useState<GeolocationPosition | null>(null);
+  const [position, setPosition] = useState<UserPosition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
