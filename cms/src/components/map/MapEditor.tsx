@@ -4,6 +4,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import Map, { MapRef, Marker, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import circle from '@turf/circle';
+import { Crosshair, Layers } from 'lucide-react';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface MapPoint {
@@ -25,6 +27,27 @@ interface MapEditorProps {
   onMarkerClick?: (pointId: string) => void;
 }
 
+const MAP_STYLES = {
+  streets: {
+    name: 'Streets',
+    url: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://api.maptiler.com/maps/hybrid/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+  },
+  terrain: {
+    name: 'Terrain',
+    url: 'https://api.maptiler.com/maps/outdoor/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+  },
+  dark: {
+    name: 'Dark',
+    url: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  },
+} as const;
+
+type MapStyleKey = keyof typeof MAP_STYLES;
+
 export function MapEditor({
   points = [],
   onPointsChange,
@@ -38,11 +61,16 @@ export function MapEditor({
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [mapStyle, setMapStyle] = useState<MapStyleKey>('streets');
+  const [showStyleMenu, setShowStyleMenu] = useState(false);
   const [viewState, setViewState] = useState({
     longitude: center[0],
     latitude: center[1],
     zoom: zoom,
   });
+
+  // Get user's location
+  const { position: userLocation, loading: locationLoading, refetch: refetchLocation } = useGeolocation();
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
     if (!editable || !onPointsChange || isDragging) return;
@@ -57,6 +85,16 @@ export function MapEditor({
     };
 
     onPointsChange([...points, newPoint]);
+  };
+
+  const centerOnUserLocation = () => {
+    if (!mapRef.current || !userLocation) return;
+
+    mapRef.current.flyTo({
+      center: [userLocation.longitude, userLocation.latitude],
+      zoom: 15,
+      duration: 1000,
+    });
   };
 
   // Auto-fit map bounds to show all points
@@ -117,11 +155,60 @@ export function MapEditor({
         onMove={evt => setViewState(evt.viewState)}
         onClick={handleMapClick}
         onLoad={() => setMapLoaded(true)}
-        mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+        mapStyle={MAP_STYLES[mapStyle].url}
         style={{ width: '100%', height: '100%' }}
       >
-        {/* Zoom controls */}
-        <NavigationControl position="top-right" showCompass={false} />
+        {/* Zoom controls - positioned at bottom right */}
+        <NavigationControl position="bottom-right" showCompass={false} />
+
+        {/* Custom Controls - positioned at top right */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          {/* Center on location button */}
+          <button
+            onClick={() => {
+              if (!userLocation) {
+                refetchLocation();
+              } else {
+                centerOnUserLocation();
+              }
+            }}
+            disabled={locationLoading}
+            className="bg-white p-2 rounded shadow-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300"
+            title="Center on my location"
+          >
+            <Crosshair size={20} className={locationLoading ? 'animate-spin' : ''} />
+          </button>
+
+          {/* Map style switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStyleMenu(!showStyleMenu)}
+              className="bg-white p-2 rounded shadow-lg hover:bg-gray-50 border border-gray-300"
+              title="Change map style"
+            >
+              <Layers size={20} />
+            </button>
+
+            {showStyleMenu && (
+              <div className="absolute top-full right-0 mt-2 bg-white rounded shadow-lg border border-gray-300 min-w-[120px] z-10">
+                {(Object.keys(MAP_STYLES) as MapStyleKey[]).map((styleKey) => (
+                  <button
+                    key={styleKey}
+                    onClick={() => {
+                      setMapStyle(styleKey);
+                      setShowStyleMenu(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-sm ${
+                      mapStyle === styleKey ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-900'
+                    }`}
+                  >
+                    {MAP_STYLES[styleKey].name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Route polyline */}
         {routeCoordinates.length > 0 && (
@@ -147,6 +234,44 @@ export function MapEditor({
               }}
             />
           </Source>
+        )}
+
+        {/* User location marker */}
+        {userLocation && (
+          <>
+            {/* Accuracy circle */}
+            <Source
+              id="user-location-accuracy"
+              type="geojson"
+              data={circle(
+                [userLocation.longitude, userLocation.latitude],
+                userLocation.accuracy / 1000,
+                { steps: 64, units: 'kilometers' }
+              )}
+            >
+              <Layer
+                id="user-location-accuracy-fill"
+                type="fill"
+                paint={{
+                  'fill-color': '#3B82F6',
+                  'fill-opacity': 0.1,
+                }}
+              />
+            </Source>
+
+            {/* User location marker */}
+            <Marker
+              longitude={userLocation.longitude}
+              latitude={userLocation.latitude}
+            >
+              <div className="relative">
+                {/* Outer pulse ring */}
+                <div className="absolute -inset-2 bg-blue-400 rounded-full animate-ping opacity-75"></div>
+                {/* Dot */}
+                <div className="relative w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg"></div>
+              </div>
+            </Marker>
+          </>
         )}
 
         {/* Point markers with trigger radius */}
