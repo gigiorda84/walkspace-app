@@ -32,10 +32,6 @@ export class UpdateVersionDto {
   @IsOptional()
   startingPointLng?: number;
 
-  @IsString()
-  @IsOptional()
-  routePolyline?: string;
-
   @IsEnum(['draft', 'published'])
   @IsOptional()
   status?: 'draft' | 'published';

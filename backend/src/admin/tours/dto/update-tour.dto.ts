@@ -30,4 +30,8 @@ export class UpdateTourDto {
   @IsString()
   @IsOptional()
   videoFileId?: string;
+
+  @IsString()
+  @IsOptional()
+  routePolyline?: string;
 }

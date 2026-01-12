@@ -62,4 +62,13 @@ export class CreateTourDto {
   @IsString()
   @IsOptional()
   videoFileId?: string;
+
+  @ApiProperty({
+    description: 'Route polyline in format: "lat1,lng1;lat2,lng2;..."',
+    example: '45.464203,9.189982;45.465203,9.190982',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  routePolyline?: string;
 }

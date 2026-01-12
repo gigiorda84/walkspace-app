@@ -10,7 +10,6 @@ export class VersionResponseDto {
   versionNumber: number;
   startingPointLat: number;
   startingPointLng: number;
-  routePolyline: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

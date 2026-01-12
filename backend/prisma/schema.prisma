@@ -56,6 +56,7 @@ model Tour {
   isProtected             Boolean  @default(false) @map("is_protected")
   coverImageFileId        String?  @map("cover_image_file_id")
   videoFileId             String?  @map("video_file_id")
+  routePolyline           String?  @map("route_polyline") @db.Text
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
@@ -83,7 +84,6 @@ model TourVersion {
   versionNumber     Int      @map("version_number")
   startingPointLat  Float?   @map("starting_point_lat")
   startingPointLng  Float?   @map("starting_point_lng")
-  routePolyline     String?  @map("route_polyline") @db.Text
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

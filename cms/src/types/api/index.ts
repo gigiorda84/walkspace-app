@@ -39,6 +39,7 @@ export interface Tour {
   defaultDurationMinutes: number;
   defaultDistanceKm: number;
   isProtected: boolean;
+  routePolyline: string | null;
   createdAt: string;
   updatedAt: string;
   versionsCount?: number;
@@ -56,7 +57,6 @@ export interface TourVersion {
   completionMessage?: string | null;
   coverImageFileId: string | null;
   status: 'draft' | 'published';
-  routePolyline: string | null;
   createdAt: string;
   updatedAt: string;
 }

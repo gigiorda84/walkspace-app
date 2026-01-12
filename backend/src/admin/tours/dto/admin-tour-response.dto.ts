@@ -7,7 +7,6 @@ export class AdminTourVersionDto {
   versionNumber: number;
   startingPointLat: number;
   startingPointLng: number;
-  routePolyline: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +20,7 @@ export class AdminTourResponseDto {
   isProtected: boolean;
   coverImageFileId: string | null;
   videoFileId: string | null;
+  routePolyline: string | null;
   createdAt: Date;
   updatedAt: Date;
   versions: AdminTourVersionDto[];

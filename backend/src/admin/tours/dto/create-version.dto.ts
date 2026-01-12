@@ -33,10 +33,6 @@ export class CreateVersionDto {
   @IsOptional()
   startingPointLng?: number;
 
-  @IsString()
-  @IsOptional()
-  routePolyline?: string; // Encoded polyline for the route
-
   @IsEnum(['draft', 'published'])
   @IsOptional()
   status?: 'draft' | 'published';

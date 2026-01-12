@@ -85,12 +85,12 @@ export default function TourEditorPage() {
     enabled: !!selectedLanguage && points.length > 0,
   });
 
-  // Load route when language changes
+  // Load route from tour (once when tour loads)
   useEffect(() => {
-    if (!selectedLanguage) return;
-    const version = versions.find((v) => v.language === selectedLanguage);
-    setRoutePolyline(version?.routePolyline || null);
-  }, [selectedLanguage, versions]);
+    if (tour?.routePolyline) {
+      setRoutePolyline(tour.routePolyline);
+    }
+  }, [tour]);
 
   // Initialize editing data when points or localizations change
   useEffect(() => {
@@ -161,18 +161,14 @@ export default function TourEditorPage() {
 
   const saveRouteMutation = useMutation({
     mutationFn: async () => {
-      const selectedVersion = versions.find((v) => v.language === selectedLanguage);
-      if (!selectedVersion) throw new Error('Version not found');
+      if (!tour) throw new Error('Tour not found');
 
-      return versionsApi.updateVersion(tourId, selectedVersion.id, {
-        title: selectedVersion.title,
-        description: selectedVersion.description,
-        status: selectedVersion.status,
+      return toursApi.updateTour(tourId, {
         routePolyline: routePolyline || undefined,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
+      queryClient.invalidateQueries({ queryKey: ['tour', tourId] });
       alert('Route saved successfully!');
     },
     onError: (error) => {
