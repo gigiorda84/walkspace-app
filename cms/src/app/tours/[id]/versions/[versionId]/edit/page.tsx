@@ -44,6 +44,7 @@ export default function EditVersionPage() {
   const [error, setError] = useState<string | null>(null);
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [isDrawingRoute, setIsDrawingRoute] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EditVersionForm>();
 
@@ -240,11 +241,13 @@ export default function EditVersionPage() {
                       routePolyline={routePolyline}
                       onRouteChange={setRoutePolyline}
                       editable={true}
+                      isDrawingRoute={isDrawingRoute}
                     />
 
                     <RouteDrawer
                       onRouteComplete={handleRouteComplete}
                       initialRoute={routePolyline}
+                      onDrawingStateChange={setIsDrawingRoute}
                     />
 
                     {/* Info overlay */}

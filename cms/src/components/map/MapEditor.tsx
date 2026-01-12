@@ -25,6 +25,7 @@ interface MapEditorProps {
   center?: [number, number];
   zoom?: number;
   onMarkerClick?: (pointId: string) => void;
+  isDrawingRoute?: boolean;
 }
 
 const MAP_STYLES = {
@@ -57,6 +58,7 @@ export function MapEditor({
   center = [12.4964, 41.9028], // Default to Rome
   zoom = 13,
   onMarkerClick,
+  isDrawingRoute = false,
 }: MapEditorProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -73,18 +75,36 @@ export function MapEditor({
   const { position: userLocation, loading: locationLoading, refetch: refetchLocation } = useGeolocation();
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
-    if (!editable || !onPointsChange || isDragging) return;
+    if (!editable || isDragging) return;
 
     const { lng, lat } = event.lngLat;
-    const newPoint: MapPoint = {
-      id: `temp-${Date.now()}`,
-      latitude: lat,
-      longitude: lng,
-      sequenceOrder: points.length + 1,
-      triggerRadiusMeters: 150,
-    };
 
-    onPointsChange([...points, newPoint]);
+    // If in route drawing mode, add point to route
+    if (isDrawingRoute && onRouteChange) {
+      const currentPoints = routePolyline
+        ? routePolyline.split(';').map(pair => {
+            const [pLat, pLng] = pair.split(',');
+            return { lat: pLat, lng: pLng };
+          })
+        : [];
+
+      currentPoints.push({ lat: lat.toString(), lng: lng.toString() });
+      const newPolyline = currentPoints.map(p => `${p.lat},${p.lng}`).join(';');
+      onRouteChange(newPolyline);
+      return;
+    }
+
+    // Otherwise, add tour point
+    if (onPointsChange) {
+      const newPoint: MapPoint = {
+        id: `temp-${Date.now()}`,
+        latitude: lat,
+        longitude: lng,
+        sequenceOrder: points.length + 1,
+        triggerRadiusMeters: 150,
+      };
+      onPointsChange([...points, newPoint]);
+    }
   };
 
   const centerOnUserLocation = () => {

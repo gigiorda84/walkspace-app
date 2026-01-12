@@ -11,41 +11,36 @@ interface RoutePoint {
 interface RouteDrawerProps {
   onRouteComplete: (polyline: string) => void;
   initialRoute?: string | null;
+  onDrawingStateChange?: (isDrawing: boolean) => void;
 }
 
-export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps) {
+export function RouteDrawer({ onRouteComplete, initialRoute, onDrawingStateChange }: RouteDrawerProps) {
   const [isDrawing, setIsDrawing] = useState(false);
-  const [routePoints, setRoutePoints] = useState<RoutePoint[]>(() => {
-    if (!initialRoute) return [];
-    try {
-      return initialRoute.split(';').map(pair => {
-        const [lat, lng] = pair.split(',').map(Number);
-        return { lat, lng };
-      });
-    } catch {
-      return [];
-    }
-  });
+
+  // Get route point count from initialRoute
+  const routePointCount = initialRoute ? initialRoute.split(';').length : 0;
 
   const handleStartDrawing = () => {
     setIsDrawing(true);
-    setRoutePoints([]);
+    onDrawingStateChange?.(true);
+    // Clear the route when starting to draw a new one
+    onRouteComplete('');
   };
 
   const handleClearRoute = () => {
-    setRoutePoints([]);
     setIsDrawing(false);
+    onDrawingStateChange?.(false);
+    onRouteComplete('');
   };
 
-  const handleSaveRoute = () => {
-    if (routePoints.length < 2) {
+  const handleStopDrawing = () => {
+    if (routePointCount < 2) {
       alert('Route must have at least 2 points');
       return;
     }
 
-    const polyline = routePoints.map(p => `${p.lat},${p.lng}`).join(';');
-    onRouteComplete(polyline);
     setIsDrawing(false);
+    onDrawingStateChange?.(false);
   };
 
   return (
@@ -64,12 +59,12 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
         ) : (
           <>
             <button
-              onClick={handleSaveRoute}
-              disabled={routePoints.length < 2}
+              onClick={handleStopDrawing}
+              disabled={routePointCount < 2}
               className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:opacity-50"
             >
               <Save size={16} />
-              <span>Save ({routePoints.length} points)</span>
+              <span>Done ({routePointCount} points)</span>
             </button>
             <button
               onClick={handleClearRoute}
@@ -81,11 +76,11 @@ export function RouteDrawer({ onRouteComplete, initialRoute }: RouteDrawerProps)
           </>
         )}
 
-        {routePoints.length > 0 && !isDrawing && (
+        {routePointCount > 0 && !isDrawing && (
           <div className="text-xs text-gray-900 mt-2">
-            <p>Route: {routePoints.length} points</p>
+            <p>Route: {routePointCount} points</p>
             <p className="mt-1">
-              Distance: ~{(routePoints.length * 0.1).toFixed(1)} km
+              Distance: ~{(routePointCount * 0.1).toFixed(1)} km
             </p>
           </div>
         )}
