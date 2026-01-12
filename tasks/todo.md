@@ -153,6 +153,60 @@ The route drawing feature wasn't working because:
 
 ---
 
+## Move Route Drawing to Unified CMS Editor
+
+### Changes Made
+
+**File:** `cms/src/app/tours/[id]/editor/page.tsx`
+
+Added route drawing functionality directly into the main unified tour editor:
+
+1. **Imports** - Added MapEditor and RouteDrawer components
+2. **State** - Added `showRouteMap`, `routePolyline`, `isDrawingRoute` state
+3. **Route Loading** - Added useEffect to load route when language changes
+4. **Save Mutation** - Added `saveRouteMutation` to save route to selected version
+5. **UI Section** - Added "Tour Route" section with:
+   - Show/Hide Map toggle button
+   - Route status display (points count)
+   - MapEditor with tour points visible
+   - RouteDrawer with draw/clear/done controls
+   - Save Route button (appears when route is set)
+   - Info overlay showing route status
+
+### User Experience
+
+**Before:**
+- Had to navigate to Tours → Tour Detail → Version Edit → Show Map to draw routes
+- Route drawing was buried in version edit page
+
+**After:**
+- Go directly to Tours → Tour Detail → Editor
+- Select language
+- "Tour Route" section appears with Show Map button
+- Click "Draw Route" to start, click map to add points, click "Done" when finished
+- Click "Save Route" to persist changes
+- All in one unified interface alongside point editing
+
+### URL
+
+Route drawing is now available at:
+```
+https://cms-gigiordas-projects.vercel.app/tours/{tourId}/editor
+```
+
+Example steps:
+1. Go to https://cms-gigiordas-projects.vercel.app/tours
+2. Click any tour
+3. Click "Editor" in the navigation
+4. Select a language (Italian/French/English)
+5. The "Tour Route" section appears
+6. Click "Show Map" → Click "Draw Route" → Click on map to add points → Click "Done" → Click "Save Route"
+
+### Deployment Status
+✅ **Pushed to main branch** - Vercel will deploy automatically in 2-3 minutes
+
+---
+
 # PREVIOUS WORK - Fix iOS Map - Show Trigger Radius Circles
 
 ## Problem
