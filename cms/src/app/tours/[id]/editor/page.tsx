@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ChevronDown, ChevronUp, Save, Folder, X, CheckCircle, Circle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Folder, X, CheckCircle, Circle, Map as MapIcon } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MediaBrowserModal } from '@/components/media/MediaBrowserModal';
+import { MapEditor } from '@/components/map/MapEditor';
+import { RouteDrawer } from '@/components/map/RouteDrawer';
 import { toursApi } from '@/lib/api/tours';
 import { pointsApi } from '@/lib/api/points';
 import { versionsApi } from '@/lib/api/versions';
@@ -46,6 +48,9 @@ export default function TourEditorPage() {
     pointId: string;
     type: 'audio' | 'image' | 'subtitle';
   } | null>(null);
+  const [showRouteMap, setShowRouteMap] = useState(false);
+  const [routePolyline, setRoutePolyline] = useState<string | null>(null);
+  const [isDrawingRoute, setIsDrawingRoute] = useState(false);
 
   // Fetch tour
   const { data: tour } = useQuery({
@@ -79,6 +84,13 @@ export default function TourEditorPage() {
     },
     enabled: !!selectedLanguage && points.length > 0,
   });
+
+  // Load route when language changes
+  useEffect(() => {
+    if (!selectedLanguage) return;
+    const version = versions.find((v) => v.language === selectedLanguage);
+    setRoutePolyline(version?.routePolyline || null);
+  }, [selectedLanguage, versions]);
 
   // Initialize editing data when points or localizations change
   useEffect(() => {
@@ -146,6 +158,36 @@ export default function TourEditorPage() {
       queryClient.invalidateQueries({ queryKey: ['all-localizations', tourId, selectedLanguage] });
     },
   });
+
+  const saveRouteMutation = useMutation({
+    mutationFn: async () => {
+      const selectedVersion = versions.find((v) => v.language === selectedLanguage);
+      if (!selectedVersion) throw new Error('Version not found');
+
+      return versionsApi.updateVersion(tourId, selectedVersion.id, {
+        title: selectedVersion.title,
+        description: selectedVersion.description,
+        status: selectedVersion.status,
+        routePolyline: routePolyline || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
+      alert('Route saved successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to save route:', error);
+      alert('Failed to save route. Please try again.');
+    },
+  });
+
+  const handleSaveRoute = () => {
+    if (!routePolyline || routePolyline.split(';').length < 2) {
+      alert('Route must have at least 2 points');
+      return;
+    }
+    saveRouteMutation.mutate();
+  };
 
   const togglePoint = (pointId: string) => {
     setExpandedPoints((prev) => {
@@ -279,6 +321,82 @@ export default function TourEditorPage() {
               ))}
             </div>
           </div>
+
+          {/* Route Map Section */}
+          {selectedLanguage && (
+            <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-gray-900">Tour Route</h2>
+                <div className="flex items-center space-x-3">
+                  {routePolyline && (
+                    <button
+                      onClick={handleSaveRoute}
+                      disabled={saveRouteMutation.isPending}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
+                    >
+                      <Save size={16} />
+                      <span>{saveRouteMutation.isPending ? 'Saving...' : 'Save Route'}</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowRouteMap(!showRouteMap)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+                  >
+                    <MapIcon size={16} />
+                    <span>{showRouteMap ? 'Hide Map' : 'Show Map'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {showRouteMap && (
+                <div className="h-[600px] relative border border-gray-200 rounded-lg overflow-hidden">
+                  <MapEditor
+                    points={points.map((p) => ({
+                      id: p.id,
+                      latitude: p.latitude,
+                      longitude: p.longitude,
+                      sequenceOrder: p.sequenceOrder,
+                      triggerRadiusMeters: p.triggerRadiusMeters,
+                    }))}
+                    onPointsChange={() => {}}
+                    routePolyline={routePolyline}
+                    onRouteChange={setRoutePolyline}
+                    editable={true}
+                    isDrawingRoute={isDrawingRoute}
+                  />
+
+                  <RouteDrawer
+                    onRouteComplete={setRoutePolyline}
+                    initialRoute={routePolyline}
+                    onDrawingStateChange={setIsDrawingRoute}
+                  />
+
+                  {/* Info overlay */}
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 text-xs z-10">
+                    <p><strong>Route:</strong> {routePolyline ? 'Set' : 'Not set'}</p>
+                    {routePolyline && (
+                      <p className="mt-1 text-indigo-600">
+                        <strong>Points:</strong> {routePolyline.split(';').length}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!showRouteMap && routePolyline && (
+                <div className="text-sm text-gray-900">
+                  <p>Route is configured with {routePolyline.split(';').length} points.</p>
+                  <p className="mt-1 text-gray-600">Click "Show Map" to view or edit the route.</p>
+                </div>
+              )}
+
+              {!showRouteMap && !routePolyline && (
+                <div className="text-sm text-gray-600">
+                  <p>No route configured yet. Click "Show Map" to draw a route for this tour.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Points Editor */}
           <div className="space-y-4">
