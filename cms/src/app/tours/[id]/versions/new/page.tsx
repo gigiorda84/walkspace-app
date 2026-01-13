@@ -15,7 +15,6 @@ interface NewVersionForm {
   title: string;
   description: string;
   status: 'draft' | 'published';
-  copyRouteFrom?: string;
 }
 
 const LANGUAGES = [
@@ -51,7 +50,6 @@ export default function NewVersionPage() {
   });
 
   const selectedLanguage = watch('language');
-  const copyRouteFrom = watch('copyRouteFrom');
 
   // Create mutation
   const createMutation = useMutation({
@@ -62,21 +60,11 @@ export default function NewVersionPage() {
         throw new Error(`A version for ${LANGUAGES.find(l => l.value === data.language)?.label} already exists.`);
       }
 
-      // Get route polyline if copying from another version
-      let routePolyline: string | undefined;
-      if (data.copyRouteFrom) {
-        const sourceVersion = existingVersions.find(v => v.id === data.copyRouteFrom);
-        if (sourceVersion?.routePolyline) {
-          routePolyline = sourceVersion.routePolyline;
-        }
-      }
-
       return versionsApi.createVersion(tourId, {
         language: data.language,
         title: data.title,
         description: data.description,
         status: data.status,
-        routePolyline,
       });
     },
     onSuccess: () => {
@@ -95,8 +83,6 @@ export default function NewVersionPage() {
   const availableLanguages = LANGUAGES.filter(
     lang => !existingVersions.some(v => v.language === lang.value)
   );
-
-  const versionsWithRoutes = existingVersions.filter(v => v.routePolyline);
 
   return (
     <ProtectedRoute>
@@ -186,29 +172,10 @@ export default function NewVersionPage() {
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Routes are shared across all language versions. Edit in the <a href={`/tours/${tourId}/editor`} className="text-indigo-600 hover:text-indigo-700 underline">Tour Editor</a>.
+                  </p>
                 </div>
-
-                {versionsWithRoutes.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Copy Route From (Optional)
-                    </label>
-                    <select
-                      {...register('copyRouteFrom')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="">-- Don't copy route --</option>
-                      {versionsWithRoutes.map((version) => (
-                        <option key={version.id} value={version.id}>
-                          {LANGUAGES.find(l => l.value === version.language)?.label} - {version.title}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="mt-1 text-xs text-gray-900">
-                      If selected, the route polyline will be copied from the chosen version
-                    </p>
-                  </div>
-                )}
 
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t">
                   <button
