@@ -14,9 +14,7 @@ export class TourDetailDto {
     lat: number;
     lng: number;
   };
-  routePreview: {
-    polyline: string | null;
-  };
+  routePolyline: string | null;
   downloadInfo: {
     estimatedSizeMb: number;
     isDownloaded: boolean;
