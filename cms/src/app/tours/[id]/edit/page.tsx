@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Folder, X, MapPin, Trash2, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Folder, X, MapPin, Trash2, ArrowUp, ArrowDown, AlertTriangle, Map as MapIcon, Save } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MapEditor } from '@/components/map/MapEditor';
+import { RouteDrawer } from '@/components/map/RouteDrawer';
 import { MediaBrowserModal } from '@/components/media/MediaBrowserModal';
 import { MediaFilePreview } from '@/components/media/MediaFilePreview';
 import { toursApi } from '@/lib/api/tours';
@@ -87,6 +88,11 @@ export default function UnifiedTourEditorPage() {
   } | null>(null);
   const [tourCoverModalOpen, setTourCoverModalOpen] = useState(false);
 
+  // Route state
+  const [routePolyline, setRoutePolyline] = useState<string | null>(null);
+  const [showRouteMap, setShowRouteMap] = useState(false);
+  const [isDrawingRoute, setIsDrawingRoute] = useState(false);
+
   // Auto-save tracking
   const [savingTour, setSavingTour] = useState(false);
   const [lastSavedTour, setLastSavedTour] = useState('');
@@ -135,6 +141,11 @@ export default function UnifiedTourEditorPage() {
         isProtected: tour.isProtected,
       });
       setLastSavedTour(JSON.stringify(tour));
+
+      // Load route from tour
+      if (tour.routePolyline) {
+        setRoutePolyline(tour.routePolyline);
+      }
     }
   }, [tour]);
 
@@ -226,6 +237,24 @@ export default function UnifiedTourEditorPage() {
       console.error('Error details:', error.response?.data || error.message);
       alert(`Failed to save tour: ${error.response?.data?.message || error.message}`);
       setSavingTour(false);
+    },
+  });
+
+  // Save route mutation
+  const saveRouteMutation = useMutation({
+    mutationFn: async () => {
+      if (!tour) throw new Error('Tour not found');
+      return toursApi.updateTour(tourId, {
+        routePolyline: routePolyline || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour', tourId] });
+      alert('Route saved successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to save route:', error);
+      alert('Failed to save route. Please try again.');
     },
   });
 
@@ -651,6 +680,28 @@ export default function UnifiedTourEditorPage() {
     }
   };
 
+  const handleSaveRoute = () => {
+    if (!routePolyline || routePolyline.split(';').length < 2) {
+      alert('Route must have at least 2 points');
+      return;
+    }
+    saveRouteMutation.mutate();
+  };
+
+  const handleClearRoute = () => {
+    if (confirm('Are you sure you want to clear the route? This will remove all route points.')) {
+      setRoutePolyline(null);
+      setIsDrawingRoute(false);
+    }
+  };
+
+  const handleStartDrawing = () => {
+    if (!showRouteMap) {
+      setShowRouteMap(true);
+    }
+    setIsDrawingRoute(true);
+  };
+
   if (tourLoading) {
     return (
       <ProtectedRoute>
@@ -960,6 +1011,115 @@ export default function UnifiedTourEditorPage() {
               </div>
             </div>
           )}
+
+          {/* Route Editor Section */}
+          <div className="bg-white shadow-sm rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-medium text-gray-900">Tour Route</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {routePolyline
+                    ? `Route configured with ${routePolyline.split(';').length} points`
+                    : 'Draw the walking path for this tour'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  This is the physical route visitors will follow. It's shared across all language versions.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {!isDrawingRoute && (
+                  <button
+                    onClick={handleStartDrawing}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                  >
+                    <MapIcon size={16} />
+                    <span>{routePolyline ? 'Edit Route' : 'Draw Route'}</span>
+                  </button>
+                )}
+                {routePolyline && !isDrawingRoute && (
+                  <button
+                    onClick={handleClearRoute}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm"
+                  >
+                    <X size={16} />
+                    <span>Clear</span>
+                  </button>
+                )}
+                {routePolyline && (
+                  <button
+                    onClick={handleSaveRoute}
+                    disabled={saveRouteMutation.isPending || isDrawingRoute}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                  >
+                    <Save size={16} />
+                    <span>{saveRouteMutation.isPending ? 'Saving...' : 'Save Route'}</span>
+                  </button>
+                )}
+                {showRouteMap && (
+                  <button
+                    onClick={() => setShowRouteMap(false)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+                  >
+                    <X size={16} />
+                    <span>Hide Map</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {showRouteMap && (
+              <div className="h-[600px] relative border border-gray-200 rounded-lg overflow-hidden">
+                <MapEditor
+                  points={[]}
+                  onPointsChange={() => {}}
+                  routePolyline={routePolyline}
+                  onRouteChange={setRoutePolyline}
+                  editable={true}
+                  isDrawingRoute={isDrawingRoute}
+                />
+
+                <RouteDrawer
+                  onRouteComplete={setRoutePolyline}
+                  initialRoute={routePolyline}
+                  onDrawingStateChange={setIsDrawingRoute}
+                />
+
+                {/* Info overlay */}
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 text-sm z-10 max-w-md">
+                  {isDrawingRoute ? (
+                    <div className="space-y-2">
+                      <p className="font-semibold text-indigo-600">🎨 Drawing Mode Active</p>
+                      <ul className="text-xs text-gray-700 space-y-1">
+                        <li>• Click on the map to add points to your route</li>
+                        <li>• The blue line shows your walking path</li>
+                        <li>• Click "Done" on the drawing controls when finished</li>
+                        <li>• Click "Clear" to start over</li>
+                      </ul>
+                      {routePolyline && (
+                        <p className="text-xs text-gray-600 pt-2 border-t">
+                          Current: <strong>{routePolyline.split(';').length} points</strong>
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <p><strong>Route Status:</strong> {routePolyline ? '✓ Configured' : 'Not set'}</p>
+                      {routePolyline && (
+                        <p className="mt-1 text-indigo-600">
+                          <strong>Points:</strong> {routePolyline.split(';').length}
+                        </p>
+                      )}
+                      {!routePolyline && (
+                        <p className="mt-2 text-xs text-gray-600">
+                          Click "Draw Route" above to start creating the walking path
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Main Editor: Map + Points */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

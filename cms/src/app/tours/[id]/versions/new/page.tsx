@@ -173,7 +173,7 @@ export default function NewVersionPage() {
                     <option value="published">Published</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    Routes are shared across all language versions. Edit in the <a href={`/tours/${tourId}/editor`} className="text-indigo-600 hover:text-indigo-700 underline">Tour Editor</a>.
+                    Routes are shared across all language versions. Edit in the <a href={`/tours/${tourId}/edit`} className="text-indigo-600 hover:text-indigo-700 underline">unified editor</a>.
                   </p>
                 </div>
 

@@ -1,176 +1,139 @@
-# Fix Route Saving Error and Make Routes Language-Independent
+# Move Route Editing to Unified Editor - COMPLETED
 
 ## Problem
 
-1. **Route save error**: When clicking "Save Route" in the CMS editor (https://cms-gigiordas-projects.vercel.app/tours/3213335c-a7de-4555-a0c8-5b274fbc4914/editor), an error occurs
-2. **Route is language-specific**: Currently routes are stored per language version (`TourVersion.routePolyline`), but the physical route should be the same regardless of language
+Routes saved in the CMS were appearing differently (or not at all) in the iOS app due to API response format mismatch. Additionally, route editing functionality was split across multiple pages, making it confusing for users.
 
-## Root Cause
+## Goals Achieved
 
-Routes are stored in the `TourVersion` table (`routePolyline` field), which means:
-- Each language version has its own route
-- When switching languages in the editor, different routes load
-- This is incorrect - the physical walking path doesn't change based on language
+1. ✅ Fixed backend API to return routes in correct format for iOS app
+2. ✅ Moved route editing functionality to unified editor at `/tours/[id]/edit`
+3. ✅ Eliminated the old `/editor` page
+4. ✅ Made the unified editor the single place for all tour editing
 
-## Solution Plan
+## Changes Made
 
-Move the `routePolyline` field from `TourVersion` to `Tour` so it's shared across all languages.
+### 1. Backend API Fix (Route Format)
 
-## Task List
+**File: `backend/src/tours/tours.service.ts`**
+- Changed route response from nested `routePreview.polyline` to top-level `routePolyline`
+- This matches what the iOS app expects to receive
 
-- [ ] **Backend**: Add migration to move `routePolyline` from `TourVersion` to `Tour` table
-- [ ] **Backend**: Update Prisma schema to move field to Tour model
-- [ ] **Backend**: Update API to save route on Tour instead of Version
-- [ ] **Backend**: Deploy migration and updated API
-- [ ] **CMS**: Update editor to save route to Tour instead of Version
-- [ ] **CMS**: Update editor to load route from Tour instead of Version
-- [ ] **CMS**: Test route saving and loading
-- [ ] **iOS**: Update Tour model to read route from top level instead of nested
-- [ ] **Build and test**: Verify changes work end-to-end
+**Before:**
+```typescript
+routePreview: {
+  polyline: tour.routePolyline,
+},
+```
 
-## Implementation Steps
+**After:**
+```typescript
+routePolyline: tour.routePolyline,
+```
 
-### 1. Backend Migration (Prisma)
+### 2. Unified Editor Enhancement
 
-**File**: `backend/prisma/schema.prisma`
-- Move `routePolyline` field from `TourVersion` model to `Tour` model
+**File: `cms/src/app/tours/[id]/edit/page.tsx`**
 
-**New migration**:
-- Add `routePolyline` column to `tours` table
-- Copy data from `tour_versions.route_polyline` to `tours.route_polyline` (take first non-null value per tour)
-- Drop `routePolyline` column from `tour_versions` table
+Added complete route editing functionality:
+- **Imports**: Added `RouteDrawer`, `MapIcon`, `Save`, `X` icons
+- **State**: Added `routePolyline`, `showRouteMap`, `isDrawingRoute` state variables
+- **Effects**: Load route from tour when page loads
+- **Mutations**: `saveRouteMutation` to save routes to backend
+- **Handlers**:
+  - `handleSaveRoute()` - validates and saves route
+  - `handleClearRoute()` - clears route with confirmation
+  - `handleStartDrawing()` - activates drawing mode
+- **UI Section**: Complete route editor section with:
+  - Draw/Edit route button
+  - Clear route button
+  - Save route button
+  - Hide/show map toggle
+  - Interactive map with RouteDrawer component
+  - Info overlay with instructions
+  - Real-time point count display
 
-### 2. Backend API Updates
+### 3. Navigation Updates
 
-**File**: `backend/src/admin/tours/admin-tours.service.ts`
-- `updateTour()`: Accept `routePolyline` in UpdateTourDto and save to Tour
-- `createTour()`: Accept `routePolyline` in CreateTourDto
-- `updateVersion()`: Remove routePolyline handling (no longer stored here)
+**Files Updated:**
+- `cms/src/app/tours/[id]/versions/new/page.tsx` - Updated link from `/editor` to `/edit`
+- `cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx` - Updated link from `/editor` to `/edit`
 
-**Files**: `backend/src/admin/tours/dto/`
-- Update DTOs to reflect new structure
+All references now point to the unified editor at `/tours/[id]/edit`.
 
-### 3. CMS Frontend Updates
+### 4. Deleted Old Editor
 
-**File**: `cms/src/app/tours/[id]/editor/page.tsx`
-- Remove route loading from version (lines 88-93)
-- Load route directly from tour object
-- Update `saveRouteMutation` to call tour update API instead of version API
-- Route should be same regardless of selected language
+**Removed:**
+- `cms/src/app/tours/[id]/editor/page.tsx` - Entire old editor page
+- `cms/src/app/tours/[id]/editor/` - Directory deleted
 
-**File**: `cms/src/lib/api/tours.ts`
-- Add `updateTour()` method that accepts routePolyline
+## Benefits
 
-### 4. iOS App Updates
+1. **Fixed iOS App Issue**: Routes now display correctly in the iOS app because backend returns `routePolyline` at top level
+2. **Single Source of Truth**: All tour editing (metadata, versions, routes, points, content) in one place
+3. **Better UX**: Users don't need to navigate between multiple pages to edit different aspects of a tour
+4. **Simplified Architecture**: Reduced code duplication and maintenance burden
+5. **Clearer Navigation**: Links consistently point to the unified editor
 
-**File**: `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/Tour.swift`
-- Update to read `routePolyline` from top-level Tour instead of nested in version
-- Fix decoder if needed
+## Data Flow
+
+### Route Editing Flow:
+1. User opens unified editor at `/tours/[id]/edit`
+2. Route loads from `tour.routePolyline` (shared across all languages)
+3. User clicks "Draw Route" → opens map in drawing mode
+4. User clicks map to add route points
+5. Blue line renders showing walking path
+6. User clicks "Done" → route stored in state
+7. User clicks "Save Route" → `saveRouteMutation` calls backend
+8. Backend updates `tours.routePolyline` column
+9. iOS app fetches tour → receives `routePolyline` field → displays on map
+
+### API Response Structure (Fixed):
+```json
+{
+  "id": "...",
+  "slug": "...",
+  "routePolyline": "lat1,lng1;lat2,lng2;lat3,lng3",  // ← NOW CORRECT
+  ...
+}
+```
+
+## Files Modified
+
+**Backend:**
+- `backend/src/tours/tours.service.ts` - Fixed route response format
+
+**CMS:**
+- `cms/src/app/tours/[id]/edit/page.tsx` - Added route editing functionality
+- `cms/src/app/tours/[id]/versions/new/page.tsx` - Updated link
+- `cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx` - Updated link
+
+**Deleted:**
+- `cms/src/app/tours/[id]/editor/` - Old editor page removed
+
+## Testing Checklist
+
+- [ ] Backend deploys successfully
+- [ ] Open unified editor at `/tours/[tourId]/edit`
+- [ ] Verify route section appears
+- [ ] Click "Draw Route" and add multiple points on map
+- [ ] Verify blue line renders showing the path
+- [ ] Click "Save Route" and verify success message
+- [ ] Refresh page and verify route persists
+- [ ] iOS app: Fetch tour and verify route displays on map
+- [ ] Switch languages in unified editor - route should remain same
+- [ ] Try clearing route and redrawing
+
+## Next Steps
+
+1. **Deploy Backend**: Deploy the backend change to fix route response format
+2. **Test iOS App**: Verify routes now display correctly in iOS app
+3. **User Training**: Update any documentation pointing to old `/editor` page
+4. **Monitor**: Check for any broken links or references to `/editor`
 
 ## Notes
 
-- This is a **simple, focused change** - just moving one field from one table to another
-- No complex logic changes needed
-- Route will be shared across all language versions as intended
-- Minimal code impact
-
-## Review
-
-### Summary
-
-Successfully moved the `routePolyline` field from `TourVersion` to `Tour` table, making routes language-independent as intended. The physical walking path is now shared across all language versions of a tour.
-
-### Changes Made
-
-**1. Backend (Prisma Schema & Migration)**
-- Added `routePolyline` field to `Tour` model in `schema.prisma`
-- Removed `routePolyline` field from `TourVersion` model
-- Created migration `20260112000000_move_route_polyline_to_tour` that:
-  - Adds `route_polyline` column to `tours` table
-  - Copies existing route data from first version to tour
-  - Drops `route_polyline` column from `tour_versions` table
-
-**2. Backend (DTOs & Service)**
-- Updated `CreateTourDto` and `UpdateTourDto` to accept `routePolyline`
-- Removed `routePolyline` from `CreateVersionDto` and `UpdateVersionDto`
-- Updated `AdminTourResponseDto` to include `routePolyline`
-- Removed `routePolyline` from `VersionResponseDto` and `AdminTourVersionDto`
-- Updated `admin-tours.service.ts` to:
-  - Include `routePolyline` in all tour response objects
-  - Remove route handling from version create/update operations
-
-**3. CMS Frontend**
-- Updated `cms/src/types/api/index.ts`:
-  - Added `routePolyline: string | null` to `Tour` interface
-  - Removed `routePolyline` from `TourVersion` interface
-- Updated `cms/src/app/tours/[id]/editor/page.tsx`:
-  - Load route from `tour.routePolyline` instead of `version.routePolyline`
-  - Save route via `toursApi.updateTour()` instead of `versionsApi.updateVersion()`
-  - Route now persists across language switches
-
-**4. iOS App**
-- Updated `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/Tour.swift`:
-  - Simplified `CodingKeys` to decode `routePolyline` directly from Tour
-  - Removed nested `routePreview.polyline` decoding logic
-  - Updated encoder to match simplified decoder
-
-### Files Modified
-
-**Backend:**
-- `backend/prisma/schema.prisma`
-- `backend/prisma/migrations/20260112000000_move_route_polyline_to_tour/migration.sql` (new)
-- `backend/src/admin/tours/admin-tours.service.ts`
-- `backend/src/admin/tours/dto/create-tour.dto.ts`
-- `backend/src/admin/tours/dto/update-tour.dto.ts`
-- `backend/src/admin/tours/dto/create-version.dto.ts`
-- `backend/src/admin/tours/dto/update-version.dto.ts`
-- `backend/src/admin/tours/dto/admin-tour-response.dto.ts`
-- `backend/src/admin/tours/dto/version-response.dto.ts`
-
-**CMS:**
-- `cms/src/types/api/index.ts`
-- `cms/src/app/tours/[id]/editor/page.tsx`
-
-**iOS:**
-- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/Tour.swift`
-
-### Benefits
-
-1. **Language Independence**: Routes are no longer duplicated per language - one physical path for all languages
-2. **Data Integrity**: Eliminates possibility of different routes for different languages
-3. **Simpler Editor**: Route stays the same when switching languages in CMS
-4. **Fixes Save Error**: The original save error was caused by trying to save to version - now saves to tour correctly
-
-### Deployment Notes
-
-- The migration will automatically run when backend is deployed
-- Existing route data from first version of each tour will be preserved
-- No data loss - migration copies route from tour_versions to tours before dropping column
-
-### Build Fixes
-
-After the initial deployment, discovered multiple files still referencing `version.routePolyline`. Fixed all of them:
-
-**1. Version Edit Page** (`cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx`):
-- Loading route from tour instead of version
-- Making route display read-only with link to unified editor
-- Removing route editing functionality from this page
-- Cleaning up unused imports and state
-
-**2. New Version Page** (`cms/src/app/tours/[id]/versions/new/page.tsx`):
-- Removed obsolete "copy route from" feature
-- Routes are now shared, so copying doesn't make sense
-- Added helpful note directing users to unified editor
-
-**3. Versions List Page** (`cms/src/app/tours/[id]/versions/page.tsx`):
-- Updated Route column to show tour route status
-- Display "Shared" status indicating route is shared across languages
-- Added tooltip for clarity
-
-### Next Steps
-
-After deployment:
-1. Test route saving in CMS editor
-2. Verify route displays correctly in iOS app
-3. Confirm route persists across language switches
-4. Check that no errors occur when creating/updating tours
+- Routes are language-independent and stored at the Tour level (not TourVersion level)
+- The unified editor now handles ALL tour editing in one place
+- Format remains: `"lat,lng;lat,lng;lat,lng"` throughout the system
+- Old `/editor` page no longer exists - all functionality moved to `/edit`
