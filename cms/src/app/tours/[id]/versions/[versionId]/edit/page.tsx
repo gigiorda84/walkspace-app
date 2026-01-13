@@ -9,7 +9,6 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MapEditor } from '@/components/map/MapEditor';
-import { RouteDrawer } from '@/components/map/RouteDrawer';
 import { versionsApi } from '@/lib/api/versions';
 import { toursApi } from '@/lib/api/tours';
 
@@ -18,14 +17,6 @@ interface EditVersionForm {
   description: string;
   completionMessage?: string;
   status: 'draft' | 'published';
-}
-
-interface MapPoint {
-  id: string;
-  latitude: number;
-  longitude: number;
-  sequenceOrder: number;
-  triggerRadiusMeters: number;
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -44,7 +35,6 @@ export default function EditVersionPage() {
   const [error, setError] = useState<string | null>(null);
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
-  const [isDrawingRoute, setIsDrawingRoute] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EditVersionForm>();
 
@@ -69,13 +59,19 @@ export default function EditVersionPage() {
         completionMessage: version.completionMessage || '',
         status: version.status,
       });
-      setRoutePolyline(version.routePolyline || null);
     }
   }, [version, reset]);
 
+  // Load route from tour (routes are language-independent)
+  useEffect(() => {
+    if (tour?.routePolyline) {
+      setRoutePolyline(tour.routePolyline);
+    }
+  }, [tour]);
+
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: EditVersionForm & { routePolyline?: string | null }) => {
+    mutationFn: (data: EditVersionForm) => {
       return versionsApi.updateVersion(tourId, versionId, data);
     },
     onSuccess: () => {
@@ -90,14 +86,7 @@ export default function EditVersionPage() {
 
   const onSubmit = (data: EditVersionForm) => {
     setError(null);
-    updateMutation.mutate({
-      ...data,
-      routePolyline,
-    });
-  };
-
-  const handleRouteComplete = (polyline: string) => {
-    setRoutePolyline(polyline);
+    updateMutation.mutate(data);
   };
 
   return (
@@ -214,50 +203,45 @@ export default function EditVersionPage() {
                 </form>
               </div>
 
-              {/* Route Editor Section */}
+              {/* Route Display Section */}
               <div className="bg-white shadow-sm rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-lg font-medium text-gray-900">Route Editor</h2>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {routePolyline ? 'Route is set' : 'No route defined yet'}
+                    <h2 className="text-lg font-medium text-gray-900">Tour Route</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {routePolyline ? `Route is set (${routePolyline.split(';').length} points)` : 'No route defined yet'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Routes are shared across all language versions. Edit in the main <a href={`/tours/${tourId}/editor`} className="text-indigo-600 hover:text-indigo-700 underline">Tour Editor</a>.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowMap(!showMap)}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    <MapIcon size={20} />
-                    <span>{showMap ? 'Hide Map' : 'Show Map'}</span>
-                  </button>
+                  {routePolyline && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMap(!showMap)}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                    >
+                      <MapIcon size={20} />
+                      <span>{showMap ? 'Hide Map' : 'View Map'}</span>
+                    </button>
+                  )}
                 </div>
 
-                {showMap && (
+                {showMap && routePolyline && (
                   <div className="h-[600px] relative border border-gray-200 rounded-lg overflow-hidden">
                     <MapEditor
                       points={[]}
                       onPointsChange={() => {}}
                       routePolyline={routePolyline}
-                      onRouteChange={setRoutePolyline}
-                      editable={true}
-                      isDrawingRoute={isDrawingRoute}
-                    />
-
-                    <RouteDrawer
-                      onRouteComplete={handleRouteComplete}
-                      initialRoute={routePolyline}
-                      onDrawingStateChange={setIsDrawingRoute}
+                      onRouteChange={() => {}}
+                      editable={false}
+                      isDrawingRoute={false}
                     />
 
                     {/* Info overlay */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 text-xs">
-                      <p><strong>Route:</strong> {routePolyline ? 'Set' : 'Not set'}</p>
-                      {routePolyline && (
-                        <p className="mt-1 text-indigo-600">
-                          <strong>Points:</strong> {routePolyline.split(';').length}
-                        </p>
-                      )}
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 text-xs z-10">
+                      <p className="text-gray-600">Read-only view</p>
+                      <p className="mt-1"><strong>Points:</strong> {routePolyline.split(';').length}</p>
                     </div>
                   </div>
                 )}
