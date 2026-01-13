@@ -76,4 +76,89 @@ Move the `routePolyline` field from `TourVersion` to `Tour` so it's shared acros
 
 ## Review
 
-(To be filled in after implementation)
+### Summary
+
+Successfully moved the `routePolyline` field from `TourVersion` to `Tour` table, making routes language-independent as intended. The physical walking path is now shared across all language versions of a tour.
+
+### Changes Made
+
+**1. Backend (Prisma Schema & Migration)**
+- Added `routePolyline` field to `Tour` model in `schema.prisma`
+- Removed `routePolyline` field from `TourVersion` model
+- Created migration `20260112000000_move_route_polyline_to_tour` that:
+  - Adds `route_polyline` column to `tours` table
+  - Copies existing route data from first version to tour
+  - Drops `route_polyline` column from `tour_versions` table
+
+**2. Backend (DTOs & Service)**
+- Updated `CreateTourDto` and `UpdateTourDto` to accept `routePolyline`
+- Removed `routePolyline` from `CreateVersionDto` and `UpdateVersionDto`
+- Updated `AdminTourResponseDto` to include `routePolyline`
+- Removed `routePolyline` from `VersionResponseDto` and `AdminTourVersionDto`
+- Updated `admin-tours.service.ts` to:
+  - Include `routePolyline` in all tour response objects
+  - Remove route handling from version create/update operations
+
+**3. CMS Frontend**
+- Updated `cms/src/types/api/index.ts`:
+  - Added `routePolyline: string | null` to `Tour` interface
+  - Removed `routePolyline` from `TourVersion` interface
+- Updated `cms/src/app/tours/[id]/editor/page.tsx`:
+  - Load route from `tour.routePolyline` instead of `version.routePolyline`
+  - Save route via `toursApi.updateTour()` instead of `versionsApi.updateVersion()`
+  - Route now persists across language switches
+
+**4. iOS App**
+- Updated `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/Tour.swift`:
+  - Simplified `CodingKeys` to decode `routePolyline` directly from Tour
+  - Removed nested `routePreview.polyline` decoding logic
+  - Updated encoder to match simplified decoder
+
+### Files Modified
+
+**Backend:**
+- `backend/prisma/schema.prisma`
+- `backend/prisma/migrations/20260112000000_move_route_polyline_to_tour/migration.sql` (new)
+- `backend/src/admin/tours/admin-tours.service.ts`
+- `backend/src/admin/tours/dto/create-tour.dto.ts`
+- `backend/src/admin/tours/dto/update-tour.dto.ts`
+- `backend/src/admin/tours/dto/create-version.dto.ts`
+- `backend/src/admin/tours/dto/update-version.dto.ts`
+- `backend/src/admin/tours/dto/admin-tour-response.dto.ts`
+- `backend/src/admin/tours/dto/version-response.dto.ts`
+
+**CMS:**
+- `cms/src/types/api/index.ts`
+- `cms/src/app/tours/[id]/editor/page.tsx`
+
+**iOS:**
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/Tour.swift`
+
+### Benefits
+
+1. **Language Independence**: Routes are no longer duplicated per language - one physical path for all languages
+2. **Data Integrity**: Eliminates possibility of different routes for different languages
+3. **Simpler Editor**: Route stays the same when switching languages in CMS
+4. **Fixes Save Error**: The original save error was caused by trying to save to version - now saves to tour correctly
+
+### Deployment Notes
+
+- The migration will automatically run when backend is deployed
+- Existing route data from first version of each tour will be preserved
+- No data loss - migration copies route from tour_versions to tours before dropping column
+
+### Build Fix
+
+After the initial deployment, discovered that the version edit page (`cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx`) was also referencing `version.routePolyline`. Fixed by:
+- Loading route from tour instead of version
+- Making route display read-only with link to unified editor
+- Removing route editing functionality from this page
+- Cleaning up unused imports and state
+
+### Next Steps
+
+After deployment:
+1. Test route saving in CMS editor
+2. Verify route displays correctly in iOS app
+3. Confirm route persists across language switches
+4. Check that no errors occur when creating/updating tours
