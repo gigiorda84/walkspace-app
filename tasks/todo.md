@@ -147,13 +147,25 @@ Successfully moved the `routePolyline` field from `TourVersion` to `Tour` table,
 - Existing route data from first version of each tour will be preserved
 - No data loss - migration copies route from tour_versions to tours before dropping column
 
-### Build Fix
+### Build Fixes
 
-After the initial deployment, discovered that the version edit page (`cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx`) was also referencing `version.routePolyline`. Fixed by:
+After the initial deployment, discovered multiple files still referencing `version.routePolyline`. Fixed all of them:
+
+**1. Version Edit Page** (`cms/src/app/tours/[id]/versions/[versionId]/edit/page.tsx`):
 - Loading route from tour instead of version
 - Making route display read-only with link to unified editor
 - Removing route editing functionality from this page
 - Cleaning up unused imports and state
+
+**2. New Version Page** (`cms/src/app/tours/[id]/versions/new/page.tsx`):
+- Removed obsolete "copy route from" feature
+- Routes are now shared, so copying doesn't make sense
+- Added helpful note directing users to unified editor
+
+**3. Versions List Page** (`cms/src/app/tours/[id]/versions/page.tsx`):
+- Updated Route column to show tour route status
+- Display "Shared" status indicating route is shared across languages
+- Added tooltip for clarity
 
 ### Next Steps
 
