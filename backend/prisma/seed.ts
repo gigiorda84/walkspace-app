@@ -99,6 +99,7 @@ async function main() {
       defaultDistanceKm: 3.5,
       isProtected: false,
       coverImageFileId: imageFile.id,
+      routePolyline: 'encodedPolylineStringHere',
     },
   });
   console.log('✅ Created tour');
@@ -114,7 +115,6 @@ async function main() {
       versionNumber: 1,
       startingPointLat: 45.464203,
       startingPointLng: 9.189982,
-      routePolyline: 'encodedPolylineStringHere',
     },
   });
   console.log('✅ Created tour version');

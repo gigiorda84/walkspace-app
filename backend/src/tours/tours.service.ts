@@ -134,7 +134,7 @@ export class ToursService {
         lng: version.startingPointLng,
       },
       routePreview: {
-        polyline: version.routePolyline,
+        polyline: tour.routePolyline,
       },
       downloadInfo: {
         estimatedSizeMb: 180, // Placeholder - would calculate from media files
