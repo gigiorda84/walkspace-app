@@ -234,6 +234,7 @@ async function main() {
       defaultDistanceKm: 5.0,
       isProtected: true,
       coverImageFileId: imageFile.id,
+      routePolyline: 'encodedPolylineStringHere',
     },
   });
 
@@ -248,7 +249,6 @@ async function main() {
       versionNumber: 1,
       startingPointLat: 45.464664,
       startingPointLng: 9.188540,
-      routePolyline: 'encodedPolylineStringHere',
     },
   });
 
@@ -310,7 +310,6 @@ async function main() {
       versionNumber: 1,
       startingPointLat: 45.464664,
       startingPointLng: 9.188540,
-      routePolyline: 'encodedPolylineStringHere',
     },
   });
 
@@ -350,7 +349,6 @@ async function main() {
       versionNumber: 1,
       startingPointLat: 45.464664,
       startingPointLng: 9.188540,
-      routePolyline: 'encodedPolylineStringHere',
     },
   });
 
