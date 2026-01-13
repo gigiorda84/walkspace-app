@@ -185,6 +185,20 @@ export default function TourEditorPage() {
     saveRouteMutation.mutate();
   };
 
+  const handleClearRoute = () => {
+    if (confirm('Are you sure you want to clear the route? This will remove all route points.')) {
+      setRoutePolyline(null);
+      setIsDrawingRoute(false);
+    }
+  };
+
+  const handleStartDrawing = () => {
+    if (!showRouteMap) {
+      setShowRouteMap(true);
+    }
+    setIsDrawingRoute(true);
+  };
+
   const togglePoint = (pointId: string) => {
     setExpandedPoints((prev) => {
       const newSet = new Set(prev);
@@ -322,25 +336,52 @@ export default function TourEditorPage() {
           {selectedLanguage && (
             <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Tour Route</h2>
-                <div className="flex items-center space-x-3">
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900">Tour Route</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {routePolyline
+                      ? `Route configured with ${routePolyline.split(';').length} points`
+                      : 'Draw a walking path for this tour'}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {!isDrawingRoute && (
+                    <button
+                      onClick={handleStartDrawing}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                    >
+                      <MapIcon size={16} />
+                      <span>{routePolyline ? 'Edit Route' : 'Draw Route'}</span>
+                    </button>
+                  )}
+                  {routePolyline && !isDrawingRoute && (
+                    <button
+                      onClick={handleClearRoute}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm"
+                    >
+                      <X size={16} />
+                      <span>Clear</span>
+                    </button>
+                  )}
                   {routePolyline && (
                     <button
                       onClick={handleSaveRoute}
-                      disabled={saveRouteMutation.isPending}
-                      className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
+                      disabled={saveRouteMutation.isPending || isDrawingRoute}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
                     >
                       <Save size={16} />
                       <span>{saveRouteMutation.isPending ? 'Saving...' : 'Save Route'}</span>
                     </button>
                   )}
-                  <button
-                    onClick={() => setShowRouteMap(!showRouteMap)}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
-                  >
-                    <MapIcon size={16} />
-                    <span>{showRouteMap ? 'Hide Map' : 'Show Map'}</span>
-                  </button>
+                  {showRouteMap && (
+                    <button
+                      onClick={() => setShowRouteMap(false)}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+                    >
+                      <X size={16} />
+                      <span>Hide Map</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -368,27 +409,38 @@ export default function TourEditorPage() {
                   />
 
                   {/* Info overlay */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 text-xs z-10">
-                    <p><strong>Route:</strong> {routePolyline ? 'Set' : 'Not set'}</p>
-                    {routePolyline && (
-                      <p className="mt-1 text-indigo-600">
-                        <strong>Points:</strong> {routePolyline.split(';').length}
-                      </p>
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 text-sm z-10 max-w-md">
+                    {isDrawingRoute ? (
+                      <div className="space-y-2">
+                        <p className="font-semibold text-indigo-600">🎨 Drawing Mode Active</p>
+                        <ul className="text-xs text-gray-700 space-y-1">
+                          <li>• Click on the map to add points to your route</li>
+                          <li>• The blue line shows your walking path</li>
+                          <li>• Click "Done" on the drawing controls when finished</li>
+                          <li>• Click "Clear" to start over</li>
+                        </ul>
+                        {routePolyline && (
+                          <p className="text-xs text-gray-600 pt-2 border-t">
+                            Current: <strong>{routePolyline.split(';').length} points</strong>
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <p><strong>Route Status:</strong> {routePolyline ? '✓ Configured' : 'Not set'}</p>
+                        {routePolyline && (
+                          <p className="mt-1 text-indigo-600">
+                            <strong>Points:</strong> {routePolyline.split(';').length}
+                          </p>
+                        )}
+                        {!routePolyline && (
+                          <p className="mt-2 text-xs text-gray-600">
+                            Click "Draw Route" above to start creating the walking path
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {!showRouteMap && routePolyline && (
-                <div className="text-sm text-gray-900">
-                  <p>Route is configured with {routePolyline.split(';').length} points.</p>
-                  <p className="mt-1 text-gray-600">Click "Show Map" to view or edit the route.</p>
-                </div>
-              )}
-
-              {!showRouteMap && !routePolyline && (
-                <div className="text-sm text-gray-600">
-                  <p>No route configured yet. Click "Show Map" to draw a route for this tour.</p>
                 </div>
               )}
             </div>
