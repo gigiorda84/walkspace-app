@@ -165,3 +165,138 @@ The iOS app was only calling the **tours list endpoint** (`GET /tours`) which do
 - Backend: `652e16b` Fix TypeScript build error
 - Backend: `b5a66cd` Consolidate route editing in unified editor
 - iOS: `c713bfd` Fix iOS route display by fetching full tour details
+
+---
+
+## CURRENT ISSUE: Route Still Not Displaying (2026-01-14)
+
+### Problem
+Despite previous fixes, routes still don't display. The logs show:
+```
+Failed to load full tour details: decodingError(Swift.DecodingError.typeMismatch(Swift.Dictionary<Swift.String, Any>...
+Expected to decode Dictionary<String, Any> but found a string instead
+```
+
+### Root Cause
+- Backend `/tours/{id}?language=xx` returns `TourDetailDto` with **single-language strings** (`title: "My Tour"`)
+- iOS `Tour` model expects **multi-language dictionaries** (`title: ["en": "My Tour"]`)
+- JSON decoding fails on the `title` field
+- iOS falls back to using the tour from list, which doesn't have `routePolyline`
+- Without `routePolyline`, the map cannot display the route
+
+### Solution
+Create a separate iOS model for tour detail responses that matches the backend structure.
+
+## Tasks
+
+### 1. Create TourDetailResponse model
+- [ ] Create `TourDetailResponse.swift` matching backend TourDetailDto structure
+- [ ] Use single strings for title/description (not dictionaries)
+- [ ] Include all fields including routePolyline
+
+### 2. Update APIService
+- [ ] Update fetchTourDetails to return TourDetailResponse
+- [ ] Keep existing Tour model for list endpoint
+
+### 3. Update TourDetailView
+- [ ] Update loadFullTourDetails to fetch TourDetailResponse
+- [ ] Convert TourDetailResponse to Tour model format
+- [ ] Merge routePolyline from detail into the list Tour
+- [ ] Handle both single-language and multi-language formats
+
+### 4. Test the fix
+- [ ] Add TourDetailResponse.swift to Xcode project (if not auto-detected)
+- [ ] Build the iOS project
+- [ ] Run iOS app and open a tour
+- [ ] Verify no decoding errors in console
+- [ ] Check that route path displays as blue line on map
+- [ ] Verify route works in player view
+
+## Review Section
+
+### Changes Implemented (2026-01-14)
+
+**Problem:** JSON decoding mismatch between backend response format and iOS model expectations caused routes to not display.
+
+**Root Cause:**
+- Backend `/tours/:id` returns `TourDetailDto` with single-language strings (`title: "My Tour"`)
+- iOS `Tour` model expects multi-language dictionaries (`title: ["en": "My Tour"]`)
+- Decoding failed, causing fallback to list tour without `routePolyline`
+
+**Solution:** Created separate response model matching backend format, then converted to Tour format.
+
+### Files Modified
+
+1. **Created: `mobile-app/ios/SonicWalkscape/SonicWalkscape/Models/TourDetailResponse.swift`**
+   - New model matching backend TourDetailDto structure
+   - Uses single-language strings (not dictionaries)
+   - Includes all fields including `routePolyline`
+   - Has `toTour(language:)` conversion method
+
+2. **Modified: `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/APIService.swift`**
+   - Changed `fetchTourDetails` return type from `Tour` to `TourDetailResponse`
+   - Now returns the raw backend response format
+   - Line 64: Updated method signature
+
+3. **Modified: `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/TourDetail/TourDetailView.swift`**
+   - Updated `loadFullTourDetails()` to fetch `TourDetailResponse`
+   - Converts response to Tour format by merging with list tour
+   - Preserves multi-language fields from list endpoint
+   - Extracts and stores `routePolyline` from detail endpoint
+   - Lines 176-210: Complete rewrite of the function
+
+### How It Works
+
+1. **Tour List** (`GET /tours`): Returns tours with multi-language dictionaries, no routes
+2. **Tour Details** (`GET /tours/:id?language=xx`): Returns single-language strings with route
+3. **iOS App**:
+   - Fetches both endpoints
+   - Merges the data: multi-language fields from list + routePolyline from details
+   - Creates complete Tour object with route data
+   - MapView receives Tour with routePolyline and displays blue line
+
+### Data Flow
+```
+CMS saves route → tours.routePolyline (DB)
+              ↓
+Backend API GET /tours/:id → TourDetailDto.routePolyline
+              ↓
+iOS fetchTourDetails() → TourDetailResponse.routePolyline
+              ↓
+Convert to Tour model → Tour.routePolyline
+              ↓
+Pass to MapView → MapViewRepresentable draws blue line
+```
+
+### Testing Results
+
+✅ **Build Test - PASSED**
+- TourDetailResponse.swift auto-detected by Xcode
+- Project built successfully with no compilation errors
+- Only warning: AppIntents metadata (not related to our changes)
+
+✅ **Runtime Fix Applied**
+- Initial runtime error: `startingPoint.lat` was null in backend response
+- Fixed by making `startingPoint` optional in TourDetailResponse
+- Rebuild successful after fix
+
+✅ **Code Verification**
+- MapView correctly checks for route coordinates (line 92-96)
+- Tour model correctly parses routePolyline string format
+- Route polyline format: "lat,lng;lat,lng;lat,lng"
+- Blue polyline overlay renders when routeCoordinates is not empty
+
+### Ready for Manual Testing
+The following should now work when you run the app:
+- [ ] Open any tour with a route in the iOS app
+- [ ] No "Failed to load full tour details" decoding error
+- [ ] Blue route line displays on map in PlayerView
+- [ ] Route persists when navigating between points
+
+### Key Fix Summary
+**Before:** JSON decoding failed → no routePolyline → no blue line on map
+**After:** Correct model → successful decode → routePolyline loaded → blue line displays
+
+### Commits
+- **mobile-app:** `5f23409` Fix iOS route display by resolving JSON decoding mismatch
+- **root:** `9550bf9` Document iOS route display fix
