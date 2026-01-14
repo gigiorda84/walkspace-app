@@ -137,3 +137,31 @@ All references now point to the unified editor at `/tours/[id]/edit`.
 - The unified editor now handles ALL tour editing in one place
 - Format remains: `"lat,lng;lat,lng;lat,lng"` throughout the system
 - Old `/editor` page no longer exists - all functionality moved to `/edit`
+
+## iOS Route Display Fix (COMPLETED)
+
+### Problem
+After backend deployment, routes still weren't displaying in the iOS app.
+
+### Root Cause
+The iOS app was only calling the **tours list endpoint** (`GET /tours`) which doesn't include route data. Routes are only returned by the **tour detail endpoint** (`GET /tours/:id?language=xx`).
+
+### Solution
+**File:** `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/APIService.swift`
+- Added `fetchTourDetails(tourId:language:)` method to call the detail endpoint
+
+**File:** `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/TourDetail/TourDetailView.swift`
+- Added `@State var fullTourDetails: Tour?` to store full tour with route
+- Added `loadFullTourDetails()` function to fetch complete tour data
+- Updated PlayerView to use `fullTourDetails ?? tour` so it gets the route
+- Called `loadFullTourDetails()` in `.task` modifier when view appears
+
+### Result
+✅ iOS app now fetches full tour details including `routePolyline` before displaying the player
+✅ Routes should now render as blue lines on the map in the iOS app
+✅ The complete data flow is working: CMS → Backend → iOS App
+
+### Commits
+- Backend: `652e16b` Fix TypeScript build error
+- Backend: `b5a66cd` Consolidate route editing in unified editor
+- iOS: `c713bfd` Fix iOS route display by fetching full tour details
