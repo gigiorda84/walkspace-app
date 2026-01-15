@@ -27,6 +27,7 @@ export const versionsApi = {
     description: string;
     completionMessage?: string;
     coverImageFileId?: string;
+    coverTrailerFileId?: string;
     routePolyline?: string;
     status?: 'draft' | 'published';
   }): Promise<TourVersion> {
