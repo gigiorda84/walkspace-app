@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Search, Music, Image as ImageIcon, FileText, Trash2, Download } from 'lucide-react';
+import { Upload, Search, Music, Image as ImageIcon, FileText, Video, Trash2, Download } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -14,18 +14,20 @@ const FILE_TYPE_ICONS = {
   audio: Music,
   image: ImageIcon,
   subtitle: FileText,
+  video: Video,
 };
 
 const FILE_TYPE_LABELS = {
   audio: 'Audio',
   image: 'Image',
   subtitle: 'Subtitle',
+  video: 'Video',
 };
 
 export default function MediaLibraryPage() {
   const queryClient = useQueryClient();
 
-  const [selectedType, setSelectedType] = useState<'audio' | 'image' | 'subtitle' | 'all'>('all');
+  const [selectedType, setSelectedType] = useState<'audio' | 'image' | 'subtitle' | 'video' | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -224,7 +226,7 @@ export default function MediaLibraryPage() {
           {/* Filters */}
           <div className="mb-6 flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              {['all', 'audio', 'image', 'subtitle'].map((type) => (
+              {['all', 'audio', 'image', 'subtitle', 'video'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setSelectedType(type as any)}
