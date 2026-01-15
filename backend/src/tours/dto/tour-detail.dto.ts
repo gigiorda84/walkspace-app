@@ -10,6 +10,7 @@ export class TourDetailDto {
   languages: string[];
   isProtected: boolean;
   imageUrl: string | null;
+  coverTrailerUrl: string | null;
   startingPoint: {
     lat: number;
     lng: number;

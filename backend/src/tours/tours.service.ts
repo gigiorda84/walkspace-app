@@ -79,6 +79,7 @@ export class ToursService {
           where: { language, status: 'published' },
           include: {
             coverImage: true,
+            coverTrailer: true,
           },
         },
         coverImage: true,
@@ -117,6 +118,11 @@ export class ToursService {
       ? await this.storageService.getSignedUrl(coverImage.storagePath, 86400)
       : null;
 
+    // Generate signed URL for cover trailer if available
+    const coverTrailerUrl = version.coverTrailer
+      ? await this.storageService.getSignedUrl(version.coverTrailer.storagePath, 86400)
+      : null;
+
     return {
       id: tour.id,
       slug: tour.slug,
@@ -129,6 +135,7 @@ export class ToursService {
       languages: allVersions.map((v) => v.language),
       isProtected: tour.isProtected,
       imageUrl,
+      coverTrailerUrl,
       startingPoint: {
         lat: version.startingPointLat,
         lng: version.startingPointLng,

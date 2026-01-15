@@ -56,6 +56,7 @@ export interface TourVersion {
   description: string;
   completionMessage?: string | null;
   coverImageFileId: string | null;
+  coverTrailerFileId?: string | null;
   status: 'draft' | 'published';
   createdAt: string;
   updatedAt: string;
@@ -87,7 +88,7 @@ export interface TourPointLocalization {
 // Media types
 export interface MediaFile {
   id: string;
-  type: 'audio' | 'image' | 'subtitle';
+  type: 'audio' | 'image' | 'subtitle' | 'video';
   language?: 'en' | 'fr' | 'it';
   mimeType: string;
   fileSizeBytes: number;

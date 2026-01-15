@@ -63,6 +63,7 @@ export default function UnifiedTourEditorPage() {
     description: '',
     completionMessage: '',
     coverImageFileId: '',
+    coverTrailerFileId: '',
     versionId: '',
   });
 
@@ -87,6 +88,7 @@ export default function UnifiedTourEditorPage() {
     type: 'audio' | 'image' | 'subtitle';
   } | null>(null);
   const [tourCoverModalOpen, setTourCoverModalOpen] = useState(false);
+  const [tourTrailerModalOpen, setTourTrailerModalOpen] = useState(false);
 
   // Route state
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
@@ -208,6 +210,7 @@ export default function UnifiedTourEditorPage() {
         description: version.description || '',
         completionMessage: version.completionMessage || '',
         coverImageFileId: version.coverImageFileId || '',
+        coverTrailerFileId: version.coverTrailerFileId || '',
         versionId: version.id,
       });
       setVersionStatus(version.status);
@@ -218,6 +221,7 @@ export default function UnifiedTourEditorPage() {
         description: '',
         completionMessage: '',
         coverImageFileId: '',
+        coverTrailerFileId: '',
         versionId: '',
       });
     }
@@ -512,6 +516,7 @@ export default function UnifiedTourEditorPage() {
           description: versionContent.description,
           completionMessage: versionContent.completionMessage,
           coverImageFileId: versionContent.coverImageFileId || null,
+          coverTrailerFileId: versionContent.coverTrailerFileId || null,
         },
       });
     } else if (versionContent.title) {
@@ -522,6 +527,7 @@ export default function UnifiedTourEditorPage() {
         description: versionContent.description,
         completionMessage: versionContent.completionMessage || undefined,
         coverImageFileId: versionContent.coverImageFileId || undefined,
+        coverTrailerFileId: versionContent.coverTrailerFileId || undefined,
       });
     }
   };
@@ -572,6 +578,63 @@ export default function UnifiedTourEditorPage() {
               description: updated.description,
               completionMessage: updated.completionMessage,
               coverImageFileId: null,
+            },
+          });
+        }
+      }, 100);
+
+      return updated;
+    });
+  };
+
+  // Handle tour cover trailer selection
+  const handleTourTrailerSelect = (file: MediaFile) => {
+    setVersionContent((prev) => {
+      const updated = {
+        ...prev,
+        coverTrailerFileId: file.id,
+      };
+
+      // Auto-save with the updated state
+      setTimeout(() => {
+        if (updated.versionId) {
+          updateVersionMutation.mutate({
+            versionId: updated.versionId,
+            data: {
+              title: updated.title,
+              description: updated.description,
+              completionMessage: updated.completionMessage,
+              coverImageFileId: updated.coverImageFileId || null,
+              coverTrailerFileId: file.id,
+            },
+          });
+        }
+      }, 100);
+
+      return updated;
+    });
+    setTourTrailerModalOpen(false);
+  };
+
+  // Clear tour cover trailer
+  const clearTourTrailer = () => {
+    setVersionContent((prev) => {
+      const updated = {
+        ...prev,
+        coverTrailerFileId: '',
+      };
+
+      // Auto-save with the updated state
+      setTimeout(() => {
+        if (updated.versionId) {
+          updateVersionMutation.mutate({
+            versionId: updated.versionId,
+            data: {
+              title: updated.title,
+              description: updated.description,
+              completionMessage: updated.completionMessage,
+              coverImageFileId: updated.coverImageFileId || null,
+              coverTrailerFileId: null,
             },
           });
         }
@@ -985,6 +1048,32 @@ export default function UnifiedTourEditorPage() {
                     </button>
                   )}
                   <p className="text-xs text-gray-500 mt-1">This image will appear as the tour cover in the mobile app</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Tour Cover Trailer
+                  </label>
+                  {versionContent.coverTrailerFileId ? (
+                    <div className="flex items-center justify-between p-3 border border-gray-300 rounded-md bg-gray-50">
+                      <span className="text-sm text-gray-900">Cover trailer selected</span>
+                      <button
+                        onClick={clearTourTrailer}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setTourTrailerModalOpen(true)}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:bg-gray-50"
+                    >
+                      <Folder size={16} className="mr-2" />
+                      Browse Videos
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">This video will auto-play on the tour card in the mobile app discover page (optional)</p>
                 </div>
 
                 <div>
@@ -1490,6 +1579,15 @@ export default function UnifiedTourEditorPage() {
           onSelect={handleTourCoverSelect}
           fileType="image"
           title="Select Tour Cover Image"
+        />
+
+        {/* Tour Cover Trailer Modal */}
+        <MediaBrowserModal
+          isOpen={tourTrailerModalOpen}
+          onClose={() => setTourTrailerModalOpen(false)}
+          onSelect={handleTourTrailerSelect}
+          fileType="video"
+          title="Select Tour Cover Trailer"
         />
       </MainLayout>
     </ProtectedRoute>

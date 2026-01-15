@@ -6,6 +6,7 @@ export class VersionResponseDto {
   description: string;
   completionMessage: string | null;
   coverImageFileId: string | null;
+  coverTrailerFileId: string | null;
   status: 'draft' | 'published';
   versionNumber: number;
   startingPointLat: number;

@@ -73,22 +73,24 @@ model Tour {
 }
 
 model TourVersion {
-  id                String   @id @default(uuid())
-  tourId            String   @map("tour_id")
-  language          String
-  title             String
-  description       String   @db.Text
-  completionMessage String?  @map("completion_message") @db.Text
-  coverImageFileId  String?  @map("cover_image_file_id")
-  status            String   @default("draft") // "draft", "published", "archived"
-  versionNumber     Int      @map("version_number")
-  startingPointLat  Float?   @map("starting_point_lat")
-  startingPointLng  Float?   @map("starting_point_lng")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  tourId              String   @map("tour_id")
+  language            String
+  title               String
+  description         String   @db.Text
+  completionMessage   String?  @map("completion_message") @db.Text
+  coverImageFileId    String?  @map("cover_image_file_id")
+  coverTrailerFileId  String?  @map("cover_trailer_file_id")
+  status              String   @default("draft") // "draft", "published", "archived"
+  versionNumber       Int      @map("version_number")
+  startingPointLat    Float?   @map("starting_point_lat")
+  startingPointLng    Float?   @map("starting_point_lng")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   tour               Tour                     @relation(fields: [tourId], references: [id], onDelete: Cascade)
   coverImage         MediaFile?               @relation("TourVersionCoverImage", fields: [coverImageFileId], references: [id])
+  coverTrailer       MediaFile?               @relation("TourVersionCoverTrailer", fields: [coverTrailerFileId], references: [id])
   pointLocalizations TourPointLocalization[]
 
   @@unique([tourId, language, versionNumber])
@@ -150,12 +152,13 @@ model MediaFile {
   originalFilename String?  @map("original_filename")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  tourCoverImages       Tour[]                   @relation("TourCoverImage")
-  tourVideos            Tour[]                   @relation("TourVideo")
-  tourVersionCoverImages TourVersion[]           @relation("TourVersionCoverImage")
-  pointAudio            TourPointLocalization[]  @relation("PointAudio")
-  pointImages           TourPointLocalization[]  @relation("PointImage")
-  pointSubtitles        TourPointLocalization[]  @relation("PointSubtitle")
+  tourCoverImages         Tour[]                   @relation("TourCoverImage")
+  tourVideos              Tour[]                   @relation("TourVideo")
+  tourVersionCoverImages  TourVersion[]            @relation("TourVersionCoverImage")
+  tourVersionCoverTrailers TourVersion[]           @relation("TourVersionCoverTrailer")
+  pointAudio              TourPointLocalization[]  @relation("PointAudio")
+  pointImages             TourPointLocalization[]  @relation("PointImage")
+  pointSubtitles          TourPointLocalization[]  @relation("PointSubtitle")
 
   @@map("media_files")
 }

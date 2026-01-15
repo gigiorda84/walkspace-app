@@ -20,6 +20,11 @@ export class UpdateVersionDto {
   @IsOptional()
   coverImageFileId?: string | null;
 
+  @ValidateIf((o) => o.coverTrailerFileId !== null)
+  @IsString()
+  @IsOptional()
+  coverTrailerFileId?: string | null;
+
   @IsNumber()
   @Min(-90)
   @Max(90)

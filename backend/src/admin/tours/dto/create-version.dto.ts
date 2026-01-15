@@ -21,6 +21,10 @@ export class CreateVersionDto {
   @IsOptional()
   coverImageFileId?: string;
 
+  @IsString()
+  @IsOptional()
+  coverTrailerFileId?: string;
+
   @IsNumber()
   @Min(-90)
   @Max(90)
