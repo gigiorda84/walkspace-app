@@ -6,7 +6,7 @@ export const mediaApi = {
    * Get all media files with optional filters
    */
   async getAllMedia(filters?: {
-    type?: 'audio' | 'image' | 'subtitle';
+    type?: 'audio' | 'image' | 'subtitle' | 'video';
     language?: 'en' | 'fr' | 'it';
     search?: string;
   }): Promise<MediaFile[]> {
