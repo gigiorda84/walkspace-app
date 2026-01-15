@@ -1,4 +1,46 @@
-# Tour Cover Trailer Feature - COMPLETED
+# Tour Completed Screen Redesign - COMPLETED
+
+## Goal
+Redesign the "Tour Completed" screen with the following changes:
+1. Move orange checkmark next to "Tour Completed!" text (inline/horizontal)
+2. Move stats (Points Visited, Distance, Duration) to a single compact line above the purple box
+3. Replace stats in the purple box with three action buttons: "Info Bus", "Seguici", "Supporta"
+
+## Tasks
+
+- [x] Modify header to show checkmark inline with "Tour Completed!" text
+- [x] Create compact single-line stats row (points, distance, duration)
+- [x] Replace StatRow content in purple box with three stacked action buttons
+- [ ] Test the layout in preview
+
+## File Modified
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/TourCompletionView.swift`
+
+## Review
+
+### Changes Made
+
+1. **Inline checkmark + title** (lines 25-35): Changed from vertical stack to HStack with checkmark icon (40pt) and "Tour Completed!" text side by side
+
+2. **Compact stats line** (lines 72-81): Added a single horizontal line showing `"4 pts • 2.0 km • 0 min"` format with muted color
+
+3. **Action buttons card** (lines 83-96): Replaced the three StatRow items with three stacked ActionButton components
+
+4. **ActionButton component** (lines 136-156): New reusable button component with:
+   - Semi-transparent orange background
+   - Orange border
+   - Cream text color
+   - Full-width layout
+
+5. **Removed StatRow component**: No longer needed, replaced with ActionButton
+
+### Notes
+- The three buttons currently have empty actions (`action: {}`) - these need to be wired up to actual functionality later
+- Layout matches the requested design with checkmark inline, stats in a compact line, and three stacked buttons in the purple box
+
+---
+
+# Previous Task: Tour Cover Trailer Feature - COMPLETED
 
 ## Goal
 Add support for tour cover trailers (videos) that play on the iOS app's discover page. When users tap a tour to view details, they see the static cover image instead of the video.
@@ -20,6 +62,7 @@ All tasks have been completed successfully. The feature is now fully implemented
 - `backend/src/admin/tours/dto/create-version.dto.ts` - Added optional `coverTrailerFileId?: string`
 - `backend/src/admin/tours/dto/update-version.dto.ts` - Added optional `coverTrailerFileId?: string | null`
 - `backend/src/tours/dto/tour-detail.dto.ts` - Added `coverTrailerUrl: string | null`
+- `backend/src/tours/dto/tour-list.dto.ts` - Added `coverTrailerUrl: string | null`
 
 **Services Updated**
 - `backend/src/tours/tours.service.ts:75-87` - Updated Prisma query to include `coverTrailer` relation
@@ -89,6 +132,7 @@ All tasks have been completed successfully. The feature is now fully implemented
 - `backend/src/admin/tours/dto/create-version.dto.ts`
 - `backend/src/admin/tours/dto/update-version.dto.ts`
 - `backend/src/tours/dto/tour-detail.dto.ts`
+- `backend/src/tours/dto/tour-list.dto.ts`
 - `backend/src/tours/tours.service.ts`
 - `backend/src/admin/tours/admin-tours.service.ts`
 
@@ -137,3 +181,29 @@ All tasks have been completed successfully. The feature is now fully implemented
 - Auto-play is muted to comply with mobile platform guidelines
 - Video playback is optimized for memory by cleaning up when cards scroll off-screen
 - All changes are backward compatible - existing tours without trailers continue to work
+
+---
+
+## Bug Fix: Video not displaying in Discover page (2026-01-15)
+
+### Problem
+Video was loaded to CMS but not displayed in the iOS Discover page.
+
+### Root Cause
+The `listTours` endpoint in `tours.service.ts` was NOT returning `coverTrailerUrl`:
+- The Prisma query did not include `coverTrailer` in the versions select
+- The return object did not include `coverTrailerUrl`
+
+The `getTourDetails` endpoint correctly returned `coverTrailerUrl`, but the **list endpoint** (used by iOS Discover page) did not.
+
+### Fix
+Updated `backend/src/tours/tours.service.ts` `listTours` method:
+1. Added `coverTrailer: true` to the versions select in Prisma query (line 27)
+2. Added signed URL generation for cover trailer (lines 56-60)
+3. Added `coverTrailerUrl` to the return object (line 74)
+
+Updated `backend/src/tours/dto/tour-list.dto.ts`:
+1. Added `coverTrailerUrl: string | null;` field (line 13)
+
+### Verification
+- Backend builds successfully with `npm run build`
