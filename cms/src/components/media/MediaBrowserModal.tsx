@@ -3,7 +3,7 @@
 import { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
-import { X, Music, Image as ImageIcon, FileText, Upload } from 'lucide-react';
+import { X, Music, Image as ImageIcon, FileText, Video, Upload } from 'lucide-react';
 import { mediaApi } from '@/lib/api/media';
 import { MediaFile } from '@/types/api';
 
@@ -11,7 +11,7 @@ interface MediaBrowserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (file: MediaFile) => void;
-  fileType?: 'audio' | 'image' | 'subtitle';
+  fileType?: 'audio' | 'image' | 'subtitle' | 'video';
   title?: string;
 }
 
@@ -19,6 +19,7 @@ const FILE_TYPE_ICONS = {
   audio: Music,
   image: ImageIcon,
   subtitle: FileText,
+  video: Video,
 };
 
 export function MediaBrowserModal({
