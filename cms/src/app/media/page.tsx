@@ -90,6 +90,7 @@ export default function MediaLibraryPage() {
         audio: ['audio/mpeg', 'audio/wav', 'audio/mp3'],
         image: ['image/jpeg', 'image/png', 'image/jpg'],
         subtitle: ['text/plain', 'application/x-subrip'],
+        video: ['video/mp4', 'video/quicktime', 'video/webm'],
       };
 
       const isValid = Object.values(validTypes).flat().includes(file.type) ||
@@ -100,15 +101,17 @@ export default function MediaLibraryPage() {
         return;
       }
 
-      // Validate file size (50MB for audio, 10MB for images, 1MB for subtitles)
+      // Validate file size (50MB for audio, 10MB for images, 1MB for subtitles, 500MB for videos)
       const maxSizes: Record<string, number> = {
         audio: 50 * 1024 * 1024,
         image: 10 * 1024 * 1024,
         subtitle: 1 * 1024 * 1024,
+        video: 500 * 1024 * 1024,
       };
 
       const fileType = file.type.startsWith('audio/') ? 'audio' :
-                       file.type.startsWith('image/') ? 'image' : 'subtitle';
+                       file.type.startsWith('image/') ? 'image' :
+                       file.type.startsWith('video/') ? 'video' : 'subtitle';
 
       if (file.size > maxSizes[fileType]) {
         alert(`File too large: ${file.name}. Max size: ${maxSizes[fileType] / 1024 / 1024}MB`);
