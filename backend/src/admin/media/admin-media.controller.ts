@@ -13,7 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from '../../media/media.service';
 import { UploadResponseDto, MediaFileListItemDto, MediaFileResponseDto } from '../../media/dto';
 import { Public } from '../../auth/decorators/public.decorator';
-import type { Express as ExpressNamespace } from 'express';
+import { Express } from 'express';
 
 @Controller('admin/media')
 @Public()
@@ -23,7 +23,7 @@ export class AdminMediaController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile() file: ExpressNamespace.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Query('type') type: 'audio' | 'image' | 'subtitle' | 'video',
     @Query('language') language?: string,
   ): Promise<UploadResponseDto> {

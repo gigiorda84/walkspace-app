@@ -13,7 +13,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from './media.service';
 import { UploadResponseDto } from './dto';
 import { Public } from '../auth/decorators/public.decorator';
-import type { Response, Express as ExpressNamespace } from 'express';
+import type { Response } from 'express';
+import { Express } from 'express';
 
 @Controller('media')
 export class MediaController {
@@ -22,7 +23,7 @@ export class MediaController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile() file: ExpressNamespace.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Query('type') type: 'audio' | 'image' | 'subtitle' | 'video',
   ): Promise<UploadResponseDto> {
     if (!type || !['audio', 'image', 'subtitle', 'video'].includes(type)) {
