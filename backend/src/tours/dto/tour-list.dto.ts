@@ -10,5 +10,6 @@ export class TourListItemDto {
   languages: string[];
   isProtected: boolean;
   imageUrl: string | null;
+  coverTrailerUrl: string | null;
   hasAccess?: boolean; // Whether current user has access
 }

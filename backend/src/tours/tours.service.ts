@@ -24,7 +24,7 @@ export class ToursService {
       include: {
         versions: {
           where: { status: 'published' },
-          select: { language: true, title: true, description: true, completionMessage: true, coverImage: true },
+          select: { language: true, title: true, description: true, completionMessage: true, coverImage: true, coverTrailer: true },
         },
         coverImage: true,
         userAccess: userId ? { where: { userId } } : false,
@@ -53,6 +53,12 @@ export class ToursService {
           ? await this.storageService.getSignedUrl(coverImage.storagePath, 86400)
           : null;
 
+        // Use first version's cover trailer if available
+        const coverTrailer = tour.versions.find((v) => v.coverTrailer)?.coverTrailer;
+        const coverTrailerUrl = coverTrailer
+          ? await this.storageService.getSignedUrl(coverTrailer.storagePath, 86400)
+          : null;
+
         return {
           id: tour.id,
           slug: tour.slug,
@@ -65,6 +71,7 @@ export class ToursService {
           languages,
           isProtected: tour.isProtected,
           imageUrl,
+          coverTrailerUrl,
           hasAccess: userId ? tour.userAccess.length > 0 : undefined,
         };
       }),
