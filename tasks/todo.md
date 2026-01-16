@@ -1,3 +1,34 @@
+# Opening Screen Redesign - COMPLETED
+
+## Changes Made
+
+### 1. Added BANDITE logo to asset catalog
+- Created `BanditeLogo.imageset` in Assets.xcassets
+- Copied `logo_BANDITE-T.png` from Downloads folder
+
+### 2. Updated WelcomeView.swift
+- **Logo**: Replaced `headphones.circle.fill` icon with BANDITE logo image (200x200)
+- **Subtitle**: Changed "Discover the world through sound" to "BANDITE _ Artivism"
+- **About button**: Added new button that opens a sheet with multilingual text (EN/IT/FR)
+- **Start Exploring**: Kept as-is (orange primary CTA button)
+- **Connect button**: Added new button that reuses `FollowUsModal` from TourCompletionView
+- **Enable Location**: Removed completely
+
+### New Components
+- `AboutModal`: Full-screen sheet with scrollable multilingual About text
+- `AboutSection`: Reusable component for each language section with styled card
+
+### Button Order (top to bottom):
+1. About (opens About modal)
+2. Start Exploring (goes to DiscoveryView)
+3. Connect (opens FollowUsModal with social links)
+
+### Files Modified:
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Assets.xcassets/BanditeLogo.imageset/` (created)
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Welcome/WelcomeView.swift`
+
+---
+
 # Tour Completed Screen Redesign - COMPLETED
 
 ## Goal
