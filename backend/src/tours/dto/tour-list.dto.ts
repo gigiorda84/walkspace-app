@@ -11,5 +11,6 @@ export class TourListItemDto {
   isProtected: boolean;
   imageUrl: string | null;
   coverTrailerUrl: string | null;
+  routePolyline: string | null; // Route coordinates for map display
   hasAccess?: boolean; // Whether current user has access
 }

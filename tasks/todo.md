@@ -109,3 +109,17 @@ Major redesign:
 - Navigation to tour detail works on callout tap
 - Map centers appropriately on all tour locations
 - User's language preference is respected for tour names
+
+### Post-Review Fixes
+
+#### Build Error: Equatable Conformance
+**Issue**: iOS build failed with error in DiscoveryView.swift:160 - `.onChange(of:perform:)` requires Tour to conform to Equatable
+
+**Root Cause**: SwiftUI's onChange modifier requires array elements to be Equatable for comparison. The filteredTours array contains Tour objects that didn't conform to Equatable protocol.
+
+**Fix**: Added Equatable conformance to Tour struct (Tour.swift:4)
+- Changed: `struct Tour: Codable, Identifiable {`
+- To: `struct Tour: Codable, Identifiable, Equatable {`
+- Swift automatically synthesizes Equatable implementation since all Tour properties are Equatable (including [TourPoint] which already conforms to Equatable)
+
+**Result**: Build succeeded. App compiles and runs correctly with Discovery screen map interface.

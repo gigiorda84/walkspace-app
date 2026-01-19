@@ -72,6 +72,7 @@ export class ToursService {
           isProtected: tour.isProtected,
           imageUrl,
           coverTrailerUrl,
+          routePolyline: tour.routePolyline,
           hasAccess: userId ? tour.userAccess.length > 0 : undefined,
         };
       }),
