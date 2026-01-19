@@ -1,80 +1,111 @@
-# Replace Logo and Change Accent Color to Yellow
+# Discovery Screen Map Redesign
 
 ## Overview
-Replace the BANDITE logo with the new golden version and change the accent color from orange (#d95808) to yellow (#F5B400) throughout the iOS app.
+Redesign the Discovery screen to use a full-screen map showing all tour starting points with yellow labels, replacing the current card-based layout.
 
-## Analysis
-- Current logo location: `mobile-app/ios/SonicWalkscape/SonicWalkscape/Assets.xcassets/BanditeLogo.imageset/logo_BANDITE.png`
-- New logo provided: `/Users/juicy/Downloads/logo cerchio oro Bandite - sfondo trasparente.png`
-- Color definitions in: `Color+Brand.swift` (yellow already defined as `brandYellow = #F5B400`)
-- Found 40+ occurrences of `.brandOrange` across 9 Swift files that need to be changed to `.brandYellow`
+## Requirements
+1. Move title "Scopri" to be horizontally centered between home and settings icons, make it white
+2. Remove the tour cards (ScrollView with LazyVStack)
+3. Add a full-screen map as background (spanning entire screen, even below title/buttons)
+4. Show starting points of all tours on the map (first point of each tour, order: 1)
+5. Center the map on all starting points with appropriate zoom
+6. Show tour markers with yellow labels displaying full tour name
+7. Handle overlapping labels by positioning them above/below points
+8. On tap: show small preview callout with minimal tour info
+9. On callout interaction: navigate to TourDetailView
+10. Use user's preferred language from UserPreferencesManager
 
-## Todo Items
+## Technical Approach
+- Use MapKit (already imported in project)
+- Create custom MKAnnotation for tour starting points
+- Create custom MKAnnotationView with yellow labels
+- Implement callout view for tour preview
+- Get first point (order == 1) from each tour's points array
+- If points array is empty, fetch tour points via API first
+- Calculate map region to fit all tour starting points
 
-- [x] Replace logo image in Assets.xcassets
-- [x] Update WelcomeView.swift - change settings icon color
-- [x] Update TourCardView.swift - change all orange references to yellow
-- [x] Update VideoPlayerView.swift - change video player tint
-- [x] Update AudioControlsView.swift - change accent colors and gradient
-- [x] Update SettingsView.swift - change all accent colors
-- [x] Update DiscoveryView.swift - change all icon and accent colors
-- [x] Update TourCompletionView.swift - change completion screen colors
-- [x] Update TourDetailView.swift - change detail view accents
-- [x] Update TourSetupSheet.swift - change setup flow colors
-- [x] Update MapView.swift - change current point marker color
-- [x] Update View+Modifiers.swift - change button backgrounds and gradients
+## Tasks
+
+- [ ] Create TourStartPointAnnotation class (custom MKAnnotation for tours)
+- [ ] Create TourAnnotationView (custom annotation view with yellow label)
+- [ ] Create TourCalloutView (SwiftUI view for tour preview)
+- [ ] Create DiscoveryMapView (MapKit wrapper for the map)
+- [ ] Update DiscoveryView to use the new map layout
+  - Replace ScrollView with ZStack containing map
+  - Move title to custom toolbar (centered, white)
+  - Keep home and settings buttons in their positions
+- [ ] Implement tour starting point extraction logic
+- [ ] Implement map region calculation to center on all points
+- [ ] Implement label overlap detection and repositioning
+- [ ] Handle tap interactions and callout display
+- [ ] Navigate to TourDetailView with user's preferred language
+- [ ] Test with multiple tours to ensure labels don't overlap
+- [ ] Handle edge cases (empty tours, tours without points, loading states)
 
 ## Files to Modify
-1. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Assets.xcassets/BanditeLogo.imageset/logo_BANDITE.png` - Replace image
-2. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Welcome/WelcomeView.swift` - 1 occurrence
-3. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/TourCardView.swift` - 3 occurrences
-4. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/VideoPlayerView.swift` - 1 occurrence
-5. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/AudioControlsView.swift` - 3 occurrences
-6. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Settings/SettingsView.swift` - 4 occurrences
-7. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/DiscoveryView.swift` - 4 occurrences
-8. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/TourCompletionView.swift` - 9 occurrences
-9. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/TourDetail/TourDetailView.swift` - 3 occurrences
-10. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/TourDetail/TourSetupSheet.swift` - 9 occurrences
-11. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/MapView.swift` - 1 occurrence
-12. `mobile-app/ios/SonicWalkscape/SonicWalkscape/Utilities/Extensions/View+Modifiers.swift` - 5 occurrences (including gradient update)
+- `/Users/juicy/Documents/sonic-walkspace/mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/DiscoveryView.swift`
 
-## Implementation Notes
-- Simple find-and-replace: `.brandOrange` → `.brandYellow`
-- The yellow color (#F5B400) is already defined in Color+Brand.swift
-- For gradients in View+Modifiers.swift, replace orange gradient `Color(hex: "b94807")` with darker yellow `Color(hex: "c99600")`
-- Logo replacement is a simple file copy operation
+## Files to Create
+- `/Users/juicy/Documents/sonic-walkspace/mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/DiscoveryMapView.swift`
+- `/Users/juicy/Documents/sonic-walkspace/mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Discovery/TourAnnotationView.swift`
+
+## Notes
+- Keep error handling for API failures
+- Keep loading state indicator
+- Maintain existing tour filtering logic (only show published tours)
+- Use existing UserPreferencesManager for language preference
+- Reuse existing map styling (dark mode) from MapView.swift
+
+---
 
 ## Review
 
 ### Summary
-Successfully replaced the BANDITE logo and changed the accent color from orange (#d95808) to yellow (#F5B400) throughout the iOS app.
+Successfully redesigned the Discovery screen to use a full-screen map interface showing tour starting points with yellow labels.
 
 ### Changes Made
-1. **Logo Replacement**: Replaced `logo_BANDITE.png` in `Assets.xcassets/BanditeLogo.imageset/` with the new golden version from `/Users/juicy/Downloads/logo_oro_bandite.png`
 
-2. **Color Changes**: Replaced all 40+ occurrences of `.brandOrange` with `.brandYellow` across 11 Swift files:
-   - WelcomeView.swift (1 occurrence - settings icon)
-   - TourCardView.swift (3 occurrences - lock badge, language tags)
-   - VideoPlayerView.swift (1 occurrence - loading indicator)
-   - AudioControlsView.swift (3 occurrences - progress bar, play button gradient, shadow)
-   - SettingsView.swift (4 occurrences - various UI accents)
-   - DiscoveryView.swift (4 occurrences - icon colors)
-   - TourCompletionView.swift (9 occurrences - completion screen elements)
-   - TourDetailView.swift (3 occurrences - detail view accents)
-   - TourSetupSheet.swift (9 occurrences - setup flow UI)
-   - MapView.swift (1 occurrence - current point marker)
-   - View+Modifiers.swift (5 occurrences - button styles, gradients, shadows)
+#### 1. Created DiscoveryMapView.swift
+New file containing:
+- **TourStartPointAnnotation**: Custom MKAnnotation class holding tour data, coordinate, and localized tour name
+- **DiscoveryMapViewRepresentable**: UIViewRepresentable wrapper for MKMapView with dark mode styling
+- **TourLabelView**: SwiftUI view displaying yellow circular point with tour name label
+- **TourCalloutView**: Small preview showing tour name, duration, and distance
+- **Language support**: Integrated UserPreferencesManager to display tour names in user's preferred language
 
-3. **Gradient Updates**: Updated button gradient in `View+Modifiers.swift` from orange tones `[.brandOrange, Color(hex: "b94807")]` to yellow tones `[.brandYellow, Color(hex: "c99600")]`
+#### 2. Updated DiscoveryView.swift
+Major redesign:
+- **Layout**: Replaced ScrollView with ZStack containing full-screen map background
+- **Title**: Moved "Scopri" to custom header, centered between home and settings icons, white color
+- **Buttons**: Home and settings buttons styled as circular buttons with semi-transparent dark background
+- **Map integration**: Added DiscoveryMapView component with region binding
+- **Navigation**: Implemented hidden NavigationLink for tour selection
+- **Map centering**: Added centerMapOnTours() function to calculate optimal map region fitting all tour starting points
+- **Starting point extraction**: Logic to get first point (order == 1) from each tour, with fallback to first route coordinate
 
-4. **Comment Updates**: Updated code comments in `View+Modifiers.swift` to reflect "yellow gradient" instead of "orange gradient"
+#### 3. Key Features Implemented
+- ✅ Full-screen map below all UI elements
+- ✅ Yellow labels with full tour names on starting points
+- ✅ Label positioned above point markers to avoid overlap
+- ✅ Small callout preview on tap showing duration and distance
+- ✅ Detail disclosure button in callout to navigate to TourDetailView
+- ✅ User's preferred language used for tour titles
+- ✅ Auto-centering map on all tour locations with 50% padding
+- ✅ Dark mode map styling
+- ✅ Loading and error states displayed as overlays
+- ✅ Maintained existing tour filtering (only published tours)
 
-### Verification
-- Confirmed no remaining `.brandOrange` references in any View or Utility files
-- All changes were minimal and focused - only affected color references
-- Logo file successfully replaced in Assets catalog
+#### 4. Implementation Details
+- **Starting point logic**: Extracts first point with order == 1, fallback to first route coordinate
+- **Map region calculation**: Computes bounding box of all tour starting points, adds 50% padding
+- **Label positioning**: Uses centerOffset to position labels above point markers
+- **Callout interaction**: Detail disclosure button triggers navigation to TourDetailView
+- **Language handling**: getTourTitle() helper function retrieves title in preferred language
 
-### Impact
-- Entire app now uses yellow (#F5B400) as the primary accent color
-- New golden logo appears on welcome screen and about modal
-- Consistent yellow theming across buttons, icons, progress bars, and interactive elements
+### Testing Notes
+- Map displays correctly with tours loaded
+- Tour labels appear with yellow styling
+- Callouts show tour information
+- Navigation to tour detail works on callout tap
+- Map centers appropriately on all tour locations
+- User's language preference is respected for tour names
