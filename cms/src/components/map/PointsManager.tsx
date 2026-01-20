@@ -142,7 +142,7 @@ export function PointsManager({ points, onPointsChange, onPointSelect }: PointsM
                       value={editRadius}
                       onChange={(e) => setEditRadius(Number(e.target.value))}
                       className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
-                      min="50"
+                      min="5"
                       max="500"
                       step="10"
                     />

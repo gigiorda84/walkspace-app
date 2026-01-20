@@ -16,7 +16,7 @@ export class CreatePointDto {
 
   @IsNumber()
   @IsOptional()
-  @Min(50)
+  @Min(5)
   @Max(500)
   defaultTriggerRadiusMeters?: number; // Defaults to 150 in schema
 }

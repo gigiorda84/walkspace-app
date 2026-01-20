@@ -19,7 +19,7 @@ export class UpdatePointDto {
 
   @IsNumber()
   @IsOptional()
-  @Min(50)
+  @Min(5)
   @Max(500)
   defaultTriggerRadiusMeters?: number;
 }

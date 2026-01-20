@@ -258,7 +258,7 @@ export default function EditPointPage() {
                       type="number"
                       {...register('triggerRadiusMeters', {
                         required: 'Trigger radius is required',
-                        min: { value: 50, message: 'Minimum radius is 50 meters' },
+                        min: { value: 5, message: 'Minimum radius is 5 meters' },
                         max: { value: 500, message: 'Maximum radius is 500 meters' },
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
