@@ -1389,7 +1389,7 @@ export default function UnifiedTourEditorPage() {
                               </label>
                               <input
                                 type="number"
-                                min="50"
+                                min="5"
                                 max="500"
                                 step="10"
                                 value={point.triggerRadiusMeters}
