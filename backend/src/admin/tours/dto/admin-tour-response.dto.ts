@@ -17,6 +17,7 @@ export class AdminTourResponseDto {
   defaultCity: string;
   defaultDurationMinutes: number;
   defaultDistanceKm: number;
+  defaultDifficulty: string;
   isProtected: boolean;
   coverImageFileId: string | null;
   videoFileId: string | null;
@@ -33,6 +34,7 @@ export class AdminTourListItemDto {
   defaultCity: string;
   defaultDurationMinutes: number;
   defaultDistanceKm: number;
+  defaultDifficulty: string;
   isProtected: boolean;
   createdAt: Date;
   updatedAt: Date;

@@ -37,6 +37,7 @@ export default function ToursPage() {
         defaultCity: tour.defaultCity,
         defaultDurationMinutes: tour.defaultDurationMinutes,
         defaultDistanceKm: tour.defaultDistanceKm,
+        defaultDifficulty: tour.defaultDifficulty,
         isProtected: tour.isProtected,
       };
       return toursApi.createTour(clonedData);

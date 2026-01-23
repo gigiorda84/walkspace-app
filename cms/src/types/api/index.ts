@@ -38,6 +38,7 @@ export interface Tour {
   defaultCity: string;
   defaultDurationMinutes: number;
   defaultDistanceKm: number;
+  defaultDifficulty?: string;
   isProtected: boolean;
   routePolyline: string | null;
   createdAt: string;
