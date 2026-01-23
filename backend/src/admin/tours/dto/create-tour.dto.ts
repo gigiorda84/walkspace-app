@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, Min } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, Min, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTourDto {
@@ -34,6 +34,18 @@ export class CreateTourDto {
   @IsNumber()
   @Min(0)
   defaultDistanceKm: number;
+
+  @ApiProperty({
+    description: 'Tour difficulty level',
+    example: 'facile',
+    enum: ['facile', 'medio', 'difficile'],
+    default: 'facile',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @IsIn(['facile', 'medio', 'difficile'])
+  defaultDifficulty?: string;
 
   @ApiProperty({
     description: 'Whether the tour requires a voucher to access',

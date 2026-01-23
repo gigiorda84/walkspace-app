@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, Min } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, Min, IsIn } from 'class-validator';
 
 export class UpdateTourDto {
   @IsString()
@@ -18,6 +18,11 @@ export class UpdateTourDto {
   @Min(0)
   @IsOptional()
   defaultDistanceKm?: number;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['facile', 'medio', 'difficile'])
+  defaultDifficulty?: string;
 
   @IsBoolean()
   @IsOptional()

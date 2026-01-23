@@ -7,6 +7,7 @@ export class TourListItemDto {
   city: string;
   durationMinutes: number;
   distanceKm: number;
+  difficulty: string;
   languages: string[];
   isProtected: boolean;
   imageUrl: string | null;

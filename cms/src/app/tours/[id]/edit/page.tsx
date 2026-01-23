@@ -54,6 +54,7 @@ export default function UnifiedTourEditorPage() {
     defaultCity: '',
     defaultDurationMinutes: 0,
     defaultDistanceKm: 0,
+    defaultDifficulty: 'facile',
     isProtected: false,
   });
 
@@ -140,6 +141,7 @@ export default function UnifiedTourEditorPage() {
         defaultCity: tour.defaultCity,
         defaultDurationMinutes: tour.defaultDurationMinutes,
         defaultDistanceKm: tour.defaultDistanceKm,
+        defaultDifficulty: tour.defaultDifficulty || 'facile',
         isProtected: tour.isProtected,
       });
       setLastSavedTour(JSON.stringify(tour));
@@ -843,6 +845,21 @@ export default function UnifiedTourEditorPage() {
                   onBlur={handleTourFieldBlur}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Difficulty</label>
+                <select
+                  value={tourData.defaultDifficulty}
+                  onChange={(e) => {
+                    setTourData({ ...tourData, defaultDifficulty: e.target.value });
+                    handleTourFieldBlur();
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                >
+                  <option value="facile">Facile</option>
+                  <option value="medio">Medio</option>
+                  <option value="difficile">Difficile</option>
+                </select>
               </div>
               <div className="flex items-center">
                 <label className="flex items-center space-x-2 cursor-pointer">

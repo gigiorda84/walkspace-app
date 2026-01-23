@@ -53,6 +53,7 @@ model Tour {
   defaultCity             String   @map("default_city")
   defaultDurationMinutes  Int      @map("default_duration_minutes")
   defaultDistanceKm       Float    @map("default_distance_km")
+  defaultDifficulty       String   @default("facile") @map("default_difficulty")
   isProtected             Boolean  @default(false) @map("is_protected")
   coverImageFileId        String?  @map("cover_image_file_id")
   videoFileId             String?  @map("video_file_id")
