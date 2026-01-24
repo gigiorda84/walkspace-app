@@ -1,69 +1,77 @@
-# Task: Add Difficulty Field to Tours
+# Plan: Improve Audio Loading UX for Download vs Stream Modes
+
+## Problem
+When streaming (not downloading), the first point's audio takes time to download but shows no progress indicator. Users see "Player not ready" which is confusing. Also, subsequent points have no pre-loading.
 
 ## Requirements
-- Add "difficoltà" (difficulty) field with three options: Facile/Medio/Difficile
-- Display in CMS Tour Settings (similar to Duration/Distance)
-- Display in mobile app TourDetailView as third InfoBadge
-- Default value: "Facile" for all tours
+1. **Download mode**: Already works - downloads all files before tour starts with progress
+2. **Stream mode**:
+   - Show download progress indicator while first point's audio is loading
+   - Pre-download the next point in the background (silently) while current plays
 
 ## Tasks
 
-### Backend
-- [x] 1. Add `defaultDifficulty` field to Prisma schema with default "facile"
-- [x] 2. Database column added via SQL (run `npx prisma generate` to sync client)
-- [x] 3. Add to CreateTourDto and UpdateTourDto
-- [x] 4. Add to TourListItemDto and TourDetailDto
-- [x] 5. Update tours.service.ts to include difficulty in responses
+### AudioPlayerManager.swift
+- [x] 1. Add `isLoading` and `loadingProgress` published properties
+- [x] 2. Add `audioCache` dictionary for pre-downloaded audio data
+- [x] 3. Modify `play()` method to check cache first and track loading progress
+- [x] 4. Add `preloadAudio()` method for background pre-downloading
 
-### CMS
-- [x] 6. Add difficulty dropdown to tour creation form (new/page.tsx)
-- [x] 7. Add difficulty dropdown to tour editor (edit/page.tsx)
+### PlayerView.swift
+- [x] 5. Create `AudioLoadingOverlayView` component
+- [x] 6. Add loading overlay that shows when `audioManager.isLoading && !setupConfig.isDownloaded`
+- [x] 7. Add `preloadNextPoint()` method
+- [x] 8. Add `.onChange` observer to trigger preload when audio starts playing
 
-### Mobile App
-- [x] 8. Add `difficulty` to Tour model
-- [x] 9. Add `difficulty` to TourDetailResponse model
-- [x] 10. Add InfoBadge for difficulty in TourDetailView
+### Testing
+- [ ] 9. Test download mode (should work same as before)
+- [ ] 10. Test stream mode with loading indicator
+- [ ] 11. Test preloading behavior
 
-## Files Changed
-- `backend/prisma/schema.prisma` - Added defaultDifficulty field
-- `backend/src/admin/tours/dto/create-tour.dto.ts` - Added defaultDifficulty with validation
-- `backend/src/admin/tours/dto/update-tour.dto.ts` - Added defaultDifficulty with validation
-- `backend/src/tours/dto/tour-list.dto.ts` - Added difficulty field
-- `backend/src/tours/dto/tour-detail.dto.ts` - Added difficulty field
-- `backend/src/tours/tours.service.ts` - Added difficulty to listTours and getTourDetails
-- `cms/src/app/tours/new/page.tsx` - Added difficulty dropdown (3-column grid)
-- `cms/src/app/tours/[id]/edit/page.tsx` - Added difficulty dropdown with auto-save
-- `mobile-app/ios/.../Models/Tour.swift` - Added difficultyRaw, displayDifficulty, updated decoder/encoder
-- `mobile-app/ios/.../Models/TourDetailResponse.swift` - Added difficulty field
-- `mobile-app/ios/.../Views/TourDetail/TourDetailView.swift` - Added InfoBadge with figure.walk icon
+## Files Modified
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/AudioPlayerManager.swift`
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/PlayerView.swift`
 
 ---
 
 ## Review
 
-### Summary
-Added "Difficulty" field across the full stack:
-- **Backend**: Stored as `default_difficulty` in DB, exposed as `difficulty` in API responses
-- **CMS**: Dropdown with Facile/Medio/Difficile options in both create and edit forms
-- **Mobile**: Displayed as third InfoBadge with walking figure icon
+### Summary of Changes
 
-### Migration Applied
-Database column added via direct SQL. Run this to sync Prisma client:
-```bash
-cd backend && npx prisma generate
-```
+**AudioPlayerManager.swift:**
+- Added `@Published var isLoading: Bool` - tracks when audio is being downloaded
+- Added `@Published var loadingProgress: Double` - tracks download progress (0.0-1.0)
+- Added `audioCache: [String: Data]` - stores pre-downloaded audio data
+- Modified `play()` method to:
+  - Check cache first (for instant playback of pre-downloaded audio)
+  - Use `URLSession.shared.bytes()` for streaming download with progress tracking
+  - Update `isLoading` and `loadingProgress` during download
+- Added new `playFromData()` helper method to play audio from cached Data
+- Added `preloadAudio(audioURL:)` method for background pre-downloading
+- Added `clearCache()` method to clean up cached audio
 
-### Default Value
-All existing tours will get `"facile"` as default difficulty (defined in Prisma schema).
+**PlayerView.swift:**
+- Added `AudioLoadingOverlayView` component showing:
+  - Circular progress indicator with percentage
+  - "Loading audio..." text
+  - Semi-transparent dark background
+- Added loading overlay that shows only in stream mode (`!setupConfig.isDownloaded`)
+- Added `preloadNextPoint()` method to preload next point's audio
+- Added `.onChange(of: audioManager.isPlaying)` observer to trigger preload when audio starts
 
-### Display
-- CMS: Dropdown showing "Facile", "Medio", "Difficile"
-- Mobile: InfoBadge showing capitalized value (e.g., "Facile")
+### How It Works
 
-### Bug Fixes (2026-01-24)
-Fixed CMS "Failed to load tours" error caused by missing `defaultDifficulty`:
+1. **Stream Mode (isDownloaded = false):**
+   - When audio loads, progress overlay appears with percentage
+   - When audio starts playing, next point's audio pre-downloads silently
+   - When user advances to next point, cached audio plays instantly
 
-1. **CMS TypeScript type** - Added `defaultDifficulty` to `Tour` interface in `cms/src/types/api/index.ts`
-2. **Admin DTOs** - Added `defaultDifficulty` to `AdminTourListItemDto` and `AdminTourResponseDto`
-3. **Admin Service** - Added `defaultDifficulty` to all response mappings in `admin-tours.service.ts`
-4. **Database Migration** - Created `prisma/migrations/20260124000000_add_default_difficulty/migration.sql` to add column to production database
+2. **Download Mode (isDownloaded = true):**
+   - No change - uses local files as before
+   - Loading overlay never shows (audio loads instantly from disk)
+
+### Testing Notes
+- Test with "Stream Only" option in TourSetupView
+- Loading overlay should appear while first point downloads
+- Skip to point 2, then back to point 1 - should be faster (cached)
+- Check debug logs for "Preloading next audio" and "Playing from cache" messages
