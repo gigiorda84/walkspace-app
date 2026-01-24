@@ -1,32 +1,24 @@
-# Plan: Improve Audio Loading UX for Download vs Stream Modes
+# Plan: True Audio Streaming for Stream Mode
 
 ## Problem
-When streaming (not downloading), the first point's audio takes time to download but shows no progress indicator. Users see "Player not ready" which is confusing. Also, subsequent points have no pre-loading.
+Previously, audio was fully downloaded before playing in stream mode. User wanted true streaming - audio starts playing as soon as buffering allows.
 
-## Requirements
-1. **Download mode**: Already works - downloads all files before tour starts with progress
-2. **Stream mode**:
-   - Show download progress indicator while first point's audio is loading
-   - Pre-download the next point in the background (silently) while current plays
+## Solution
+Replace `AVAudioPlayer` (requires full file) with `AVPlayer` (supports streaming) for remote URLs.
 
 ## Tasks
 
 ### AudioPlayerManager.swift
-- [x] 1. Add `isLoading` and `loadingProgress` published properties
-- [x] 2. Add `audioCache` dictionary for pre-downloaded audio data
-- [x] 3. Modify `play()` method to check cache first and track loading progress
-- [x] 4. Add `preloadAudio()` method for background pre-downloading
+- [x] Replace AVAudioPlayer with AVPlayer for streaming remote URLs
+- [x] Keep AVAudioPlayer for local files (downloaded mode)
+- [x] Use KVO to observe player status and buffering state
+- [x] Add `isBuffering` property instead of `isLoading`/`loadingProgress`
+- [x] Remove preload/cache functionality (no longer needed with streaming)
 
 ### PlayerView.swift
-- [x] 5. Create `AudioLoadingOverlayView` component
-- [x] 6. Add loading overlay that shows when `audioManager.isLoading && !setupConfig.isDownloaded`
-- [x] 7. Add `preloadNextPoint()` method
-- [x] 8. Add `.onChange` observer to trigger preload when audio starts playing
-
-### Testing
-- [ ] 9. Test download mode (should work same as before)
-- [ ] 10. Test stream mode with loading indicator
-- [ ] 11. Test preloading behavior
+- [x] Replace loading overlay with simpler buffering overlay
+- [x] Remove preloadNextPoint() method and onChange observer
+- [x] Show BufferingOverlayView when `audioManager.isBuffering`
 
 ## Files Modified
 - `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/AudioPlayerManager.swift`
@@ -38,40 +30,40 @@ When streaming (not downloading), the first point's audio takes time to download
 
 ### Summary of Changes
 
-**AudioPlayerManager.swift:**
-- Added `@Published var isLoading: Bool` - tracks when audio is being downloaded
-- Added `@Published var loadingProgress: Double` - tracks download progress (0.0-1.0)
-- Added `audioCache: [String: Data]` - stores pre-downloaded audio data
-- Modified `play()` method to:
-  - Check cache first (for instant playback of pre-downloaded audio)
-  - Use `URLSession.shared.bytes()` for streaming download with progress tracking
-  - Update `isLoading` and `loadingProgress` during download
-- Added new `playFromData()` helper method to play audio from cached Data
-- Added `preloadAudio(audioURL:)` method for background pre-downloading
-- Added `clearCache()` method to clean up cached audio
+**AudioPlayerManager.swift - Complete Rewrite:**
+- Added `AVPlayer` + `AVPlayerItem` for streaming remote URLs
+- Kept `AVAudioPlayer` for local files (downloaded mode)
+- Added `isBuffering` published property (replaces `isLoading`/`loadingProgress`)
+- Uses KVO observers to track:
+  - Player item status (`.readyToPlay`, `.failed`)
+  - Buffer state (`isPlaybackBufferEmpty`)
+  - Playback completion (`AVPlayerItemDidPlayToEndTime`)
+- Removed preload/cache system (streaming starts immediately)
+- `isUsingStreamPlayer` flag tracks which player type is active
 
 **PlayerView.swift:**
-- Added `AudioLoadingOverlayView` component showing:
-  - Circular progress indicator with percentage
-  - "Loading audio..." text
-  - Semi-transparent dark background
-- Added loading overlay that shows only in stream mode (`!setupConfig.isDownloaded`)
-- Added `preloadNextPoint()` method to preload next point's audio
-- Added `.onChange(of: audioManager.isPlaying)` observer to trigger preload when audio starts
+- Changed overlay to show only when `audioManager.isBuffering`
+- Replaced `AudioLoadingOverlayView` with simpler `BufferingOverlayView`
+- Removed `preloadNextPoint()` method
+- Removed `.onChange` observer for preloading
 
-### How It Works
+### How It Works Now
 
-1. **Stream Mode (isDownloaded = false):**
-   - When audio loads, progress overlay appears with percentage
-   - When audio starts playing, next point's audio pre-downloads silently
-   - When user advances to next point, cached audio plays instantly
+**Stream Mode (no download):**
+1. User enters GPS radius OR presses play
+2. `AVPlayer` starts streaming immediately
+3. Brief "Buffering..." overlay appears while initial data loads
+4. Audio starts playing as soon as enough data is buffered
+5. Continues streaming while playing
 
-2. **Download Mode (isDownloaded = true):**
-   - No change - uses local files as before
-   - Loading overlay never shows (audio loads instantly from disk)
+**Download Mode:**
+- Uses `AVAudioPlayer` with local files (no change)
+- No buffering overlay (instant playback from disk)
 
-### Testing Notes
-- Test with "Stream Only" option in TourSetupView
-- Loading overlay should appear while first point downloads
-- Skip to point 2, then back to point 1 - should be faster (cached)
-- Check debug logs for "Preloading next audio" and "Playing from cache" messages
+### Key Differences from Previous Approach
+| Before | After |
+|--------|-------|
+| Download entire file, then play | Stream and play simultaneously |
+| Progress bar (0-100%) | Simple buffering spinner |
+| Preload next point's audio | No preloading needed |
+| Uses AVAudioPlayer for all | AVPlayer for streaming, AVAudioPlayer for local |
