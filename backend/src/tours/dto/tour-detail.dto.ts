@@ -4,6 +4,7 @@ export class TourDetailDto {
   title: string;
   description: string;
   completionMessage?: string;
+  busInfo?: string;
   city: string;
   durationMinutes: number;
   distanceKm: number;

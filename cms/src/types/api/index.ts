@@ -56,6 +56,7 @@ export interface TourVersion {
   title: string;
   description: string;
   completionMessage?: string | null;
+  busInfo?: string | null;
   coverImageFileId: string | null;
   coverTrailerFileId?: string | null;
   status: 'draft' | 'published';

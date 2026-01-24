@@ -19,6 +19,10 @@ export class CreateVersionDto {
 
   @IsString()
   @IsOptional()
+  busInfo?: string;
+
+  @IsString()
+  @IsOptional()
   coverImageFileId?: string;
 
   @IsString()

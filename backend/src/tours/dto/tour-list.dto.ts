@@ -4,6 +4,7 @@ export class TourListItemDto {
   title: Record<string, string>; // { "it": "...", "fr": "...", "en": "..." }
   descriptionPreview: Record<string, string>;
   completionMessage?: Record<string, string>; // { "it": "...", "fr": "...", "en": "..." }
+  busInfo?: Record<string, string>; // { "it": "...", "fr": "...", "en": "..." }
   city: string;
   durationMinutes: number;
   distanceKm: number;

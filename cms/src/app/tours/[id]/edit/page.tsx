@@ -63,6 +63,7 @@ export default function UnifiedTourEditorPage() {
     title: '',
     description: '',
     completionMessage: '',
+    busInfo: '',
     coverImageFileId: '',
     coverTrailerFileId: '',
     versionId: '',
@@ -211,6 +212,7 @@ export default function UnifiedTourEditorPage() {
         title: version.title || '',
         description: version.description || '',
         completionMessage: version.completionMessage || '',
+        busInfo: version.busInfo || '',
         coverImageFileId: version.coverImageFileId || '',
         coverTrailerFileId: version.coverTrailerFileId || '',
         versionId: version.id,
@@ -222,6 +224,7 @@ export default function UnifiedTourEditorPage() {
         title: '',
         description: '',
         completionMessage: '',
+        busInfo: '',
         coverImageFileId: '',
         coverTrailerFileId: '',
         versionId: '',
@@ -517,6 +520,7 @@ export default function UnifiedTourEditorPage() {
           title: versionContent.title,
           description: versionContent.description,
           completionMessage: versionContent.completionMessage,
+          busInfo: versionContent.busInfo,
           coverImageFileId: versionContent.coverImageFileId || null,
           coverTrailerFileId: versionContent.coverTrailerFileId || null,
         },
@@ -528,6 +532,7 @@ export default function UnifiedTourEditorPage() {
         title: versionContent.title,
         description: versionContent.description,
         completionMessage: versionContent.completionMessage || undefined,
+        busInfo: versionContent.busInfo || undefined,
         coverImageFileId: versionContent.coverImageFileId || undefined,
         coverTrailerFileId: versionContent.coverTrailerFileId || undefined,
       });
@@ -1106,6 +1111,21 @@ export default function UnifiedTourEditorPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   />
                   <p className="text-xs text-gray-500 mt-1">This message appears on the completion screen in the mobile app</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Bus Info (optional)
+                  </label>
+                  <textarea
+                    value={versionContent.busInfo}
+                    onChange={(e) => setVersionContent({ ...versionContent, busInfo: e.target.value })}
+                    onBlur={handleVersionContentBlur}
+                    placeholder="Bus schedule or transportation info (e.g., bus line, departure times). Leave empty to hide the Info Bus button."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">If provided, an "Info Bus" button will appear on the completion screen</p>
                 </div>
 
                 {(updateVersionMutation.isPending || createVersionMutation.isPending) && (

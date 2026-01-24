@@ -80,6 +80,7 @@ model TourVersion {
   title               String
   description         String   @db.Text
   completionMessage   String?  @map("completion_message") @db.Text
+  busInfo             String?  @map("bus_info") @db.Text
   coverImageFileId    String?  @map("cover_image_file_id")
   coverTrailerFileId  String?  @map("cover_trailer_file_id")
   status              String   @default("draft") // "draft", "published", "archived"

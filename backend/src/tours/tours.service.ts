@@ -24,7 +24,7 @@ export class ToursService {
       include: {
         versions: {
           where: { status: 'published' },
-          select: { language: true, title: true, description: true, completionMessage: true, coverImage: true, coverTrailer: true },
+          select: { language: true, title: true, description: true, completionMessage: true, busInfo: true, coverImage: true, coverTrailer: true },
         },
         coverImage: true,
         userAccess: userId ? { where: { userId } } : false,
@@ -36,6 +36,7 @@ export class ToursService {
         const title: Record<string, string> = {};
         const descriptionPreview: Record<string, string> = {};
         const completionMessage: Record<string, string> = {};
+        const busInfo: Record<string, string> = {};
         const languages: string[] = [];
 
         tour.versions.forEach((version) => {
@@ -43,6 +44,9 @@ export class ToursService {
           descriptionPreview[version.language] = version.description.substring(0, 200) + '...';
           if (version.completionMessage) {
             completionMessage[version.language] = version.completionMessage;
+          }
+          if (version.busInfo) {
+            busInfo[version.language] = version.busInfo;
           }
           languages.push(version.language);
         });
@@ -65,6 +69,7 @@ export class ToursService {
           title,
           descriptionPreview,
           completionMessage: Object.keys(completionMessage).length > 0 ? completionMessage : undefined,
+          busInfo: Object.keys(busInfo).length > 0 ? busInfo : undefined,
           city: tour.defaultCity,
           durationMinutes: tour.defaultDurationMinutes,
           distanceKm: tour.defaultDistanceKm,
@@ -138,6 +143,7 @@ export class ToursService {
       title: version.title,
       description: version.description,
       completionMessage: version.completionMessage,
+      busInfo: version.busInfo,
       city: tour.defaultCity,
       durationMinutes: tour.defaultDurationMinutes,
       distanceKm: tour.defaultDistanceKm,

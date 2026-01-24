@@ -215,6 +215,54 @@ if (email) → validate email format
 
 ---
 
+# Add Editable busInfo Field to CMS
+
+## Goal
+Make the "Info Bus" button content editable in the CMS by adding a `busInfo` field to TourVersion.
+
+## Tasks
+
+- [x] 1. Backend - Add `busInfo` field to TourVersion in Prisma schema
+- [x] 2. Backend - Run database migration
+- [x] 3. Backend - Update DTOs (create-version, update-version, version-response, tour-list, tour-detail)
+- [x] 4. Backend - Update tours.service.ts to include busInfo in responses
+- [x] 5. CMS - Update types/api/index.ts with busInfo field
+- [x] 6. CMS - Update tour editor page with busInfo textarea
+- [x] 7. Mobile - Update Tour.swift model
+- [x] 8. Mobile - Update TourDetailResponse.swift model
+- [x] 9. Mobile - Update TourCompletionView.swift to conditionally show Info Bus button
+
+## Review
+
+### Summary
+Implemented editable `busInfo` field across the full stack (backend, CMS, mobile) following the exact same pattern as `completionMessage`.
+
+### Files Changed
+
+**Backend (NestJS):**
+- `prisma/schema.prisma` - Added `busInfo` field to TourVersion model
+- `src/admin/tours/dto/create-version.dto.ts` - Added `busInfo?: string`
+- `src/admin/tours/dto/update-version.dto.ts` - Added `busInfo?: string`
+- `src/admin/tours/dto/version-response.dto.ts` - Added `busInfo: string | null`
+- `src/tours/dto/tour-list.dto.ts` - Added `busInfo?: Record<string, string>`
+- `src/tours/dto/tour-detail.dto.ts` - Added `busInfo?: string`
+- `src/tours/tours.service.ts` - Select and aggregate busInfo in listTours, include in getTourDetails
+
+**CMS (Next.js):**
+- `src/types/api/index.ts` - Added `busInfo?: string | null` to TourVersion interface
+- `src/app/tours/[id]/edit/page.tsx` - Added busInfo to state, added textarea field, included in save mutations
+
+**Mobile App (iOS):**
+- `Models/Tour.swift` - Added `busInfo: [String: String]?` property, `displayBusInfo` computed property, updated CodingKeys, init, decoder, encoder
+- `Models/TourDetailResponse.swift` - Added `busInfo: String?`, included in toTour() conversion
+- `Views/Player/TourCompletionView.swift` - Wrapped Info Bus button in conditional (`if let busInfoText = tour.displayBusInfo`), updated alert to display dynamic content
+
+### Behavior
+- If `busInfo` has content → "Info Bus" button shows on completion screen, displays the content in an alert
+- If `busInfo` is empty/null → "Info Bus" button is hidden entirely
+
+---
+
 # Fix Feedback Submission 400 Error
 
 ## Problem

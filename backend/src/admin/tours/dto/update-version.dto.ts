@@ -15,6 +15,10 @@ export class UpdateVersionDto {
   @IsOptional()
   completionMessage?: string;
 
+  @IsString()
+  @IsOptional()
+  busInfo?: string;
+
   @ValidateIf((o) => o.coverImageFileId !== null)
   @IsString()
   @IsOptional()
