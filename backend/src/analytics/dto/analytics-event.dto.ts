@@ -14,6 +14,11 @@ export enum AnalyticsEventType {
   TOUR_STARTED = 'tour_started',
   POINT_TRIGGERED = 'point_triggered',
   TOUR_COMPLETED = 'tour_completed',
+  TOUR_ABANDONED = 'tour_abandoned',
+
+  // Post-Tour Engagement
+  FOLLOW_US_CLICKED = 'follow_us_clicked',
+  CONTACT_CLICKED = 'contact_clicked',
 
   // Monetization
   VOUCHER_REDEEMED = 'voucher_redeemed',

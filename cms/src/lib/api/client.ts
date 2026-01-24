@@ -61,3 +61,35 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Analytics API
+import type {
+  AnalyticsOverview,
+  DurationAnalytics,
+  EngagementAnalytics,
+  TourAnalyticsItem,
+} from '@/types/api';
+
+export type AnalyticsPeriod = '7d' | '30d' | '90d' | 'all';
+
+export const analyticsApi = {
+  getOverview: async (period: AnalyticsPeriod = '30d'): Promise<AnalyticsOverview> => {
+    const response = await apiClient.get(`/admin/analytics/overview?period=${period}`);
+    return response.data;
+  },
+
+  getDuration: async (period: AnalyticsPeriod = '30d'): Promise<DurationAnalytics> => {
+    const response = await apiClient.get(`/admin/analytics/duration?period=${period}`);
+    return response.data;
+  },
+
+  getEngagement: async (period: AnalyticsPeriod = '30d'): Promise<EngagementAnalytics> => {
+    const response = await apiClient.get(`/admin/analytics/engagement?period=${period}`);
+    return response.data;
+  },
+
+  getTours: async (period: AnalyticsPeriod = '30d'): Promise<TourAnalyticsItem[]> => {
+    const response = await apiClient.get(`/admin/analytics/tours?period=${period}`);
+    return response.data;
+  },
+};

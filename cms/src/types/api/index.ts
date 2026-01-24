@@ -124,22 +124,51 @@ export interface Voucher {
 }
 
 // Analytics types
-export interface AnalyticsEvent {
-  id: string;
-  eventType: string;
-  userId: string | null;
-  tourId: string | null;
-  properties: Record<string, any>;
-  createdAt: string;
+export interface AnalyticsOverview {
+  totalStarts: number;
+  totalCompletions: number;
+  uniqueDevices: number;
+  platformBreakdown: {
+    ios: number;
+    android: number;
+  };
+  triggerBreakdown: {
+    gps: number;
+    manual: number;
+  };
 }
 
-export interface TourAnalytics {
+export interface DurationAnalytics {
+  avgDurationGpsCompleted: number;
+  avgDurationManualCompleted: number;
+  avgDurationAbandoned: number;
+  totalGpsCompleted: number;
+  totalManualCompleted: number;
+  totalAbandoned: number;
+}
+
+export interface ChannelBreakdown {
+  channel: string;
+  clicks: number;
+  percentOfCompletions: number;
+}
+
+export interface EngagementAnalytics {
+  followUsClicks: number;
+  followUsPercent: number;
+  channelBreakdown: ChannelBreakdown[];
+  donationClicks: number;
+  donationPercent: number;
+  totalCompletions: number;
+}
+
+export interface TourAnalyticsItem {
   tourId: string;
-  downloads: number;
+  tourName: string;
   starts: number;
   completions: number;
-  languageBreakdown: {
-    language: string;
-    count: number;
-  }[];
+  completionRate: number;
+  avgDurationMinutes: number;
+  gpsTriggered: number;
+  manualTriggered: number;
 }
