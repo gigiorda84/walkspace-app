@@ -269,7 +269,7 @@ export default function UnifiedTourEditorPage() {
 
   // Create new version mutation
   const createVersionMutation = useMutation({
-    mutationFn: (data: { language: string; title: string; description: string; completionMessage?: string; coverImageFileId?: string; coverTrailerFileId?: string }) =>
+    mutationFn: (data: { language: string; title: string; description: string; completionMessage?: string; busInfo?: string; coverImageFileId?: string; coverTrailerFileId?: string }) =>
       versionsApi.createVersion(tourId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-versions', tourId] });
