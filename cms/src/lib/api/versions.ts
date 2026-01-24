@@ -27,6 +27,7 @@ export const versionsApi = {
     title: string;
     description: string;
     completionMessage?: string;
+    busInfo?: string;
     coverImageFileId?: string;
     coverTrailerFileId?: string;
     routePolyline?: string;
