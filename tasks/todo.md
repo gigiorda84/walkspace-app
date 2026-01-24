@@ -118,3 +118,98 @@ All endpoints support `?period=7d|30d|90d|all` query parameter.
 - Offline queue with automatic retry when network available
 - No PII collected - only anonymous IDs, tour IDs, and behavior data
 
+---
+
+# Newsletter & Feedback Form - Implementation Plan
+
+## Goal
+Add a flexible form to the SupportScreen ("Connect" page) that allows users to:
+1. Subscribe to newsletter (email required, name optional)
+2. Leave feedback (feedback required, email/name optional)
+3. Do both
+
+## Tasks
+
+### Backend
+- [x] 1. Add `FeedbackSubmission` model to Prisma schema
+  - `id` (UUID, primary key)
+  - `email` (string, optional)
+  - `name` (string, optional)
+  - `feedback` (text, optional)
+  - `subscribeToNewsletter` (boolean, default false)
+  - `createdAt` (timestamp)
+
+- [x] 2. Run database migration
+
+- [x] 3. Create `FeedbackModule` with:
+  - `POST /feedback` endpoint (public, no auth required)
+  - DTO with validation:
+    - If `subscribeToNewsletter` is true, `email` is required
+    - If no `feedback` and `subscribeToNewsletter` is false, reject
+
+### Mobile App
+- [x] 4. Update `SupportScreen.tsx` to add form:
+  - Email input field
+  - Name input field (optional label)
+  - Feedback textarea (optional label)
+  - "Subscribe to newsletter" checkbox
+  - Submit button
+  - Success/error feedback
+
+- [x] 5. Add API call to POST /feedback
+
+### CMS
+- [x] 6. Add `/feedback` page to view submissions
+  - Table: date, email, name, feedback preview, newsletter checkbox
+  - CSV export
+  - Summary cards (newsletter signups, feedback count, emails count)
+  - Pagination
+
+## Validation Logic
+```
+if (!subscribeToNewsletter && !feedback) → reject "Please provide feedback or subscribe"
+if (subscribeToNewsletter && !email) → reject "Email required for newsletter"
+if (email) → validate email format
+```
+
+---
+
+## Review
+
+### Files Changed
+
+**Backend (NestJS):**
+- `prisma/schema.prisma` - Added `FeedbackSubmission` model
+- `src/feedback/feedback.module.ts` - New module
+- `src/feedback/feedback.controller.ts` - POST /feedback and GET /feedback endpoints
+- `src/feedback/feedback.service.ts` - Business logic with validation
+- `src/feedback/dto/create-feedback.dto.ts` - Request DTO with validation
+- `src/app.module.ts` - Registered FeedbackModule
+
+**Mobile App (React):**
+- `screens/SupportScreen.tsx` - Added newsletter/feedback form with:
+  - Email, name, feedback fields
+  - Newsletter checkbox
+  - Submit button with loading state
+  - Success/error feedback display
+
+**CMS (Next.js):**
+- `src/lib/api/client.ts` - Added feedbackApi methods and types
+- `src/app/feedback/page.tsx` - New page with table, summary cards, CSV export
+- `src/components/layout/Sidebar.tsx` - Added Feedback navigation link
+
+### API Endpoints Added
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/feedback` | POST | Public | Submit feedback/newsletter signup |
+| `/feedback` | GET | Public | List all submissions (paginated) |
+
+### Form Behavior
+
+- User can submit **newsletter signup only** (email required)
+- User can submit **feedback only** (no email required)
+- User can submit **both** (email required if newsletter checked)
+- Name is always optional
+- Success message shown after submission
+

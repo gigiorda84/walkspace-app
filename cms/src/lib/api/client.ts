@@ -93,3 +93,30 @@ export const analyticsApi = {
     return response.data;
   },
 };
+
+// Feedback API
+export interface FeedbackSubmission {
+  id: string;
+  email: string | null;
+  name: string | null;
+  feedback: string | null;
+  subscribeToNewsletter: boolean;
+  createdAt: string;
+}
+
+export interface FeedbackListResponse {
+  data: FeedbackSubmission[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export const feedbackApi = {
+  getAll: async (page: number = 1, limit: number = 50): Promise<FeedbackListResponse> => {
+    const response = await apiClient.get(`/feedback?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+};

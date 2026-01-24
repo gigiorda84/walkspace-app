@@ -17,6 +17,7 @@ import { AdminToursModule } from './admin/tours/admin-tours.module';
 import { AdminMediaModule } from './admin/media/admin-media.module';
 import { AdminAnalyticsModule } from './admin/analytics/admin-analytics.module';
 import { SetupModule } from './setup/setup.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SetupModule } from './setup/setup.module';
     AdminMediaModule,
     AdminAnalyticsModule,
     SetupModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [

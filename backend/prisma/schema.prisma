@@ -271,3 +271,18 @@ model CmsUser {
 
   @@map("cms_users")
 }
+
+// ============================================================================
+// FEEDBACK & NEWSLETTER
+// ============================================================================
+
+model FeedbackSubmission {
+  id                    String   @id @default(uuid())
+  email                 String?
+  name                  String?
+  feedback              String?  @db.Text
+  subscribeToNewsletter Boolean  @default(false) @map("subscribe_to_newsletter")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("feedback_submissions")
+}

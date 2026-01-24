@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Ticket, BarChart3, Upload } from 'lucide-react';
+import { Map, Ticket, BarChart3, Upload, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const navigation = [
   { name: 'Tours', href: '/tours', icon: Map },
   { name: 'Media Library', href: '/media', icon: Upload },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Feedback', href: '/feedback', icon: MessageSquare },
   // { name: 'Vouchers', href: '/vouchers', icon: Ticket },  // Hidden for now
 ];
 
