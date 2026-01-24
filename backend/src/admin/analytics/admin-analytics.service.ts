@@ -186,10 +186,17 @@ export class AdminAnalyticsService {
       where: { ...whereClause, name: 'donation_link_clicked' },
     });
 
+    // Total contact clicks = sum of all channel clicks
+    const totalContactClicks = contactEvents.length;
+
     return {
       followUsClicks,
       followUsPercent: totalCompletions > 0
         ? Math.round((followUsClicks / totalCompletions) * 1000) / 10
+        : 0,
+      totalContactClicks,
+      totalContactPercent: totalCompletions > 0
+        ? Math.round((totalContactClicks / totalCompletions) * 1000) / 10
         : 0,
       channelBreakdown,
       donationClicks,
@@ -273,5 +280,10 @@ export class AdminAnalyticsService {
 
     // Sort by starts descending
     return result.sort((a, b) => b.starts - a.starts);
+  }
+
+  async deleteAllAnalytics(): Promise<{ deleted: number }> {
+    const result = await this.prisma.analyticsEvent.deleteMany({});
+    return { deleted: result.count };
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AdminAnalyticsService } from './admin-analytics.service';
 import {
@@ -93,5 +93,18 @@ export class AdminAnalyticsController {
   })
   async getTours(@Query('period') period?: string): Promise<TourAnalyticsItemDto[]> {
     return this.adminAnalyticsService.getTourAnalytics(period || '30d');
+  }
+
+  @Delete()
+  @ApiOperation({
+    summary: '[CMS] Delete all analytics data',
+    description: 'Permanently delete all analytics events. This action cannot be undone.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Analytics data deleted successfully',
+  })
+  async deleteAll(): Promise<{ deleted: number }> {
+    return this.adminAnalyticsService.deleteAllAnalytics();
   }
 }

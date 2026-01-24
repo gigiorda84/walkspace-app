@@ -156,6 +156,8 @@ export interface ChannelBreakdown {
 export interface EngagementAnalytics {
   followUsClicks: number;
   followUsPercent: number;
+  totalContactClicks: number;
+  totalContactPercent: number;
   channelBreakdown: ChannelBreakdown[];
   donationClicks: number;
   donationPercent: number;

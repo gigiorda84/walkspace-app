@@ -213,3 +213,46 @@ if (email) → validate email format
 - Name is always optional
 - Success message shown after submission
 
+---
+
+# Fix Feedback Submission 400 Error
+
+## Problem
+The iOS feedback form returns a 400 error because it doesn't validate email format before submission. The backend's `@IsEmail` validation rejects invalid email formats.
+
+## Root Cause
+In `TourCompletionView.swift`, the `needsEmail` property only checks if email is **empty**, not if it's a valid format:
+```swift
+private var needsEmail: Bool {
+    subscribeToNewsletter && email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+}
+```
+
+When a user types an invalid email like "abc" or "test@", the form allows submission, but the backend rejects it with 400.
+
+## Tasks
+
+- [x] 1. Add email validation helper function
+- [x] 2. Update form validation to check email format when newsletter is checked
+- [x] 3. Test the fix (build succeeded)
+
+## Approach
+Add a simple email validation function and update the `needsEmail` computed property. Keep changes minimal.
+
+## Review
+
+### Change Made
+Added `isValidEmail` computed property to `TourCompletionView.swift` that validates email format:
+- Checks that email is not empty
+- Checks that email contains exactly one `@`
+- Checks that the domain part contains at least one `.`
+
+Updated `needsEmail` to use `!isValidEmail` instead of just checking if empty.
+
+### Files Changed
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/TourCompletionView.swift` (lines 276-286)
+
+### Behavior Change
+- **Before**: Submit button enabled when newsletter checked and email field has any text
+- **After**: Submit button enabled when newsletter checked and email field has valid format (e.g., `user@example.com`)
+

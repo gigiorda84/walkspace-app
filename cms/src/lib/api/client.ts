@@ -92,6 +92,11 @@ export const analyticsApi = {
     const response = await apiClient.get(`/admin/analytics/tours?period=${period}`);
     return response.data;
   },
+
+  deleteAll: async (): Promise<{ deleted: number }> => {
+    const response = await apiClient.delete('/admin/analytics');
+    return response.data;
+  },
 };
 
 // Feedback API

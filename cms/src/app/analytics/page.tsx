@@ -48,6 +48,8 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('30d');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [duration, setDuration] = useState<DurationAnalytics | null>(null);
@@ -77,6 +79,19 @@ export default function AnalyticsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDeleteAll() {
+    setDeleting(true);
+    try {
+      await analyticsApi.deleteAll();
+      setShowDeleteConfirm(false);
+      fetchAnalytics();
+    } catch (err) {
+      console.error('Failed to delete analytics:', err);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -124,16 +139,52 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as AnalyticsPeriod)}
-          className="border border-gray-300 rounded-lg px-4 py-2 text-sm"
-        >
-          {Object.entries(periodLabels).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as AnalyticsPeriod)}
+            className="border border-gray-300 rounded-lg px-4 py-2 text-sm"
+          >
+            {Object.entries(periodLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+          >
+            Delete All Data
+          </button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete All Analytics Data?</h3>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete all analytics events. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                className="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete All'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overview Section */}
       <section className="mb-8">
@@ -229,10 +280,10 @@ export default function AnalyticsPage() {
             <h3 className="font-medium text-gray-900 mb-4">Contact & Social</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                <span className="text-gray-600">Follow Us Clicks</span>
+                <span className="text-gray-600">Total Contact Clicks</span>
                 <div className="text-right">
-                  <span className="font-semibold text-gray-900">{engagement?.followUsClicks || 0}</span>
-                  <span className="text-gray-500 text-sm ml-2">({engagement?.followUsPercent || 0}% of completions)</span>
+                  <span className="font-semibold text-gray-900">{engagement?.totalContactClicks || 0}</span>
+                  <span className="text-gray-500 text-sm ml-2">({engagement?.totalContactPercent || 0}% of completions)</span>
                 </div>
               </div>
               {engagement?.channelBreakdown.map((channel) => (

@@ -74,6 +74,12 @@ export class EngagementAnalyticsDto {
   @ApiProperty({ example: 45.9, description: 'Percentage of completions' })
   followUsPercent: number;
 
+  @ApiProperty({ example: 120, description: 'Total clicks on contact buttons (Instagram, Facebook, Website, Email)' })
+  totalContactClicks: number;
+
+  @ApiProperty({ example: 64.8, description: 'Percentage of completions' })
+  totalContactPercent: number;
+
   @ApiProperty({ type: [ChannelBreakdownDto] })
   channelBreakdown: ChannelBreakdownDto[];
 
