@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { TourVersion } from '@/types/api';
 
-// API functions for managing tour versions
+// API functions for managing tour versions (v2 - added busInfo support)
 export const versionsApi = {
   /**
    * Get all versions for a tour
