@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils/cn';
 const navigation = [
   { name: 'Tours', href: '/tours', icon: Map },
   { name: 'Media Library', href: '/media', icon: Upload },
-  { name: 'Vouchers', href: '/vouchers', icon: Ticket },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  // { name: 'Vouchers', href: '/vouchers', icon: Ticket },  // Hidden for now
 ];
 
 export function Sidebar() {

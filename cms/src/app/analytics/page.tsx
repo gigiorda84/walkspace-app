@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { analyticsApi, AnalyticsPeriod } from '@/lib/api/client';
 import type {
   AnalyticsOverview,
@@ -87,28 +89,38 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Analytics</h1>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      </div>
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Analytics</h1>
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Analytics</h1>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
-        </div>
-      </div>
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Analytics</h1>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+              {error}
+            </div>
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <div className="p-8">
+    <ProtectedRoute>
+      <MainLayout>
+        <div className="p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
@@ -290,7 +302,9 @@ export default function AnalyticsPage() {
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </MainLayout>
+  </ProtectedRoute>
   );
 }
