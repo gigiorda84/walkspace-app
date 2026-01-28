@@ -351,3 +351,88 @@ Added file existence check in `downloadTour()` before downloading each audio fil
 1. **Already downloaded tour**: Progress jumps to 100% instantly (no network requests)
 2. **Partially downloaded tour**: Only missing files downloaded
 3. **New tour**: All files downloaded (unchanged behavior)
+
+---
+
+# Only Auto-Play First Point If User Is Within GPS Radius
+
+## Problem
+When a tour starts, the first point audio plays automatically regardless of the user's location. The user wants auto-play only if they're within the GPS trigger radius of the first point.
+
+## Current Behavior
+In `PlayerView.fetchManifest()` (lines 304-308), after loading the manifest, the first point audio auto-plays unconditionally.
+
+## Tasks
+
+- [x] 1. Check if user is within GPS radius of first point before auto-playing
+- [x] 2. If within radius → auto-play as before
+- [x] 3. If not within radius → prepare audio but don't play (user hits play button)
+
+## Files to Modify
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/PlayerView.swift`
+
+## Approach
+In `fetchManifest()`, after loading the manifest:
+1. Get user's current location from `locationManager.location`
+2. Calculate distance to first point
+3. Only call `playAudio()` if distance <= triggerRadiusMeters
+
+## Review
+
+### Change Made
+Modified `fetchManifest()` in PlayerView.swift to conditionally auto-play the first point:
+- Get user's current location from `locationManager.location`
+- Calculate distance to first point using `CLLocation.distance(from:)`
+- Only call `playAudio()` if distance <= `firstPoint.triggerRadiusMeters`
+- If no location or outside radius, just update Now Playing info and wait for user to press play
+
+### Files Changed
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Views/Player/PlayerView.swift` (lines 304-321)
+
+### Behavior Change
+- **Before**: First point audio always auto-plays when tour starts
+- **After**: First point only auto-plays if user is within GPS trigger radius; otherwise waits for play button
+
+---
+
+# Queue Next Point If User Passes Through While Audio Is Playing
+
+## Problem
+If user is at point 2 (audio playing), walks into point 3's radius, then walks past it before audio finishes, point 3's audio never plays. The trigger is lost because LocationManager only checks the current point index.
+
+## Current Behavior
+- `checkSequentialPointProximity()` only checks `tourPoints[currentPointIndex]`
+- If user enters/exits the next point while audio is playing, it's not detected
+- When audio finishes and `advanceToNextPoint()` is called, user may be outside the new point's radius
+
+## Tasks
+
+- [x] 1. Add `nextPointQueued` flag to LocationManager
+- [x] 2. In `checkSequentialPointProximity()`, also check next point (currentPointIndex + 1)
+- [x] 3. If user enters next point's radius, set `nextPointQueued = true`
+- [x] 4. In `advanceToNextPoint()`, if `nextPointQueued`, trigger the new point immediately
+
+## Files to Modify
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/LocationManager.swift`
+
+## Review
+
+### Changes Made
+1. Added `nextPointQueued: Bool` published property (line 18)
+2. Reset flag in `setTourPoints()` and `resetTourProgress()`
+3. In `checkSequentialPointProximity()`, added look-ahead check for next point (lines 106-120)
+4. In `advanceToNextPoint()`, if point was queued, trigger it immediately (lines 130-148)
+
+### Files Changed
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/LocationManager.swift`
+
+### Behavior Change
+- **Before**: If user passes through next point while audio is playing, the trigger is lost
+- **After**: Next point is queued and auto-plays when current audio finishes
+
+### Flow Example
+1. User at point 2, audio playing
+2. User walks into point 3's radius → `nextPointQueued = true`, logged as "QUEUED"
+3. User walks past point 3 (exits radius)
+4. Point 2 audio finishes → `advanceToNextPoint()` sees `wasQueued = true`
+5. Point 3 audio auto-plays immediately, logged as "AUTO-TRIGGERED from queue"
