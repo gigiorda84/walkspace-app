@@ -84,7 +84,7 @@ class TourPlaybackService : Service() {
     fun startTour(tour: Tour, language: String) {
         currentTour = tour
         currentLanguage = language
-        locationManager.setTourPoints(tour.points)
+        locationManager.setTourPoints(tour.points ?: emptyList())
         locationManager.startTracking()
         updateNotification("Playing: ${tour.getDisplayTitle(language)}")
         DebugLogger.d("Tour started: ${tour.id}")

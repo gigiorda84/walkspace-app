@@ -24,7 +24,7 @@ class PlayerViewModel @Inject constructor(
     private val apiService: ApiService,
     private val userPreferencesManager: UserPreferencesManager,
     private val locationManager: LocationManager,
-    private val audioPlayerManager: AudioPlayerManager,
+    val audioPlayerManager: AudioPlayerManager,
     private val tourDownloadManager: TourDownloadManager,
     private val analyticsService: AnalyticsService
 ) : ViewModel() {
@@ -141,7 +141,7 @@ class PlayerViewModel @Inject constructor(
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
         // Initialize location tracking
-        locationManager.setTourPoints(tour.points)
+        locationManager.setTourPoints(tour.points ?: emptyList())
         locationManager.startTracking()
         audioPlayerManager.initialize()
 

@@ -18,7 +18,7 @@ data class Tour(
     val coverImageUrl: String? = null,
     val coverTrailerUrl: String? = null,
     val routePolyline: String? = null,
-    var points: List<TourPoint> = emptyList(),
+    var points: List<TourPoint>? = null,
     var isDownloaded: Boolean = false
 ) {
     enum class Difficulty {
