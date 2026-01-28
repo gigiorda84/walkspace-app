@@ -50,6 +50,22 @@
     <string name="support_us">Soutenez Notre Travail</string>
     <string name="return_home">Retour à l\'Accueil</string>
 
+    <!-- Follow Us / Connect Modal -->
+    <string name="connect">Se connecter</string>
+    <string name="instagram">Instagram</string>
+    <string name="facebook">Facebook</string>
+    <string name="website">Site Web</string>
+    <string name="email_label">Email</string>
+    <string name="email_hint">Email</string>
+    <string name="name_optional">Nom (facultatif)</string>
+    <string name="feedback_optional">Votre avis (facultatif)</string>
+    <string name="subscribe_newsletter">S\'abonner à la newsletter</string>
+    <string name="submit">Envoyer</string>
+    <string name="thank_you">Merci!</string>
+    <string name="send_another">Envoyer un autre message</string>
+    <string name="email_required">Email requis pour s\'abonner à la newsletter</string>
+    <string name="submit_error">Erreur lors de l\'envoi. Veuillez réessayer.</string>
+
     <!-- Settings -->
     <string name="language">Langue</string>
     <string name="preferred_language">Langue Préférée</string>

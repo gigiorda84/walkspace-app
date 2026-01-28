@@ -2,7 +2,7 @@ package com.bandite.sonicwalkscape.utils
 
 object Constants {
     // API Configuration
-    const val API_BASE_URL = "https://walkspace-api.vercel.app/api/"
+    const val API_BASE_URL = "https://walkspace-api.onrender.com/"
 
     // Storage paths
     const val TOURS_DIRECTORY = "tours"

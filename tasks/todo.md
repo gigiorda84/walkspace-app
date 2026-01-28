@@ -436,3 +436,54 @@ If user is at point 2 (audio playing), walks into point 3's radius, then walks p
 3. User walks past point 3 (exits radius)
 4. Point 2 audio finishes → `advanceToNextPoint()` sees `wasQueued = true`
 5. Point 3 audio auto-plays immediately, logged as "AUTO-TRIGGERED from queue"
+
+---
+
+# Fix Android Connect Page
+
+## Problem
+The Android app's Connect bottom sheet has three issues:
+1. All 4 social buttons use `R.drawable.ic_notification` (headphones icon) as placeholder
+2. Social link click handlers are empty (don't open URLs)
+3. Only has "Subscribe to newsletter" placeholder text - missing the full form (email, name, feedback, checkbox, submit)
+4. No API connection for feedback submission
+
+## Tasks
+
+- [x] 1. Update `SocialButton` to use Material Icons (ImageVector) instead of drawable resource
+- [x] 2. Fix icons: Instagram=CameraAlt, Facebook=People, Website=Language, Email=Email (matching iOS)
+- [x] 3. Add URL opening for social links
+- [x] 4. Add `POST /feedback` endpoint to Android `ApiService.kt`
+- [x] 5. Build full newsletter/feedback form matching iOS implementation
+- [x] 6. Add missing localized strings for Italian and French
+
+## Review
+
+### Files Changed
+
+**Android App (Kotlin):**
+- `data/api/ApiService.kt` - Added `submitFeedback()` endpoint, `FeedbackRequest` and `FeedbackResponse` DTOs
+- `ui/welcome/WelcomeScreen.kt` - Rewrote `ConnectBottomSheet` and `SocialButton`, added `NewsletterFeedbackForm`
+- `res/values-it/strings.xml` - Added Italian translations for all Connect form strings
+- `res/values-fr/strings.xml` - Added French translations for all Connect form strings
+
+### Changes Made
+
+1. **Icons**: Replaced `R.drawable.ic_notification` placeholder with Material Icons:
+   - Instagram → `Icons.Outlined.CameraAlt` (matches iOS `camera.fill`)
+   - Facebook → `Icons.Outlined.People` (matches iOS `person.2.fill`)
+   - Website → `Icons.Outlined.Language` (matches iOS `globe`)
+   - Email → `Icons.Outlined.Email` (matches iOS `envelope.fill`)
+
+2. **Social Links**: Each button now opens the correct URL via `Intent.ACTION_VIEW`
+
+3. **Newsletter Form**: Full form matching iOS with:
+   - Email, Name, Feedback fields
+   - Newsletter checkbox
+   - Submit button with loading spinner
+   - Success state with "Send another" option
+   - Validation: must provide feedback OR subscribe; email required if subscribing
+
+4. **API Integration**: Form submits to `POST /feedback` using existing Retrofit ApiClient
+
+5. **Localization**: Added all form strings in Italian and French (matching iOS LocalizedStrings)

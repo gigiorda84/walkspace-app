@@ -67,6 +67,12 @@ interface ApiService {
     suspend fun sendAnalyticsEvents(
         @Body request: AnalyticsRequest
     ): Response<AnalyticsResponse>
+
+    // Feedback
+    @POST("feedback")
+    suspend fun submitFeedback(
+        @Body request: FeedbackRequest
+    ): Response<FeedbackResponse>
 }
 
 // Request/Response DTOs
@@ -128,4 +134,16 @@ data class AnalyticsEvent(
 
 data class AnalyticsResponse(
     val status: String
+)
+
+data class FeedbackRequest(
+    val email: String? = null,
+    val name: String? = null,
+    val feedback: String? = null,
+    val subscribeToNewsletter: Boolean = false
+)
+
+data class FeedbackResponse(
+    val success: Boolean,
+    val message: String
 )
