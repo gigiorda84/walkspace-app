@@ -304,3 +304,50 @@ Updated `needsEmail` to use `!isValidEmail` instead of just checking if empty.
 - **Before**: Submit button enabled when newsletter checked and email field has any text
 - **After**: Submit button enabled when newsletter checked and email field has valid format (e.g., `user@example.com`)
 
+---
+
+# Skip Already-Downloaded Files Before Re-downloading
+
+## Problem
+When a user initiates a tour download, the app downloads all files regardless of whether they already exist on disk. This wastes bandwidth and time.
+
+## Current Behavior
+- `TourDownloadManager.downloadTour()` downloads every audio file from the manifest
+- No check for existing files before downloading
+- Files are overwritten even if they already exist
+
+## Tasks
+
+- [x] 1. In `downloadTour()`, check if each audio file already exists before downloading
+- [x] 2. If file exists, skip downloading and increment progress
+- [x] 3. Test that pre-downloaded tours complete instantly
+
+## Files to Modify
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/TourDownloadManager.swift`
+
+## Approach
+In the download loop (lines 58-69), add `fileManager.fileExists(atPath:)` check before downloading each file. This handles:
+1. Fully downloaded tours - skips everything
+2. Partially downloaded tours - only downloads missing files
+3. No downloaded files - downloads everything (current behavior)
+
+## Review
+
+### Change Made
+Added file existence check in `downloadTour()` before downloading each audio file:
+- Build local file path first
+- Check if file already exists with `fileManager.fileExists(atPath:)`
+- If exists: increment progress and `continue` to next file
+- If not exists: download and save as before
+
+### Files Changed
+- `mobile-app/ios/SonicWalkscape/SonicWalkscape/Services/TourDownloadManager.swift` (lines 58-77)
+
+### Behavior Change
+- **Before**: All audio files downloaded every time, overwriting existing files
+- **After**: Only missing files are downloaded; existing files are skipped
+
+### Test Scenarios
+1. **Already downloaded tour**: Progress jumps to 100% instantly (no network requests)
+2. **Partially downloaded tour**: Only missing files downloaded
+3. **New tour**: All files downloaded (unchanged behavior)
