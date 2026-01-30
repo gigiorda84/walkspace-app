@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sonic Walkscape</string>
+
+    <!-- Welcome -->
+    <string name="welcome_title">Benvenuto in Sonic Walkscape</string>
+    <string name="welcome_subtitle">Tour audio immersivi a piedi</string>
+    <string name="welcome_start">Inizia</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_slide1_title">Scopri i Tour Audio</string>
+    <string name="onboarding_slide1_description">Esplora le città attraverso esperienze sonore immersive guidate dal GPS</string>
+    <string name="onboarding_slide2_title">Resta al Sicuro</string>
+    <string name="onboarding_slide2_description">Presta sempre attenzione all\'ambiente circostante. Togli le cuffie agli incroci.</string>
+    <string name="onboarding_slide3_title">Scarica per l\'Offline</string>
+    <string name="onboarding_slide3_description">Scarica i tour prima di iniziare per la migliore esperienza</string>
+    <string name="onboarding_next">Avanti</string>
+    <string name="onboarding_skip">Salta</string>
+    <string name="onboarding_finish">Iniziamo</string>
+
+    <!-- Discovery -->
+    <string name="discovery_title">Scopri i Tour</string>
+    <string name="discovery_search_placeholder">Cerca tour…</string>
+    <string name="discovery_filter_all">Tutti</string>
+    <string name="discovery_no_tours">Nessun tour disponibile</string>
+    <string name="discovery_loading">Caricamento tour…</string>
+    <string name="discovery_error">Impossibile caricare i tour</string>
+    <string name="discovery_retry">Riprova</string>
+
+    <!-- Tour Card -->
+    <string name="tour_duration">%1$d min</string>
+    <string name="tour_distance">%1$.1f km</string>
+    <string name="tour_points">%1$d punti</string>
+    <string name="tour_downloaded">Scaricato</string>
+    <string name="tour_protected">Protetto</string>
+
+    <!-- Tour Detail -->
+    <string name="tour_detail_about">Informazioni sul tour</string>
+    <string name="tour_detail_route">Percorso</string>
+    <string name="tour_detail_start">Inizia Tour</string>
+    <string name="tour_detail_download">Scarica</string>
+    <string name="tour_detail_downloading">Download in corso…</string>
+    <string name="tour_detail_delete">Elimina Download</string>
+    <string name="tour_detail_difficulty">Difficoltà</string>
+    <string name="tour_detail_category">Categoria</string>
+
+    <!-- Difficulty -->
+    <string name="difficulty_easy">Facile</string>
+    <string name="difficulty_moderate">Moderato</string>
+    <string name="difficulty_challenging">Impegnativo</string>
+
+    <!-- Categories -->
+    <string name="category_history">Storia</string>
+    <string name="category_nature">Natura</string>
+    <string name="category_art">Arte</string>
+    <string name="category_architecture">Architettura</string>
+    <string name="category_food">Cibo</string>
+    <string name="category_culture">Cultura</string>
+
+    <!-- Tour Setup -->
+    <string name="setup_title">Impostazioni Tour</string>
+    <string name="setup_language">Lingua Audio</string>
+    <string name="setup_subtitles">Mostra Sottotitoli</string>
+    <string name="setup_download_required">Download Richiesto</string>
+    <string name="setup_download_message">Questo tour deve essere scaricato per la riproduzione offline</string>
+    <string name="setup_start">Inizia Tour</string>
+
+    <!-- Player -->
+    <string name="player_point">Punto %1$d di %2$d</string>
+    <string name="player_distance_to_next">%1$dm al prossimo punto</string>
+    <string name="player_waiting_gps">In attesa del GPS…</string>
+    <string name="player_walk_to_start">Vai al punto di partenza</string>
+    <string name="player_audio_playing">Audio in riproduzione…</string>
+    <string name="player_tap_to_play">Tocca per riprodurre</string>
+    <string name="player_exit_title">Uscire dal Tour?</string>
+    <string name="player_exit_message">I tuoi progressi andranno persi. Sei sicuro?</string>
+    <string name="player_exit_confirm">Esci</string>
+    <string name="player_exit_cancel">Continua</string>
+
+    <!-- Tour Completion -->
+    <string name="completion_title">Tour Completato!</string>
+    <string name="completion_congratulations">Complimenti per aver completato il tour</string>
+    <string name="completion_duration">Durata: %1$d minuti</string>
+    <string name="completion_points_visited">Punti visitati: %1$d</string>
+    <string name="completion_follow_us">Seguici</string>
+    <string name="completion_donate">Supportaci</string>
+    <string name="completion_feedback">Lascia un Feedback</string>
+    <string name="completion_done">Fatto</string>
+    <string name="completion_bus_info">Info Bus</string>
+
+    <!-- Feedback -->
+    <string name="feedback_title">Feedback</string>
+    <string name="feedback_email_hint">Email (opzionale)</string>
+    <string name="feedback_name_hint">Nome (opzionale)</string>
+    <string name="feedback_message_hint">Il tuo feedback…</string>
+    <string name="feedback_newsletter">Iscriviti alla newsletter</string>
+    <string name="feedback_submit">Invia</string>
+    <string name="feedback_success">Grazie per il tuo feedback!</string>
+    <string name="feedback_error">Impossibile inviare il feedback</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_language">Lingua App</string>
+    <string name="settings_notifications">Notifiche</string>
+    <string name="settings_auto_download">Download automatico tour</string>
+    <string name="settings_analytics">Condividi Analytics</string>
+    <string name="settings_analytics_description">Aiutaci a migliorare condividendo dati anonimi sull\'utilizzo</string>
+    <string name="settings_location">Permesso Posizione</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_privacy">Informativa sulla Privacy</string>
+    <string name="settings_terms">Termini di Servizio</string>
+
+    <!-- Languages -->
+    <string name="language_english">English</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_french">Français</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_title">Permesso Posizione</string>
+    <string name="permission_location_message">Abbiamo bisogno dell\'accesso alla posizione per attivare l\'audio nei punti del tour</string>
+    <string name="permission_location_background">La posizione in background è necessaria per continuare il tour quando l\'app è in background</string>
+    <string name="permission_grant">Concedi Permesso</string>
+    <string name="permission_denied">Permesso Negato</string>
+    <string name="permission_settings">Apri Impostazioni</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_playback">Riproduzione Tour</string>
+    <string name="notification_channel_description">Mostra l\'avanzamento del tour corrente</string>
+    <string name="notification_tour_active">Tour in corso</string>
+    <string name="notification_point">Punto %1$d - %2$s</string>
+
+    <!-- Errors -->
+    <string name="error_network">Errore di rete. Controlla la connessione.</string>
+    <string name="error_server">Errore del server. Riprova più tardi.</string>
+    <string name="error_download">Download fallito. Riprova.</string>
+    <string name="error_location">Impossibile ottenere la posizione</string>
+    <string name="error_audio">Impossibile riprodurre l\'audio</string>
+    <string name="error_unknown">Si è verificato un errore</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Annulla</string>
+    <string name="close">Chiudi</string>
+    <string name="retry">Riprova</string>
+    <string name="loading">Caricamento…</string>
+    <string name="save">Salva</string>
+    <string name="delete">Elimina</string>
+    <string name="share">Condividi</string>
+</resources>

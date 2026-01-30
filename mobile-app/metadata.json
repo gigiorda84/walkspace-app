@@ -1,0 +1,7 @@
+{
+  "name": "Mobile Sonic Walkscape",
+  "description": "Immersive geolocated audio experiences for city explorations. Experience history through sound.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

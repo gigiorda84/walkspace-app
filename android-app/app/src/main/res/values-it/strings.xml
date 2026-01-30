@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sonic Walkscape</string>
+
+    <!-- Welcome -->
+    <string name="welcome_subtitle">Tour audio immersivi a piedi</string>
+    <string name="select_language">Seleziona la tua lingua</string>
+    <string name="continue_button">Continua</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_audio_title">Esperienza Audio</string>
+    <string name="onboarding_audio_description">Ascolta storie immersive mentre cammini per la città. Usa le cuffie per la migliore esperienza.</string>
+    <string name="onboarding_gps_title">Attivato dal GPS</string>
+    <string name="onboarding_gps_description">L\'audio si avvia automaticamente quando raggiungi ogni punto. Cammina e ascolta.</string>
+    <string name="onboarding_offline_title">Funziona Offline</string>
+    <string name="onboarding_offline_description">Scarica i tour prima di partire. Non serve internet durante la passeggiata.</string>
+    <string name="back">Indietro</string>
+    <string name="next">Avanti</string>
+    <string name="get_started">Inizia</string>
+
+    <!-- Discovery -->
+    <string name="discover_tours">Scopri i Tour</string>
+    <string name="refresh">Aggiorna</string>
+    <string name="settings">Impostazioni</string>
+    <string name="no_tours">Nessun tour disponibile</string>
+    <string name="error_loading">Errore nel caricamento</string>
+    <string name="retry">Riprova</string>
+    <string name="downloaded">Scaricato</string>
+
+    <!-- Tour Detail -->
+    <string name="duration">Durata</string>
+    <string name="distance">Distanza</string>
+    <string name="download_for_offline">Scarica per Offline</string>
+    <string name="downloading">Scaricamento…</string>
+    <string name="delete">Elimina</string>
+    <string name="start_tour">Inizia Tour</string>
+
+    <!-- Player -->
+    <string name="close">Chiudi</string>
+    <string name="map_placeholder">Mappa in arrivo</string>
+    <string name="waiting_for_location">Cammina verso il punto di partenza…</string>
+    <string name="play">Riproduci</string>
+    <string name="pause">Pausa</string>
+    <string name="rewind">Indietro 10s</string>
+    <string name="forward">Avanti 10s</string>
+
+    <!-- Tour Completion -->
+    <string name="tour_complete_title">Tour Completato!</string>
+    <string name="tour_complete_message">Grazie per aver camminato con noi. Speriamo ti sia piaciuta l\'esperienza.</string>
+    <string name="support_us">Sostieni il Nostro Lavoro</string>
+    <string name="return_home">Torna alla Home</string>
+
+    <!-- Follow Us / Connect Modal -->
+    <string name="connect">Contattaci</string>
+    <string name="instagram">Instagram</string>
+    <string name="facebook">Facebook</string>
+    <string name="website">Sito Web</string>
+    <string name="email_label">Email</string>
+    <string name="email_hint">Email</string>
+    <string name="name_optional">Nome (opzionale)</string>
+    <string name="feedback_optional">Il tuo feedback (opzionale)</string>
+    <string name="subscribe_newsletter">Iscrivimi alla newsletter</string>
+    <string name="submit">Invia</string>
+    <string name="thank_you">Grazie!</string>
+    <string name="send_another">Invia un altro messaggio</string>
+    <string name="email_required">Email richiesta per iscriversi alla newsletter</string>
+    <string name="submit_error">Errore durante l\'invio. Riprova.</string>
+
+    <!-- Settings -->
+    <string name="language">Lingua</string>
+    <string name="preferred_language">Lingua Preferita</string>
+    <string name="preferences">Preferenze</string>
+    <string name="notifications">Notifiche</string>
+    <string name="notifications_description">Ricevi notifiche sui nuovi tour</string>
+    <string name="auto_download">Download Automatico</string>
+    <string name="auto_download_description">Scarica automaticamente i nuovi tour su WiFi</string>
+    <string name="privacy">Privacy</string>
+    <string name="analytics">Analytics</string>
+    <string name="analytics_description">Aiutaci a migliorare condividendo dati anonimi</string>
+    <string name="about">Informazioni</string>
+    <string name="version">Versione</string>
+</resources>

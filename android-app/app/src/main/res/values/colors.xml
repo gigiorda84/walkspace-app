@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_purple">#1A1625</color>
+    <color name="surface_purple">#2A1F3D</color>
+    <color name="border_purple">#3D2F52</color>
+    <color name="brand_dark">#0F0B14</color>
+    <color name="brand_orange">#D95808</color>
+    <color name="brand_yellow">#F5B400</color>
+    <color name="brand_cream">#F8F5F0</color>
+    <color name="brand_muted">#9B8FB5</color>
+</resources>

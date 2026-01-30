@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sonic Walkscape</string>
+
+    <!-- Welcome -->
+    <string name="welcome_subtitle">Visites audio immersives à pied</string>
+    <string name="select_language">Sélectionnez votre langue</string>
+    <string name="continue_button">Continuer</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_audio_title">Expérience Audio</string>
+    <string name="onboarding_audio_description">Écoutez des histoires immersives en vous promenant dans la ville. Utilisez des écouteurs pour une meilleure expérience.</string>
+    <string name="onboarding_gps_title">Déclenché par GPS</string>
+    <string name="onboarding_gps_description">L\'audio se lance automatiquement quand vous atteignez chaque point. Marchez et écoutez.</string>
+    <string name="onboarding_offline_title">Fonctionne Hors Ligne</string>
+    <string name="onboarding_offline_description">Téléchargez les visites avant de partir. Pas besoin d\'internet pendant la promenade.</string>
+    <string name="back">Retour</string>
+    <string name="next">Suivant</string>
+    <string name="get_started">Commencer</string>
+
+    <!-- Discovery -->
+    <string name="discover_tours">Découvrir les Visites</string>
+    <string name="refresh">Actualiser</string>
+    <string name="settings">Paramètres</string>
+    <string name="no_tours">Aucune visite disponible</string>
+    <string name="error_loading">Erreur de chargement</string>
+    <string name="retry">Réessayer</string>
+    <string name="downloaded">Téléchargé</string>
+
+    <!-- Tour Detail -->
+    <string name="duration">Durée</string>
+    <string name="distance">Distance</string>
+    <string name="download_for_offline">Télécharger pour Hors Ligne</string>
+    <string name="downloading">Téléchargement…</string>
+    <string name="delete">Supprimer</string>
+    <string name="start_tour">Commencer la Visite</string>
+
+    <!-- Player -->
+    <string name="close">Fermer</string>
+    <string name="map_placeholder">Carte à venir</string>
+    <string name="waiting_for_location">Marchez vers le point de départ…</string>
+    <string name="play">Lecture</string>
+    <string name="pause">Pause</string>
+    <string name="rewind">Reculer 10s</string>
+    <string name="forward">Avancer 10s</string>
+
+    <!-- Tour Completion -->
+    <string name="tour_complete_title">Visite Terminée!</string>
+    <string name="tour_complete_message">Merci d\'avoir marché avec nous. Nous espérons que vous avez apprécié l\'expérience.</string>
+    <string name="support_us">Soutenez Notre Travail</string>
+    <string name="return_home">Retour à l\'Accueil</string>
+
+    <!-- Follow Us / Connect Modal -->
+    <string name="connect">Se connecter</string>
+    <string name="instagram">Instagram</string>
+    <string name="facebook">Facebook</string>
+    <string name="website">Site Web</string>
+    <string name="email_label">Email</string>
+    <string name="email_hint">Email</string>
+    <string name="name_optional">Nom (facultatif)</string>
+    <string name="feedback_optional">Votre avis (facultatif)</string>
+    <string name="subscribe_newsletter">S\'abonner à la newsletter</string>
+    <string name="submit">Envoyer</string>
+    <string name="thank_you">Merci!</string>
+    <string name="send_another">Envoyer un autre message</string>
+    <string name="email_required">Email requis pour s\'abonner à la newsletter</string>
+    <string name="submit_error">Erreur lors de l\'envoi. Veuillez réessayer.</string>
+
+    <!-- Settings -->
+    <string name="language">Langue</string>
+    <string name="preferred_language">Langue Préférée</string>
+    <string name="preferences">Préférences</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_description">Recevoir des notifications sur les nouvelles visites</string>
+    <string name="auto_download">Téléchargement Auto</string>
+    <string name="auto_download_description">Télécharger automatiquement les nouvelles visites en WiFi</string>
+    <string name="privacy">Confidentialité</string>
+    <string name="analytics">Analytics</string>
+    <string name="analytics_description">Aidez-nous à améliorer en partageant des données anonymes</string>
+    <string name="about">À Propos</string>
+    <string name="version">Version</string>
+</resources>

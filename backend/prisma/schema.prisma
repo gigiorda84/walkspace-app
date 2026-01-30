@@ -1,0 +1,289 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// USERS & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id                  String   @id @default(uuid())
+  email               String?  @unique
+  passwordHash        String?  @map("password_hash")
+  name                String?
+  preferredLanguage   String   @default("en") @map("preferred_language")
+  mailingListOptIn    Boolean  @default(false) @map("mailing_list_opt_in")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  authProviders       UserAuthProvider[]
+  tourAccess          UserTourAccess[]
+  voucherRedemptions  VoucherRedemption[]
+  analyticsEvents     AnalyticsEvent[]
+
+  @@map("users")
+}
+
+model UserAuthProvider {
+  id              String  @id @default(uuid())
+  userId          String  @map("user_id")
+  provider        String  // "apple", "google", "password"
+  providerUserId  String  @map("provider_user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@map("user_auth_providers")
+}
+
+// ============================================================================
+// TOURS
+// ============================================================================
+
+model Tour {
+  id                      String   @id @default(uuid())
+  slug                    String   @unique
+  defaultCity             String   @map("default_city")
+  defaultDurationMinutes  Int      @map("default_duration_minutes")
+  defaultDistanceKm       Float    @map("default_distance_km")
+  defaultDifficulty       String   @default("facile") @map("default_difficulty")
+  isProtected             Boolean  @default(false) @map("is_protected")
+  coverImageFileId        String?  @map("cover_image_file_id")
+  videoFileId             String?  @map("video_file_id")
+  routePolyline           String?  @map("route_polyline") @db.Text
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  coverImage         MediaFile?              @relation("TourCoverImage", fields: [coverImageFileId], references: [id])
+  video              MediaFile?              @relation("TourVideo", fields: [videoFileId], references: [id])
+  versions           TourVersion[]
+  points             TourPoint[]
+  userAccess         UserTourAccess[]
+  vouchers           Voucher[]
+  voucherBatches     VoucherBatch[]
+  analyticsEvents    AnalyticsEvent[]
+
+  @@map("tours")
+}
+
+model TourVersion {
+  id                  String   @id @default(uuid())
+  tourId              String   @map("tour_id")
+  language            String
+  title               String
+  description         String   @db.Text
+  completionMessage   String?  @map("completion_message") @db.Text
+  busInfo             String?  @map("bus_info") @db.Text
+  coverImageFileId    String?  @map("cover_image_file_id")
+  coverTrailerFileId  String?  @map("cover_trailer_file_id")
+  status              String   @default("draft") // "draft", "published", "archived"
+  versionNumber       Int      @map("version_number")
+  startingPointLat    Float?   @map("starting_point_lat")
+  startingPointLng    Float?   @map("starting_point_lng")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  tour               Tour                     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  coverImage         MediaFile?               @relation("TourVersionCoverImage", fields: [coverImageFileId], references: [id])
+  coverTrailer       MediaFile?               @relation("TourVersionCoverTrailer", fields: [coverTrailerFileId], references: [id])
+  pointLocalizations TourPointLocalization[]
+
+  @@unique([tourId, language, versionNumber])
+  @@map("tour_versions")
+}
+
+model TourPoint {
+  id                       String   @id @default(uuid())
+  tourId                   String   @map("tour_id")
+  order                    Int
+  lat                      Float
+  lng                      Float
+  defaultTriggerRadiusMeters Int    @default(150) @map("default_trigger_radius_meters")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  tour          Tour                     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  localizations TourPointLocalization[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@unique([tourId, order])
+  @@map("tour_points")
+}
+
+model TourPointLocalization {
+  id              String  @id @default(uuid())
+  tourPointId     String  @map("tour_point_id")
+  tourVersionId   String  @map("tour_version_id")
+  language        String
+  title           String
+  description     String? @db.Text
+  audioFileId     String? @map("audio_file_id")
+  imageFileId     String? @map("image_file_id")
+  subtitleFileId  String? @map("subtitle_file_id")
+
+  tourPoint     TourPoint   @relation(fields: [tourPointId], references: [id], onDelete: Cascade)
+  tourVersion   TourVersion @relation(fields: [tourVersionId], references: [id], onDelete: Cascade)
+  audioFile     MediaFile?  @relation("PointAudio", fields: [audioFileId], references: [id])
+  imageFile     MediaFile?  @relation("PointImage", fields: [imageFileId], references: [id])
+  subtitleFile  MediaFile?  @relation("PointSubtitle", fields: [subtitleFileId], references: [id])
+
+  @@unique([tourPointId, tourVersionId, language])
+  @@map("tour_point_localizations")
+}
+
+// ============================================================================
+// MEDIA
+// ============================================================================
+
+model MediaFile {
+  id               String   @id @default(uuid())
+  type             String   // "audio", "image", "subtitle", "video"
+  language         String?  // Optional: "en", "fr", "it" (primarily for subtitles)
+  mimeType         String   @map("mime_type")
+  fileSizeBytes    Int      @map("file_size_bytes")
+  storagePath      String   @map("storage_path")
+  version          Int      @default(1)
+  isActive         Boolean  @default(true) @map("is_active")
+  originalFilename String?  @map("original_filename")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  tourCoverImages         Tour[]                   @relation("TourCoverImage")
+  tourVideos              Tour[]                   @relation("TourVideo")
+  tourVersionCoverImages  TourVersion[]            @relation("TourVersionCoverImage")
+  tourVersionCoverTrailers TourVersion[]           @relation("TourVersionCoverTrailer")
+  pointAudio              TourPointLocalization[]  @relation("PointAudio")
+  pointImages             TourPointLocalization[]  @relation("PointImage")
+  pointSubtitles          TourPointLocalization[]  @relation("PointSubtitle")
+
+  @@map("media_files")
+}
+
+// ============================================================================
+// ACCESS CONTROL
+// ============================================================================
+
+model UserTourAccess {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tourId    String   @map("tour_id")
+  source    String   // "free", "voucher"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tour Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tourId])
+  @@map("user_tour_access")
+}
+
+model VoucherBatch {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?  @db.Text
+  tourId          String?  @map("tour_id")
+  createdByUserId String   @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  tour      Tour?      @relation(fields: [tourId], references: [id])
+  createdBy CmsUser    @relation(fields: [createdByUserId], references: [id])
+  vouchers  Voucher[]
+
+  @@map("voucher_batches")
+}
+
+model Voucher {
+  id         String    @id @default(uuid())
+  code       String    @unique
+  batchId    String?   @map("batch_id")
+  tourId     String?   @map("tour_id")
+  maxUses    Int       @default(1) @map("max_uses")
+  usesSoFar  Int       @default(0) @map("uses_so_far")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  batch       VoucherBatch?       @relation(fields: [batchId], references: [id])
+  tour        Tour?               @relation(fields: [tourId], references: [id])
+  redemptions VoucherRedemption[]
+
+  @@map("vouchers")
+}
+
+model VoucherRedemption {
+  id         String   @id @default(uuid())
+  voucherId  String   @map("voucher_id")
+  userId     String   @map("user_id")
+  tourId     String   @map("tour_id")
+  redeemedAt DateTime @default(now()) @map("redeemed_at")
+
+  voucher Voucher @relation(fields: [voucherId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("voucher_redemptions")
+}
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  name        String
+  userId      String?  @map("user_id")
+  anonymousId String?  @map("anonymous_id")
+  tourId      String?  @map("tour_id")
+  pointId     String?  @map("point_id")
+  language    String?
+  device      String?
+  osVersion   String?  @map("os_version")
+  properties  Json?    @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tour  Tour?       @relation(fields: [tourId], references: [id], onDelete: SetNull)
+  point TourPoint?  @relation(fields: [pointId], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@index([tourId])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+// ============================================================================
+// CMS
+// ============================================================================
+
+model CmsUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   // "admin", "editor"
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  voucherBatches VoucherBatch[]
+
+  @@map("cms_users")
+}
+
+// ============================================================================
+// FEEDBACK & NEWSLETTER
+// ============================================================================
+
+model FeedbackSubmission {
+  id                    String   @id @default(uuid())
+  email                 String?
+  name                  String?
+  feedback              String?  @db.Text
+  subscribeToNewsletter Boolean  @default(false) @map("subscribe_to_newsletter")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("feedback_submissions")
+}
