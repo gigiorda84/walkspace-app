@@ -45,7 +45,7 @@ data class Tour(
         get() = distanceKm * 1000
 
     fun getDisplayTitle(language: String = "en"): String {
-        return title[language] ?: title["en"] ?: title.values.firstOrNull() ?: ""
+        return title[language] ?: title["en"] ?: title.values.firstOrNull() ?: slug
     }
 
     fun getDisplayDescription(language: String = "en"): String {
