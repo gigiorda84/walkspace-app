@@ -41,13 +41,26 @@ fun DiscoveryScreen(
     val preferredLanguage by viewModel.preferredLanguage.collectAsState(initial = "en")
 
     // Calculate camera position to fit all tour markers
+    // Parse starting point from routePolyline (format: "lat,lng;lat,lng;...")
     val tourLocations = remember(tours) {
         tours.mapNotNull { tour ->
-            tour.points?.firstOrNull()?.let { point ->
-                TourLocation(
-                    tour = tour,
-                    position = LatLng(point.location.lat, point.location.lng)
-                )
+            tour.routePolyline?.let { polyline ->
+                try {
+                    val firstPoint = polyline.split(";").firstOrNull()
+                    val coords = firstPoint?.split(",")
+                    if (coords != null && coords.size >= 2) {
+                        val lat = coords[0].toDoubleOrNull()
+                        val lng = coords[1].toDoubleOrNull()
+                        if (lat != null && lng != null) {
+                            TourLocation(
+                                tour = tour,
+                                position = LatLng(lat, lng)
+                            )
+                        } else null
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
             }
         }
     }
