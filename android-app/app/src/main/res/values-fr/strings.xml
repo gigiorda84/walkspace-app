@@ -3,58 +3,16 @@
     <string name="app_name">Sonic Walkscape</string>
 
     <!-- Welcome -->
-    <string name="welcome_subtitle">Visites audio immersives à pied</string>
+    <string name="welcome_subtitle">BANDITE _ Artivism</string>
     <string name="select_language">Sélectionnez votre langue</string>
     <string name="continue_button">Continuer</string>
+    <string name="start_exploring">Commencer</string>
+    <string name="connect">Se connecter</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_audio_title">Expérience Audio</string>
-    <string name="onboarding_audio_description">Écoutez des histoires immersives en vous promenant dans la ville. Utilisez des écouteurs pour une meilleure expérience.</string>
-    <string name="onboarding_gps_title">Déclenché par GPS</string>
-    <string name="onboarding_gps_description">L\'audio se lance automatiquement quand vous atteignez chaque point. Marchez et écoutez.</string>
-    <string name="onboarding_offline_title">Fonctionne Hors Ligne</string>
-    <string name="onboarding_offline_description">Téléchargez les visites avant de partir. Pas besoin d\'internet pendant la promenade.</string>
-    <string name="back">Retour</string>
-    <string name="next">Suivant</string>
-    <string name="get_started">Commencer</string>
-
-    <!-- Discovery -->
-    <string name="discover_tours">Découvrir les Visites</string>
-    <string name="refresh">Actualiser</string>
-    <string name="settings">Paramètres</string>
-    <string name="no_tours">Aucune visite disponible</string>
-    <string name="error_loading">Erreur de chargement</string>
-    <string name="retry">Réessayer</string>
-    <string name="downloaded">Téléchargé</string>
-
-    <!-- Tour Detail -->
-    <string name="duration">Durée</string>
-    <string name="distance">Distance</string>
-    <string name="download_for_offline">Télécharger pour Hors Ligne</string>
-    <string name="downloading">Téléchargement…</string>
-    <string name="delete">Supprimer</string>
-    <string name="start_tour">Commencer la Visite</string>
-
-    <!-- Player -->
-    <string name="close">Fermer</string>
-    <string name="map_placeholder">Carte à venir</string>
-    <string name="waiting_for_location">Marchez vers le point de départ…</string>
-    <string name="play">Lecture</string>
-    <string name="pause">Pause</string>
-    <string name="rewind">Reculer 10s</string>
-    <string name="forward">Avancer 10s</string>
-    <string name="previous_point">Point précédent</string>
-    <string name="next_point">Point suivant</string>
-    <string name="toggle_subtitles">Activer/Désactiver sous-titres</string>
-
-    <!-- Tour Completion -->
-    <string name="tour_complete_title">Visite Terminée!</string>
-    <string name="tour_complete_message">Merci d\'avoir marché avec nous. Nous espérons que vous avez apprécié l\'expérience.</string>
-    <string name="support_us">Soutenez Notre Travail</string>
-    <string name="return_home">Retour à l\'Accueil</string>
+    <!-- About Modal -->
+    <string name="about_text">BANDITE est un collectif fondé en 2023 par Valentina Bosio et Simona Sala, deux artistes dont les parcours de recherche et de création se rencontrent à la croisée de l\'art et de l\'activisme. Leur travail naît d\'une approche anthropologique du théâtre physique et se déploie de manière fluide entre théâtre, danse, arts visuels, vidéo et technologies multimédias. L\'objectif est de dépasser les langages performatifs traditionnels en tissant différents codes expressifs pour restituer au théâtre sa nature d\'espace collectif : un lieu de réflexion et de confrontation avec les complexités du présent.\n\nL\'urgence est d\'observer et de raconter ce qui demeure en marge, les histoires et identités invisibles ou oubliées par les récits officiels. Le parcours de BANDITE se fonde sur une idée de l\'art comme pratique de traversée, capable d\'unir territoires, langages et communautés. Le collectif cherche constamment à construire des espaces de dialogue entre corps et mémoires, entre dimension réelle et digitale, entre présent et ancestral. L\'objectif n\'est pas de représenter, mais d\'activer : générer des expériences dans lesquelles le public devient partie prenante d\'un rituel collectif d\'écoute, de conscience et de transmission.\n\nBANDITE est le coeur battant de l\'association Resonavisse: une association culturelle pensée comme un espace vivant d\'exploration, de création et de partage. Un champ ouvert, en transformation continue, où pratiquer l\'art comme rencontre, intuition et possibilité.</string>
 
     <!-- Follow Us / Connect Modal -->
-    <string name="connect">Se connecter</string>
     <string name="instagram">Instagram</string>
     <string name="facebook">Facebook</string>
     <string name="website">Site Web</string>
@@ -69,17 +27,96 @@
     <string name="email_required">Email requis pour s\'abonner à la newsletter</string>
     <string name="submit_error">Erreur lors de l\'envoi. Veuillez réessayer.</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Comment ça marche</string>
+    <string name="onboarding_text_1a">Sonic Walkscape est une promenade simple sur des sentiers de montagne.</string>
+    <string name="onboarding_text_1b">Vous entendrez des pistes audio qui s\'activent automatiquement en suivant la carte du tour choisi.</string>
+    <string name="onboarding_text_1c">Vous pourriez entendre des silences: ils font partie de l\'expérience.</string>
+
+    <string name="onboarding_title_2">La sécurité avant tout</string>
+    <string name="onboarding_text_2a">Vérifiez la météo avant de commencer.</string>
+    <string name="onboarding_text_2b">Portez des vêtements et des chaussures adaptés à un sentier de montagne.</string>
+    <string name="onboarding_text_2c">En cas de neige, apportez des bâtons de randonnée.</string>
+
+    <string name="onboarding_title_3">Avant de partir</string>
+    <string name="onboarding_text_3a">Apportez des écouteurs avec vous.</string>
+    <string name="onboarding_text_3b">N\'oubliez pas: les basses températures déchargent le téléphone plus rapidement.</string>
+    <string name="onboarding_text_3c">Continuez jusqu\'à la fin du tour et laissez-nous un commentaire!</string>
+
+    <string name="back">Retour</string>
+    <string name="next">Suivant</string>
+    <string name="get_started">Commencer</string>
+
+    <!-- Discovery -->
+    <string name="discover">Découvrir</string>
+    <string name="refresh">Actualiser</string>
+    <string name="home">Accueil</string>
+    <string name="settings">Paramètres</string>
+    <string name="no_tours">Aucun tour trouvé</string>
+    <string name="error_loading">Erreur de chargement</string>
+    <string name="retry">Réessayer</string>
+    <string name="downloaded">Téléchargé</string>
+
+    <!-- Tour Detail -->
+    <string name="duration">Durée</string>
+    <string name="distance">Distance</string>
+    <string name="difficulty">Difficulté</string>
+    <string name="difficulty_easy">Facile</string>
+    <string name="difficulty_moderate">Moyen</string>
+    <string name="difficulty_challenging">Difficile</string>
+    <string name="download_for_offline">Télécharger pour Hors Ligne</string>
+    <string name="downloading">Téléchargement…</string>
+    <string name="delete">Supprimer</string>
+    <string name="start_tour">Commencer</string>
+
+    <!-- Player -->
+    <string name="close">Fermer</string>
+    <string name="map_placeholder">Carte à venir</string>
+    <string name="waiting_for_location">Marchez vers le point de départ…</string>
+    <string name="play">Lecture</string>
+    <string name="pause">Pause</string>
+    <string name="rewind">Reculer 10s</string>
+    <string name="forward">Avancer 10s</string>
+    <string name="previous_point">Point précédent</string>
+    <string name="next_point">Point suivant</string>
+    <string name="toggle_subtitles">Activer/Désactiver sous-titres</string>
+
+    <!-- Tour Completion -->
+    <string name="tour_complete_title">Tour Terminé!</string>
+    <string name="tour_complete_message">Merci d\'avoir marché avec nous. Nous espérons que vous avez apprécié l\'expérience.</string>
+    <string name="support_us">Soutenez Notre Travail</string>
+    <string name="return_home">Retour à l\'Accueil</string>
+
+    <!-- Tour Setup -->
+    <string name="choose_audio_language">Langue audio</string>
+    <string name="choose_language_subtitle">Choisissez la langue audio</string>
+    <string name="subtitles">Sous-titres</string>
+    <string name="subtitles_question">Voulez-vous activer les sous-titres?</string>
+    <string name="subtitles_on">Activé</string>
+    <string name="subtitles_on_description">Afficher les sous-titres pendant la lecture</string>
+    <string name="subtitles_off">Désactivé</string>
+    <string name="subtitles_off_description">Sans sous-titres</string>
+    <string name="download_tour">Télécharger le tour</string>
+    <string name="download_recommended_subtitle">Nous recommandons de télécharger le tour pour une meilleure expérience, surtout dans les zones à faible connectivité.</string>
+    <string name="download_recommended">Télécharger (Recommandé)</string>
+    <string name="save_for_offline">Sauvegarder pour une utilisation hors ligne</string>
+    <string name="stream_only">Streaming uniquement</string>
+    <string name="requires_internet">Nécessite une connexion internet</string>
+    <string name="downloading_tour">Téléchargement en cours</string>
+    <string name="please_wait">Veuillez patienter pendant le téléchargement…</string>
+    <string name="download_failed">Échec du téléchargement</string>
+    <string name="skip">Passer</string>
+
     <!-- Settings -->
     <string name="language">Langue</string>
     <string name="preferred_language">Langue Préférée</string>
-    <string name="preferences">Préférences</string>
-    <string name="notifications">Notifications</string>
-    <string name="notifications_description">Recevoir des notifications sur les nouvelles visites</string>
-    <string name="auto_download">Téléchargement Auto</string>
-    <string name="auto_download_description">Télécharger automatiquement les nouvelles visites en WiFi</string>
-    <string name="privacy">Confidentialité</string>
-    <string name="analytics">Analytics</string>
-    <string name="analytics_description">Aidez-nous à améliorer en partageant des données anonymes</string>
-    <string name="about">À Propos</string>
+    <string name="location">Localisation</string>
+    <string name="enable_location">Activer la localisation</string>
+    <string name="location_description">Requis pour la lecture audio GPS</string>
+    <string name="about">À propos</string>
     <string name="version">Version</string>
+    <string name="build">Build</string>
+    <string name="credits">Crédits</string>
+    <string name="developed_by">Développé par BANDITE Artivism</string>
+    <string name="get_in_touch">Contactez-nous si vous souhaitez utiliser cette app pour votre projet</string>
 </resources>

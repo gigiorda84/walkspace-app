@@ -3,24 +3,54 @@
     <string name="app_name">Sonic Walkscape</string>
 
     <!-- Welcome -->
-    <string name="welcome_subtitle">Tour audio immersivi a piedi</string>
+    <string name="welcome_subtitle">BANDITE _ Artivism</string>
     <string name="select_language">Seleziona la tua lingua</string>
     <string name="continue_button">Continua</string>
+    <string name="start_exploring">Inizia a esplorare</string>
+    <string name="connect">Contattaci</string>
+
+    <!-- About Modal -->
+    <string name="about_text">BANDITE è un collettivo fondato nel 2023 da Valentina Bosio e Simona Sala, due artiste le cui esperienze di ricerca e creazione si incontrano al confine tra arte e attivismo. Il loro lavoro nasce da un approccio antropologico al teatro fisico e si muove fluidamente tra teatro, danza, arti visive, video e tecnologie multimediali. L\'obiettivo è quello di superare i linguaggi performativi tradizionali, intrecciando codici espressivi diversi per restituire al teatro la sua natura di spazio collettivo, un luogo di riflessione e di confronto con le complessità del presente.\n\nL\'urgenza è quella di osservare e raccontare ciò che resta ai margini, le storie e le identità invisibili o dimenticate dalle narrazioni ufficiali. Il percorso di BANDITE si fonda su un\'idea di arte come pratica di attraversamento, capace di unire territori, linguaggi e comunità. Il collettivo cerca costantemente di costruire spazi di dialogo tra corpi e memorie, tra dimensione reale e digitale, tra presente e ancestrale. L\'obiettivo non è rappresentare, ma attivare, generare esperienze in cui il pubblico diventa parte di un rito collettivo di ascolto, consapevolezza e trasmissione.\n\nBANDITE è il cuore pulsante dell\'associazione Resonavisse: un\'associazione culturale ideata per essere uno spazio vivo di esplorazione, creazione e condivisione. Un campo aperto, in continua trasformazione, dove praticare l\'arte come incontro, intuizione e possibilità.</string>
+
+    <!-- Follow Us / Connect Modal -->
+    <string name="instagram">Instagram</string>
+    <string name="facebook">Facebook</string>
+    <string name="website">Sito Web</string>
+    <string name="email_label">Email</string>
+    <string name="email_hint">Email</string>
+    <string name="name_optional">Nome (opzionale)</string>
+    <string name="feedback_optional">Il tuo feedback (opzionale)</string>
+    <string name="subscribe_newsletter">Iscrivimi alla newsletter</string>
+    <string name="submit">Invia</string>
+    <string name="thank_you">Grazie!</string>
+    <string name="send_another">Invia un altro messaggio</string>
+    <string name="email_required">Email richiesta per iscriversi alla newsletter</string>
+    <string name="submit_error">Errore durante l\'invio. Riprova.</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_audio_title">Esperienza Audio</string>
-    <string name="onboarding_audio_description">Ascolta storie immersive mentre cammini per la città. Usa le cuffie per la migliore esperienza.</string>
-    <string name="onboarding_gps_title">Attivato dal GPS</string>
-    <string name="onboarding_gps_description">L\'audio si avvia automaticamente quando raggiungi ogni punto. Cammina e ascolta.</string>
-    <string name="onboarding_offline_title">Funziona Offline</string>
-    <string name="onboarding_offline_description">Scarica i tour prima di partire. Non serve internet durante la passeggiata.</string>
+    <string name="onboarding_title_1">Come funziona</string>
+    <string name="onboarding_text_1a">Sonic Walkscape è una camminata semplice su sentieri di montagna.</string>
+    <string name="onboarding_text_1b">Ascolterai tracce audio che si attivano automaticamente seguendo la mappa del tour scelto.</string>
+    <string name="onboarding_text_1c">Potresti ascoltare dei silenzi: fanno parte dell\'esperienza.</string>
+
+    <string name="onboarding_title_2">Sicurezza prima di tutto</string>
+    <string name="onboarding_text_2a">Controlla il meteo prima di iniziare.</string>
+    <string name="onboarding_text_2b">Indossa abiti e scarpe adatte a un sentiero di montagna.</string>
+    <string name="onboarding_text_2c">In caso di neve, porta i bastoncini da montagna.</string>
+
+    <string name="onboarding_title_3">Prima di partire</string>
+    <string name="onboarding_text_3a">Porta con te cuffie o auricolari.</string>
+    <string name="onboarding_text_3b">Ricorda: le basse temperature scaricano il telefono più velocemente.</string>
+    <string name="onboarding_text_3c">Prosegui fino al termine del tour e lasciaci un feedback!</string>
+
     <string name="back">Indietro</string>
     <string name="next">Avanti</string>
     <string name="get_started">Inizia</string>
 
     <!-- Discovery -->
-    <string name="discover_tours">Scopri i Tour</string>
+    <string name="discover">Scopri</string>
     <string name="refresh">Aggiorna</string>
+    <string name="home">Home</string>
     <string name="settings">Impostazioni</string>
     <string name="no_tours">Nessun tour disponibile</string>
     <string name="error_loading">Errore nel caricamento</string>
@@ -30,6 +60,10 @@
     <!-- Tour Detail -->
     <string name="duration">Durata</string>
     <string name="distance">Distanza</string>
+    <string name="difficulty">Difficoltà</string>
+    <string name="difficulty_easy">Facile</string>
+    <string name="difficulty_moderate">Medio</string>
+    <string name="difficulty_challenging">Difficile</string>
     <string name="download_for_offline">Scarica per Offline</string>
     <string name="downloading">Scaricamento…</string>
     <string name="delete">Elimina</string>
@@ -53,33 +87,36 @@
     <string name="support_us">Sostieni il Nostro Lavoro</string>
     <string name="return_home">Torna alla Home</string>
 
-    <!-- Follow Us / Connect Modal -->
-    <string name="connect">Contattaci</string>
-    <string name="instagram">Instagram</string>
-    <string name="facebook">Facebook</string>
-    <string name="website">Sito Web</string>
-    <string name="email_label">Email</string>
-    <string name="email_hint">Email</string>
-    <string name="name_optional">Nome (opzionale)</string>
-    <string name="feedback_optional">Il tuo feedback (opzionale)</string>
-    <string name="subscribe_newsletter">Iscrivimi alla newsletter</string>
-    <string name="submit">Invia</string>
-    <string name="thank_you">Grazie!</string>
-    <string name="send_another">Invia un altro messaggio</string>
-    <string name="email_required">Email richiesta per iscriversi alla newsletter</string>
-    <string name="submit_error">Errore durante l\'invio. Riprova.</string>
+    <!-- Tour Setup -->
+    <string name="choose_audio_language">Lingua Audio</string>
+    <string name="choose_language_subtitle">Scegli la lingua audio preferita</string>
+    <string name="subtitles">Sottotitoli</string>
+    <string name="subtitles_question">Vuoi attivare i sottotitoli?</string>
+    <string name="subtitles_on">Attivo</string>
+    <string name="subtitles_on_description">Mostra sottotitoli durante la riproduzione</string>
+    <string name="subtitles_off">Disattivo</string>
+    <string name="subtitles_off_description">Nessun sottotitolo</string>
+    <string name="download_tour">Scarica Tour</string>
+    <string name="download_recommended_subtitle">Ti consigliamo di scaricare il tour per un\'esperienza migliore, specialmente in zone con scarsa connettività.</string>
+    <string name="download_recommended">Download (Consigliato)</string>
+    <string name="save_for_offline">Salva il tour per l\'uso offline</string>
+    <string name="stream_only">Solo Streaming</string>
+    <string name="requires_internet">Richiede connessione internet</string>
+    <string name="downloading_tour">Download in corso</string>
+    <string name="please_wait">Attendere il download del contenuto…</string>
+    <string name="download_failed">Download Fallito</string>
+    <string name="skip">Salta</string>
 
     <!-- Settings -->
     <string name="language">Lingua</string>
     <string name="preferred_language">Lingua Preferita</string>
-    <string name="preferences">Preferenze</string>
-    <string name="notifications">Notifiche</string>
-    <string name="notifications_description">Ricevi notifiche sui nuovi tour</string>
-    <string name="auto_download">Download Automatico</string>
-    <string name="auto_download_description">Scarica automaticamente i nuovi tour su WiFi</string>
-    <string name="privacy">Privacy</string>
-    <string name="analytics">Analytics</string>
-    <string name="analytics_description">Aiutaci a migliorare condividendo dati anonimi</string>
+    <string name="location">Posizione</string>
+    <string name="enable_location">Attiva Posizione</string>
+    <string name="location_description">Necessario per la riproduzione audio GPS</string>
     <string name="about">Informazioni</string>
     <string name="version">Versione</string>
+    <string name="build">Build</string>
+    <string name="credits">Crediti</string>
+    <string name="developed_by">Sviluppato da BANDITE Artivism</string>
+    <string name="get_in_touch">Contattaci se vuoi usare questa app per il tuo progetto</string>
 </resources>

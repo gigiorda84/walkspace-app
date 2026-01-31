@@ -1,5 +1,7 @@
 package com.bandite.sonicwalkscape.ui.settings
 
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bandite.sonicwalkscape.services.UserPreferencesManager
@@ -21,6 +23,8 @@ class SettingsViewModel @Inject constructor(
     fun setPreferredLanguage(language: String) {
         viewModelScope.launch {
             userPreferencesManager.setPreferredLanguage(language)
+            // Apply locale change immediately - Android will recreate activities
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language))
         }
     }
 

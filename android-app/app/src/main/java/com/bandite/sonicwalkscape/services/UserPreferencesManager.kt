@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.bandite.sonicwalkscape.utils.Constants
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 
@@ -132,5 +133,11 @@ class UserPreferencesManager(private val context: Context) {
             }
         }
         return id!!
+    }
+
+    suspend fun getPreferredLanguageOnce(): String {
+        return context.dataStore.data.map { prefs ->
+            prefs[PreferencesKeys.PREFERRED_LANGUAGE] ?: Constants.DEFAULT_LANGUAGE
+        }.first()
     }
 }
