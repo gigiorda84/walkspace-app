@@ -620,3 +620,201 @@ Replaced the Android Discover screen's vertical list view with a full-screen Goo
 - Tours without points are filtered out (no marker shown)
 - Uses first point of each tour as marker location
 - Existing loading/error states preserved
+
+---
+
+# Tour Setup Carousel Implementation (Android)
+
+## Overview
+Implement a 3-step carousel/bottom sheet for tour setup matching the iOS app's `TourSetupSheet.swift`. The carousel appears when the user taps "Start Tour" and allows them to:
+1. Select audio language
+2. Enable/disable subtitles
+3. Choose to download or stream
+
+## Tasks
+
+- [x] 1. Add string resources for the new carousel UI text
+- [x] 2. Create TourSetupSheet.kt - Bottom sheet with 3 carousel steps:
+  - Step 0: Language selection (icon: waveform/equalizer)
+  - Step 1: Subtitle selection ON/OFF (icon: captions/subtitles)
+  - Step 2: Download selection (icon: download)
+  - Download progress view with retry/skip on error
+  - Step indicators (3 dots at bottom)
+  - Auto-advance on selection with animation
+- [x] 3. Update TourDetailViewModel.kt - Add setup config state
+- [x] 4. Update TourDetailScreen.kt - Show setup sheet on "Start Tour" click
+- [x] 5. Update NavGraph.kt - Pass setup config (language, subtitles) to Player
+
+## Design Notes (from iOS)
+- Use ModalBottomSheet from Material 3
+- Match iOS color scheme: yellow for selected, surface purple for unselected
+- Buttons: full-width, 12dp corner radius
+- Step indicator: 3 circles (filled yellow for current/past, muted for future)
+- Animation: 0.3s ease-in-out between steps
+- Icons: Step 0=Equalizer, Step 1=Subtitles, Step 2=Download
+- Language names: it→Italiano, en→English, fr→Français
+
+## Review
+
+### Summary
+Implemented the 3-step tour setup carousel for Android matching the iOS app's `TourSetupSheet.swift` functionality.
+
+### Files Changed
+
+**strings.xml**
+- Added 16 new string resources for the carousel UI (choose_audio_language, subtitles, download_tour, etc.)
+
+**TourSetupSheet.kt** (NEW)
+- Created new composable with `ModalBottomSheet`
+- `TourSetupConfig` data class for passing config to Player
+- `LanguageSelectionStep` - Shows available languages with localized names
+- `SubtitleSelectionStep` - ON/OFF toggle for subtitles
+- `DownloadSelectionStep` - Download (Recommended) or Stream Only
+- `DownloadingStep` - Progress bar with percentage, error state with Retry/Skip
+- `OptionButton` - Reusable styled button with selected/unselected states
+- `StepIndicators` - 3 dots showing progress
+- Auto-advance on selection with slide animation
+
+**TourDetailViewModel.kt**
+- Added `downloadError` state flow
+- Updated `downloadTour()` to accept optional language parameter
+- Added `clearDownloadError()` method
+- Added error handling with try/catch
+
+**TourDetailScreen.kt**
+- Changed `onStartTour` callback to pass `TourSetupConfig`
+- Added `showSetupSheet` state
+- "Start Tour" button now shows setup sheet instead of navigating directly
+- Integrated `TourSetupSheet` with all required callbacks
+
+**NavGraph.kt**
+- Updated `Screen.Player` route to include language and subtitles parameters
+- Updated `createRoute()` to accept language and subtitlesEnabled
+- Updated Player composable to extract new parameters and pass to screen
+
+**PlayerScreen.kt**
+- Added `language` and `subtitlesEnabled` parameters
+- Uses passed language instead of preferredLanguage from preferences
+
+**PlayerViewModel.kt**
+- Updated `loadAndStartTour()` to accept optional language parameter
+
+### Flow
+1. User taps "Start Tour" → Setup sheet opens
+2. Step 0: Select audio language → auto-advances
+3. Step 1: Choose subtitles ON/OFF → auto-advances
+4. Step 2: Choose Download or Stream
+   - Download: Shows progress, then completes
+   - Stream: Completes immediately
+5. On complete → Navigates to Player with selected config
+
+---
+
+# Android PlayerScreen - Match iOS PlayerView Implementation
+
+## Problem
+The Android PlayerScreen is missing key functionality compared to the iOS PlayerView:
+1. Map is just a placeholder (no real map with markers, route, trigger circles)
+2. No subtitle overlay synced with audio
+3. No cueing system (auto-play next point when user enters its radius while current audio is playing)
+4. Missing previous/next point navigation buttons
+5. Missing subtitle toggle button
+6. Layout doesn't match iOS (should be full-screen map with controls at bottom)
+
+## Tasks
+
+### Phase 1: Update LocationManager with Cueing Support
+- [x] 1.1 Add `nextPointQueued` flag to track when user enters next point's radius
+- [x] 1.2 Add `currentPointIndex` public accessor
+- [x] 1.3 Add `distanceToNextPoint` tracking
+- [x] 1.4 Modify `advanceToNextPoint()` to auto-trigger queued points
+
+### Phase 2: Update PlayerViewModel
+- [x] 2.1 Expose `tourPoints` list as StateFlow
+- [x] 2.2 Add `currentPointIndex` StateFlow
+- [x] 2.3 Add `moveToNextPoint()` method
+- [x] 2.4 Add `moveToPreviousPoint()` method
+- [x] 2.5 Add subtitle loading (fetch manifest, get URLs by point ID)
+- [x] 2.6 Add `currentSubtitle` StateFlow
+- [x] 2.7 Add `subtitlesEnabled` state toggle
+- [x] 2.8 Add subtitle timer to sync with audio position
+
+### Phase 3: Rewrite PlayerScreen Layout (match iOS)
+- [x] 3.1 Full-screen Google Map showing:
+  - Route polyline
+  - Point markers with numbers (yellow=future, orange=current, gray=passed)
+  - Trigger radius circles (colored by state)
+  - User location
+- [x] 3.2 Subtitle overlay on top of map (bottom, semi-transparent background)
+- [x] 3.3 Close button (X) overlay top-left
+- [x] 3.4 Subtitle toggle button overlay top-right
+- [x] 3.5 Audio controls panel at bottom matching iOS:
+  - Current point title
+  - Seekable progress slider
+  - Time display (current / total)
+  - Previous point | Skip back 10s | Play/Pause | Skip forward 10s | Next point
+
+### Phase 4: Add String Resources
+- [x] 4.1 Add `previous_point` string
+- [x] 4.2 Add `next_point` string
+- [x] 4.3 Add `toggle_subtitles` string
+
+## Files Modified
+1. `LocationManager.kt` - Added cueing support
+2. `PlayerViewModel.kt` - Added subtitle/navigation state
+3. `PlayerScreen.kt` - Complete rewrite to match iOS layout
+4. `strings.xml` (en/it/fr) - Added new strings
+
+## Review
+
+### Summary
+Completely rewrote the Android PlayerScreen to match the iOS PlayerView implementation with:
+- Full-screen interactive Google Map
+- GPS-triggered audio with cueing support
+- Real-time subtitle sync
+- Full audio controls with point navigation
+
+### Files Changed
+
+**LocationManager.kt**
+- Added `_currentPointIndex` StateFlow (exposed as public)
+- Added `_distanceToNextPoint` StateFlow for UI display
+- Added `_nextPointQueued` StateFlow for cueing
+- Modified `checkSequentialPointProximity()` to also check next point's radius
+- Modified `advanceToNextPoint()` to auto-trigger queued points
+- Added `setPointIndex()` for manual navigation
+- Added `getTourPoints()` accessor
+
+**PlayerViewModel.kt**
+- Added `_tourPoints` StateFlow
+- Added `_currentSubtitle` StateFlow
+- Added `_subtitlesEnabled` StateFlow
+- Added `subtitleUrlsByPointId` and `audioUrlsByPointId` maps
+- Added `fetchManifest()` to get audio/subtitle URLs
+- Added `loadSubtitlesForPoint()` to fetch and parse SRT files
+- Added `startSubtitleSync()` / `stopSubtitleSync()` for real-time sync
+- Added `moveToNextPoint()` and `moveToPreviousPoint()` for manual navigation
+- Added `toggleSubtitles()` and `setSubtitlesEnabled()`
+- Added `seekTo()` method for slider seeking
+
+**PlayerScreen.kt** (complete rewrite)
+- `TourMapView` - Full-screen Google Map with:
+  - Route polyline (dark red, matching iOS)
+  - Point markers with numbered circles (muted=passed, yellow=current, purple=future)
+  - Trigger radius circles (gray=passed, orange=current, dark red=future)
+  - User location enabled when available
+- `SubtitleOverlay` - Semi-transparent black background with white text
+- Top overlay buttons: Close (left) and Subtitle toggle (right)
+- `AudioControlsPanel` - Glassmorphic card at bottom with:
+  - Point title
+  - Seekable slider with time display
+  - 5-button row: Previous | -10s | Play/Pause | +10s | Next
+
+**strings.xml (en/it/fr)**
+- Added `previous_point`, `next_point`, `toggle_subtitles`
+
+### Key Features Matching iOS
+1. **Cueing**: When user walks into next point's radius while audio is playing, the point is queued and auto-triggers when current audio finishes
+2. **Subtitles**: Real-time sync with audio position, fetched from manifest URLs, toggle on/off
+3. **Map**: Route polyline, numbered markers, trigger radius circles with state-based colors
+4. **Controls**: Full playback controls with point navigation, seekable progress bar

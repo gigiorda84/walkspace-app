@@ -26,8 +26,16 @@ class LocationManager(private val context: Context) {
     private val _isTracking = MutableStateFlow(false)
     val isTracking: StateFlow<Boolean> = _isTracking.asStateFlow()
 
+    private val _currentPointIndex = MutableStateFlow(0)
+    val currentPointIndex: StateFlow<Int> = _currentPointIndex.asStateFlow()
+
+    private val _distanceToNextPoint = MutableStateFlow(0f)
+    val distanceToNextPoint: StateFlow<Float> = _distanceToNextPoint.asStateFlow()
+
+    private val _nextPointQueued = MutableStateFlow(false)
+    val nextPointQueued: StateFlow<Boolean> = _nextPointQueued.asStateFlow()
+
     private var tourPoints: List<TourPoint> = emptyList()
-    private var currentPointIndex: Int = 0
     private val triggeredPoints = mutableSetOf<String>()
 
     var onPointTriggered: ((TourPoint) -> Unit)? = null
@@ -51,9 +59,11 @@ class LocationManager(private val context: Context) {
 
     fun setTourPoints(points: List<TourPoint>) {
         tourPoints = points.sortedBy { it.order }
-        currentPointIndex = 0
+        _currentPointIndex.value = 0
         triggeredPoints.clear()
         _nearbyPoint.value = null
+        _nextPointQueued.value = false
+        _distanceToNextPoint.value = 0f
         DebugLogger.location("Set ${points.size} tour points")
     }
 
@@ -78,13 +88,15 @@ class LocationManager(private val context: Context) {
 
     private fun checkSequentialPointProximity(location: Location) {
         if (tourPoints.isEmpty()) return
-        if (currentPointIndex >= tourPoints.size) return
+        val pointIndex = _currentPointIndex.value
+        if (pointIndex >= tourPoints.size) return
 
-        val currentPoint = tourPoints[currentPointIndex]
+        val currentPoint = tourPoints[pointIndex]
         val distance = currentPoint.distanceTo(location.latitude, location.longitude)
+        _distanceToNextPoint.value = distance
 
         DebugLogger.location(
-            "Distance to point ${currentPoint.order}: ${distance}m (trigger: ${currentPoint.triggerRadiusMeters}m)"
+            "Distance to point ${currentPoint.order}: ${distance.toInt()}m (trigger: ${currentPoint.triggerRadiusMeters}m)"
         )
 
         if (distance <= currentPoint.triggerRadiusMeters) {
@@ -95,20 +107,61 @@ class LocationManager(private val context: Context) {
                 DebugLogger.location("Triggered point ${currentPoint.order}: ${currentPoint.getDisplayTitle()}")
             }
         }
+
+        // Also check if user entered the NEXT point's radius (queue it for when current audio finishes)
+        val nextIndex = pointIndex + 1
+        if (nextIndex < tourPoints.size) {
+            val nextPoint = tourPoints[nextIndex]
+            val nextDistance = nextPoint.distanceTo(location.latitude, location.longitude)
+
+            if (nextDistance <= nextPoint.triggerRadiusMeters && !_nextPointQueued.value) {
+                _nextPointQueued.value = true
+                DebugLogger.location("Point ${nextPoint.order} QUEUED at ${nextDistance.toInt()}m (will play after current audio)")
+            }
+        }
     }
 
     fun advanceToNextPoint() {
-        if (currentPointIndex < tourPoints.size - 1) {
-            currentPointIndex++
+        val pointIndex = _currentPointIndex.value
+        if (pointIndex >= tourPoints.size - 1) {
+            DebugLogger.location("Tour completed!")
+            return
+        }
+
+        // Check if next point was queued (user passed through while audio was playing)
+        val wasQueued = _nextPointQueued.value
+
+        _currentPointIndex.value = pointIndex + 1
+        _nextPointQueued.value = false
+
+        val nextPoint = tourPoints[_currentPointIndex.value]
+        DebugLogger.location("Advanced to point ${_currentPointIndex.value + 1}: ${nextPoint.getDisplayTitle()}")
+
+        // If the point was queued, trigger it immediately
+        if (wasQueued) {
+            triggeredPoints.add(nextPoint.id)
+            _nearbyPoint.value = nextPoint
+            onPointTriggered?.invoke(nextPoint)
+            DebugLogger.location("Point ${nextPoint.order} AUTO-TRIGGERED from queue")
+        } else {
             _nearbyPoint.value = null
-            DebugLogger.location("Advanced to point ${currentPointIndex + 1}")
         }
     }
 
     fun resetProgress() {
-        currentPointIndex = 0
+        _currentPointIndex.value = 0
         triggeredPoints.clear()
         _nearbyPoint.value = null
+        _nextPointQueued.value = false
+        _distanceToNextPoint.value = 0f
+    }
+
+    fun setPointIndex(index: Int) {
+        if (index < 0 || index >= tourPoints.size) return
+        _currentPointIndex.value = index
+        _nearbyPoint.value = null
+        _nextPointQueued.value = false
+        DebugLogger.location("Set point index to ${index + 1}")
     }
 
     @SuppressLint("MissingPermission")
@@ -127,11 +180,16 @@ class LocationManager(private val context: Context) {
     }
 
     val currentPointProgress: Float
-        get() = if (tourPoints.isEmpty()) 0f else currentPointIndex.toFloat() / tourPoints.size
+        get() = if (tourPoints.isEmpty()) 0f else _currentPointIndex.value.toFloat() / tourPoints.size
 
     val remainingPoints: Int
-        get() = (tourPoints.size - currentPointIndex).coerceAtLeast(0)
+        get() = (tourPoints.size - _currentPointIndex.value).coerceAtLeast(0)
 
     val hasMorePoints: Boolean
-        get() = currentPointIndex < tourPoints.size - 1
+        get() = _currentPointIndex.value < tourPoints.size - 1
+
+    val totalPoints: Int
+        get() = tourPoints.size
+
+    fun getTourPoints(): List<TourPoint> = tourPoints
 }

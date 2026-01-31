@@ -77,12 +77,35 @@
     <string name="pause">Pause</string>
     <string name="rewind">Rewind 10s</string>
     <string name="forward">Forward 10s</string>
+    <string name="previous_point">Previous point</string>
+    <string name="next_point">Next point</string>
+    <string name="toggle_subtitles">Toggle subtitles</string>
 
     <!-- Tour Completion -->
     <string name="tour_complete_title">Tour Complete!</string>
     <string name="tour_complete_message">Thank you for walking with us. We hope you enjoyed the experience.</string>
     <string name="support_us">Support Our Work</string>
     <string name="return_home">Return Home</string>
+
+    <!-- Tour Setup -->
+    <string name="choose_audio_language">Choose audio language</string>
+    <string name="choose_language_subtitle">Choose the language for audio narration</string>
+    <string name="subtitles">Subtitles</string>
+    <string name="subtitles_question">Enable subtitles during playback?</string>
+    <string name="subtitles_on">ON</string>
+    <string name="subtitles_on_description">Show subtitles during playback</string>
+    <string name="subtitles_off">OFF</string>
+    <string name="subtitles_off_description">No subtitles</string>
+    <string name="download_tour">Download Tour</string>
+    <string name="download_recommended_subtitle">Recommended for offline playback</string>
+    <string name="download_recommended">Download (Recommended)</string>
+    <string name="save_for_offline">Save for offline</string>
+    <string name="stream_only">Stream Only</string>
+    <string name="requires_internet">Requires internet</string>
+    <string name="downloading_tour">Downloading Tour</string>
+    <string name="please_wait">Please wait</string>
+    <string name="download_failed">Download Failed</string>
+    <string name="skip">Skip</string>
 
     <!-- Settings -->
     <string name="language">Language</string>

@@ -43,6 +43,9 @@
     <string name="pause">Pause</string>
     <string name="rewind">Reculer 10s</string>
     <string name="forward">Avancer 10s</string>
+    <string name="previous_point">Point précédent</string>
+    <string name="next_point">Point suivant</string>
+    <string name="toggle_subtitles">Activer/Désactiver sous-titres</string>
 
     <!-- Tour Completion -->
     <string name="tour_complete_title">Visite Terminée!</string>

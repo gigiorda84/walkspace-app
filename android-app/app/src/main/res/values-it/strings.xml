@@ -43,6 +43,9 @@
     <string name="pause">Pausa</string>
     <string name="rewind">Indietro 10s</string>
     <string name="forward">Avanti 10s</string>
+    <string name="previous_point">Punto precedente</string>
+    <string name="next_point">Punto successivo</string>
+    <string name="toggle_subtitles">Attiva/Disattiva sottotitoli</string>
 
     <!-- Tour Completion -->
     <string name="tour_complete_title">Tour Completato!</string>
