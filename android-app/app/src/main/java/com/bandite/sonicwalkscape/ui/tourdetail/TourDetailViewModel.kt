@@ -40,15 +40,24 @@ class TourDetailViewModel @Inject constructor(
     val downloadProgress: StateFlow<Float> = tourDownloadManager.downloadProgress
     val isDownloading: StateFlow<Boolean> = tourDownloadManager.isDownloading
 
+    private val _downloadError = MutableStateFlow<String?>(null)
+    val downloadError: StateFlow<String?> = _downloadError.asStateFlow()
+
     val preferredLanguage: Flow<String> = userPreferencesManager.preferredLanguage
 
-    fun loadTour(tourId: String) {
+    fun loadTour(tourId: String, availableLanguages: List<String> = emptyList()) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
 
             try {
-                val language = userPreferencesManager.preferredLanguage.first()
+                val preferredLang = userPreferencesManager.preferredLanguage.first()
+                // Use preferred language if available for this tour, otherwise use first available
+                val language = if (availableLanguages.isEmpty() || availableLanguages.contains(preferredLang)) {
+                    preferredLang
+                } else {
+                    availableLanguages.first()
+                }
 
                 // Load tour detail
                 val tourResponse = apiService.getTourDetail(tourId, language)
@@ -71,12 +80,15 @@ class TourDetailViewModel @Inject constructor(
                             slug = detail.slug,
                             title = mapOf(language to detail.title),
                             descriptionPreview = mapOf(language to detail.description),
+                            completionMessage = detail.completionMessage?.let { mapOf(language to it) },
+                            busInfo = detail.busInfo?.let { mapOf(language to it) },
                             city = detail.city,
                             durationMinutes = detail.durationMinutes,
                             distanceKm = detail.distanceKm,
                             languages = detail.languages,
                             isProtected = detail.isProtected,
                             coverImageUrl = detail.coverImageUrl,
+                            coverTrailerUrl = detail.coverTrailerUrl,
                             routePolyline = detail.routePolyline,
                             points = tourPoints,
                             isDownloaded = tourDownloadManager.isTourDownloaded(tourId)
@@ -100,19 +112,30 @@ class TourDetailViewModel @Inject constructor(
         }
     }
 
-    fun downloadTour(tourId: String) {
+    fun downloadTour(tourId: String, language: String? = null) {
         viewModelScope.launch {
-            val language = userPreferencesManager.preferredLanguage.first()
+            val downloadLanguage = language ?: userPreferencesManager.preferredLanguage.first()
+            _downloadError.value = null
             analyticsService.trackTourDownloadStarted(tourId)
 
-            val success = tourDownloadManager.downloadTour(tourId, language)
-            if (success) {
-                _isDownloaded.value = true
-                _tour.value = _tour.value?.copy(isDownloaded = true)
-                userPreferencesManager.addDownloadedTour(tourId)
-                analyticsService.trackTourDownloadCompleted(tourId)
+            try {
+                val success = tourDownloadManager.downloadTour(tourId, downloadLanguage)
+                if (success) {
+                    _isDownloaded.value = true
+                    _tour.value = _tour.value?.copy(isDownloaded = true)
+                    userPreferencesManager.addDownloadedTour(tourId)
+                    analyticsService.trackTourDownloadCompleted(tourId)
+                } else {
+                    _downloadError.value = "Download failed"
+                }
+            } catch (e: Exception) {
+                _downloadError.value = e.message ?: "Download failed"
             }
         }
+    }
+
+    fun clearDownloadError() {
+        _downloadError.value = null
     }
 
     fun deleteTour(tourId: String) {

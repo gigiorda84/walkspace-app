@@ -82,10 +82,13 @@
     <string name="toggle_subtitles">Toggle subtitles</string>
 
     <!-- Tour Completion -->
-    <string name="tour_complete_title">Tour Complete!</string>
+    <string name="tour_complete_title">Tour Completed!</string>
     <string name="tour_complete_message">Thank you for walking with us. We hope you enjoyed the experience.</string>
+    <string name="bus_info">Info Bus</string>
+    <string name="follow_us">Follow Us</string>
+    <string name="support">Support</string>
     <string name="support_us">Support Our Work</string>
-    <string name="return_home">Return Home</string>
+    <string name="return_home">Return to home</string>
 
     <!-- Tour Setup -->
     <string name="choose_audio_language">Choose audio language</string>

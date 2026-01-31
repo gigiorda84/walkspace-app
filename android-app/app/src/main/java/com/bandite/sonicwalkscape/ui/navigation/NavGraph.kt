@@ -26,14 +26,16 @@ sealed class Screen(val route: String) {
     object Welcome : Screen("welcome")
     object Onboarding : Screen("onboarding")
     object Discovery : Screen("discovery")
-    object TourDetail : Screen("tour/{tourId}") {
-        fun createRoute(tourId: String) = "tour/$tourId"
+    object TourDetail : Screen("tour/{tourId}?languages={languages}") {
+        fun createRoute(tourId: String, languages: List<String>) =
+            "tour/$tourId?languages=${languages.joinToString(",")}"
     }
-    object Player : Screen("player/{tourId}") {
-        fun createRoute(tourId: String) = "player/$tourId"
+    object Player : Screen("player/{tourId}?language={language}&subtitles={subtitles}") {
+        fun createRoute(tourId: String, language: String, subtitlesEnabled: Boolean) =
+            "player/$tourId?language=$language&subtitles=$subtitlesEnabled"
     }
-    object TourCompletion : Screen("completion/{tourId}") {
-        fun createRoute(tourId: String) = "completion/$tourId"
+    object TourCompletion : Screen("completion/{tourId}?language={language}") {
+        fun createRoute(tourId: String, language: String) = "completion/$tourId?language=$language"
     }
     object Settings : Screen("settings")
 }
@@ -72,48 +74,61 @@ fun NavGraph() {
             val viewModel: DiscoveryViewModel = hiltViewModel()
             DiscoveryScreen(
                 viewModel = viewModel,
-                onTourClick = { tourId ->
-                    navController.navigate(Screen.TourDetail.createRoute(tourId))
+                onTourClick = { tourId, languages ->
+                    navController.navigate(Screen.TourDetail.createRoute(tourId, languages))
                 },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
                 },
                 onHomeClick = {
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.Discovery.route) { inclusive = true }
-                    }
+                    // TEMP: Test Tour Completion screen with actual tour ID
+                    navController.navigate(Screen.TourCompletion.createRoute("abf19196-419d-41ff-95f1-0be22ff8281f", "it"))
                 }
             )
         }
 
         composable(
             route = Screen.TourDetail.route,
-            arguments = listOf(navArgument("tourId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("tourId") { type = NavType.StringType },
+                navArgument("languages") { type = NavType.StringType; defaultValue = "" }
+            )
         ) { backStackEntry ->
             val tourId = backStackEntry.arguments?.getString("tourId") ?: return@composable
+            val languagesArg = backStackEntry.arguments?.getString("languages") ?: ""
+            val availableLanguages = languagesArg.split(",").filter { it.isNotEmpty() }
             val viewModel: TourDetailViewModel = hiltViewModel()
             TourDetailScreen(
                 tourId = tourId,
+                availableLanguages = availableLanguages,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
-                onStartTour = {
-                    navController.navigate(Screen.Player.createRoute(tourId))
+                onStartTour = { config ->
+                    navController.navigate(Screen.Player.createRoute(tourId, config.language, config.subtitlesEnabled))
                 }
             )
         }
 
         composable(
             route = Screen.Player.route,
-            arguments = listOf(navArgument("tourId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("tourId") { type = NavType.StringType },
+                navArgument("language") { type = NavType.StringType; defaultValue = "en" },
+                navArgument("subtitles") { type = NavType.BoolType; defaultValue = true }
+            )
         ) { backStackEntry ->
             val tourId = backStackEntry.arguments?.getString("tourId") ?: return@composable
+            val language = backStackEntry.arguments?.getString("language") ?: "en"
+            val subtitlesEnabled = backStackEntry.arguments?.getBoolean("subtitles") ?: true
             val viewModel: PlayerViewModel = hiltViewModel()
             PlayerScreen(
                 tourId = tourId,
+                language = language,
+                subtitlesEnabled = subtitlesEnabled,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onTourComplete = {
-                    navController.navigate(Screen.TourCompletion.createRoute(tourId)) {
+                    navController.navigate(Screen.TourCompletion.createRoute(tourId, language)) {
                         popUpTo(Screen.Discovery.route)
                     }
                 }
@@ -122,15 +137,23 @@ fun NavGraph() {
 
         composable(
             route = Screen.TourCompletion.route,
-            arguments = listOf(navArgument("tourId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("tourId") { type = NavType.StringType },
+                navArgument("language") { type = NavType.StringType; defaultValue = "en" }
+            )
         ) { backStackEntry ->
             val tourId = backStackEntry.arguments?.getString("tourId") ?: return@composable
+            val language = backStackEntry.arguments?.getString("language") ?: "en"
             TourCompletionScreen(
                 tourId = tourId,
+                language = language,
                 onReturnHome = {
                     navController.navigate(Screen.Discovery.route) {
                         popUpTo(Screen.Discovery.route) { inclusive = true }
                     }
+                },
+                onClose = {
+                    navController.popBackStack()
                 }
             )
         }

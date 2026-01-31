@@ -57,15 +57,37 @@ class TourPlaybackService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 val notification = createNotification("Tour in progress")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        Constants.NOTIFICATION_ID,
-                        notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(
+                            Constants.NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or
+                                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                        )
+                    } else {
+                        startForeground(Constants.NOTIFICATION_ID, notification)
+                    }
+                } catch (e: SecurityException) {
+                    // Location permission not granted - try with just media playback
+                    DebugLogger.e("Location permission missing, trying media-only: ${e.message}")
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            startForeground(
+                                Constants.NOTIFICATION_ID,
+                                notification,
                                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(Constants.NOTIFICATION_ID, notification)
+                            )
+                        } else {
+                            startForeground(Constants.NOTIFICATION_ID, notification)
+                        }
+                    } catch (e2: Exception) {
+                        DebugLogger.e("Could not start foreground service: ${e2.message}")
+                        stopSelf()
+                    }
+                } catch (e: Exception) {
+                    DebugLogger.e("Could not start foreground service: ${e.message}")
+                    stopSelf()
                 }
             }
             ACTION_STOP -> {

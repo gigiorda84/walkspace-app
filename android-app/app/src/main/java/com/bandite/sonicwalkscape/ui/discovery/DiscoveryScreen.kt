@@ -2,6 +2,7 @@ package com.bandite.sonicwalkscape.ui.discovery
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,12 +27,14 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.*
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun DiscoveryScreen(
     viewModel: DiscoveryViewModel,
-    onTourClick: (String) -> Unit,
+    onTourClick: (String, List<String>) -> Unit,
     onSettingsClick: () -> Unit,
     onHomeClick: () -> Unit = {}
 ) {
@@ -39,6 +42,16 @@ fun DiscoveryScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val preferredLanguage by viewModel.preferredLanguage.collectAsState(initial = "en")
+    val context = LocalContext.current
+
+    // Load dark map style (same as PlayerScreen)
+    val mapStyleOptions = remember {
+        try {
+            MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     // Calculate camera position to fit all tour markers
     // Parse starting point from routePolyline (format: "lat,lng;lat,lng;...")
@@ -133,19 +146,39 @@ fun DiscoveryScreen(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = MapProperties(
-                        mapType = MapType.HYBRID // Satellite/terrain style like iOS
+                        mapType = MapType.NORMAL,
+                        mapStyleOptions = mapStyleOptions
                     ),
                     uiSettings = MapUiSettings(
                         zoomControlsEnabled = false,
                         mapToolbarEnabled = false,
                         myLocationButtonEnabled = false
-                    )
+                    ),
+                    onMapClick = { clickedLatLng ->
+                        // Check if click is near any tour marker (within ~500m)
+                        val clickedTour = tourLocations.find { tourLoc ->
+                            val results = FloatArray(1)
+                            android.location.Location.distanceBetween(
+                                clickedLatLng.latitude, clickedLatLng.longitude,
+                                tourLoc.position.latitude, tourLoc.position.longitude,
+                                results
+                            )
+                            results[0] < 500f // Within 500 meters
+                        }
+                        if (clickedTour != null) {
+                            android.util.Log.d("SonicWalkscape", "[MAP] Clicked near tour: ${clickedTour.tour.id}")
+                            onTourClick(clickedTour.tour.id, clickedTour.tour.languages)
+                        }
+                    }
                 ) {
                     tourLocations.forEach { tourLocation ->
                         TourMarker(
                             tourLocation = tourLocation,
                             language = preferredLanguage,
-                            onClick = { onTourClick(tourLocation.tour.id) }
+                            onClick = {
+                                android.util.Log.d("SonicWalkscape", "[MARKER] onClick called for: ${tourLocation.tour.id}")
+                                onTourClick(tourLocation.tour.id, tourLocation.tour.languages)
+                            }
                         )
                     }
                 }
@@ -217,7 +250,7 @@ private data class TourLocation(
     val position: LatLng
 )
 
-// Custom tour marker with yellow pill label (always visible like iOS)
+// Custom tour marker with yellow pill label
 @Composable
 private fun TourMarker(
     tourLocation: TourLocation,
@@ -225,19 +258,15 @@ private fun TourMarker(
     onClick: () -> Unit
 ) {
     val markerState = rememberMarkerState(position = tourLocation.position)
+    val title = tourLocation.tour.getDisplayTitle(language).uppercase()
 
+    // Visual marker using MarkerComposable (label display only)
     MarkerComposable(
-        state = markerState,
-        onClick = {
-            onClick()
-            true
-        },
+        keys = arrayOf(tourLocation.tour.id, "visual"),
+        state = rememberMarkerState(position = tourLocation.position),
         anchor = Offset(0.5f, 1f)
     ) {
-        // Yellow dot + pill label (like iOS)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // Yellow pill label
             Box(
                 modifier = Modifier
@@ -246,7 +275,7 @@ private fun TourMarker(
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
-                    text = tourLocation.tour.getDisplayTitle(language).uppercase(),
+                    text = title,
                     color = BrandPurple,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -264,4 +293,16 @@ private fun TourMarker(
             )
         }
     }
+
+    // Clickable marker rendered on top (zIndex higher)
+    Marker(
+        state = markerState,
+        title = title,
+        zIndex = 1f,
+        onClick = {
+            android.util.Log.d("SonicWalkscape", "[MARKER] Clicked: ${tourLocation.tour.id}")
+            onClick()
+            true
+        }
+    )
 }

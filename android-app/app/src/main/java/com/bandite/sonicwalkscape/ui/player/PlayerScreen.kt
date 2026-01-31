@@ -28,6 +28,8 @@ import com.bandite.sonicwalkscape.ui.theme.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun PlayerScreen(
@@ -83,14 +85,14 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Subtitle overlay
+        // Subtitle overlay - positioned above audio controls
         AnimatedVisibility(
             visible = subtitlesOn && !currentSubtitle.isNullOrEmpty(),
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 200.dp) // Above audio controls
+                .padding(bottom = 250.dp, start = 16.dp, end = 16.dp)
         ) {
             currentSubtitle?.let { subtitle ->
                 SubtitleOverlay(text = subtitle)
@@ -167,13 +169,28 @@ private fun TourMapView(
     userLocation: android.location.Location?,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState()
 
+    // Sort points by order for consistent display
+    val sortedPoints = remember(tourPoints) {
+        tourPoints.sortedBy { it.order }
+    }
+
+    // Load dark map style
+    val mapStyleOptions = remember {
+        try {
+            MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // Calculate bounds and center camera on tour points
-    LaunchedEffect(tourPoints) {
-        if (tourPoints.isNotEmpty()) {
+    LaunchedEffect(sortedPoints) {
+        if (sortedPoints.isNotEmpty()) {
             val boundsBuilder = LatLngBounds.builder()
-            tourPoints.forEach { point ->
+            sortedPoints.forEach { point ->
                 boundsBuilder.include(LatLng(point.location.lat, point.location.lng))
             }
             val bounds = boundsBuilder.build()
@@ -185,8 +202,9 @@ private fun TourMapView(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
-            mapType = MapType.HYBRID,
-            isMyLocationEnabled = userLocation != null
+            mapType = MapType.NORMAL,
+            isMyLocationEnabled = userLocation != null,
+            mapStyleOptions = mapStyleOptions
         ),
         uiSettings = MapUiSettings(
             zoomControlsEnabled = false,
@@ -207,7 +225,7 @@ private fun TourMapView(
         }
 
         // Draw trigger radius circles and markers for each point
-        tourPoints.forEachIndexed { index, point ->
+        sortedPoints.forEachIndexed { index, point ->
             val position = LatLng(point.location.lat, point.location.lng)
             val isPassed = index < currentPointIndex
             val isCurrent = index == currentPointIndex
@@ -217,20 +235,21 @@ private fun TourMapView(
                 center = position,
                 radius = point.triggerRadiusMeters.toDouble(),
                 fillColor = when {
-                    isPassed -> Color.Gray.copy(alpha = 0.15f)
-                    isCurrent -> Color(0xFFFF9800).copy(alpha = 0.2f) // Orange
-                    else -> Color(0xFF660014).copy(alpha = 0.15f) // Dark red
+                    isPassed -> PointGrey.copy(alpha = 0.15f)
+                    isCurrent -> BrandYellow.copy(alpha = 0.2f)
+                    else -> PointGreen.copy(alpha = 0.15f)
                 },
                 strokeColor = when {
-                    isPassed -> Color.Gray.copy(alpha = 0.3f)
-                    isCurrent -> Color(0xFFFF9800).copy(alpha = 0.5f)
-                    else -> Color(0xFF660014).copy(alpha = 0.3f)
+                    isPassed -> PointGrey.copy(alpha = 0.3f)
+                    isCurrent -> BrandYellow.copy(alpha = 0.5f)
+                    else -> PointGreen.copy(alpha = 0.3f)
                 },
                 strokeWidth = 4f
             )
 
-            // Point marker
+            // Point marker - use keys to force re-render when state changes
             MarkerComposable(
+                keys = arrayOf(point.id, isPassed, isCurrent),
                 state = MarkerState(position = position),
                 title = point.getDisplayTitle(),
                 anchor = Offset(0.5f, 0.5f)
@@ -257,9 +276,9 @@ private fun PointMarker(
             .clip(CircleShape)
             .background(
                 when {
-                    isPassed -> BrandMuted
+                    isPassed -> PointGrey
                     isCurrent -> BrandYellow
-                    else -> BrandPurple
+                    else -> PointGreen
                 }
             ),
         contentAlignment = Alignment.Center

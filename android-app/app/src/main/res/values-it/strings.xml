@@ -84,8 +84,11 @@
     <!-- Tour Completion -->
     <string name="tour_complete_title">Tour Completato!</string>
     <string name="tour_complete_message">Grazie per aver camminato con noi. Speriamo ti sia piaciuta l\'esperienza.</string>
+    <string name="bus_info">Info Bus</string>
+    <string name="follow_us">Seguici</string>
+    <string name="support">Supporta</string>
     <string name="support_us">Sostieni il Nostro Lavoro</string>
-    <string name="return_home">Torna alla Home</string>
+    <string name="return_home">Torna alla home</string>
 
     <!-- Tour Setup -->
     <string name="choose_audio_language">Lingua Audio</string>

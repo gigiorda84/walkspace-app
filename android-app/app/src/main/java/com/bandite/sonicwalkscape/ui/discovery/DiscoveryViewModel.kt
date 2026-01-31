@@ -54,10 +54,12 @@ class DiscoveryViewModel @Inject constructor(
 
                 if (response.isSuccessful) {
                     val tourList = response.body() ?: emptyList()
-                    // Update download status
-                    val updatedTours = tourList.map { tour ->
-                        tour.copy(isDownloaded = tourDownloadManager.isTourDownloaded(tour.id))
-                    }
+                    // Filter out tours without published versions and update download status
+                    val updatedTours = tourList
+                        .filter { it.languages.isNotEmpty() }
+                        .map { tour ->
+                            tour.copy(isDownloaded = tourDownloadManager.isTourDownloaded(tour.id))
+                        }
                     _tours.value = updatedTours
                     DebugLogger.network("Loaded ${updatedTours.size} tours")
                 } else {

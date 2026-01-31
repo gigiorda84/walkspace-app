@@ -3,8 +3,8 @@ package com.bandite.sonicwalkscape.data.models
 data class TourPoint(
     val id: String,
     val order: Int,
-    val title: Map<String, String>,
-    val description: Map<String, String>,
+    val title: String,
+    val description: String,
     val location: Location,
     val triggerRadiusMeters: Int = 150,
     val audioUrl: String? = null,
@@ -17,11 +17,11 @@ data class TourPoint(
     )
 
     fun getDisplayTitle(language: String = "en"): String {
-        return title[language] ?: title["en"] ?: title.values.firstOrNull() ?: "Point $order"
+        return title.ifEmpty { "Point $order" }
     }
 
     fun getDisplayDescription(language: String = "en"): String {
-        return description[language] ?: description["en"] ?: description.values.firstOrNull() ?: ""
+        return description
     }
 
     fun distanceTo(lat: Double, lng: Double): Float {

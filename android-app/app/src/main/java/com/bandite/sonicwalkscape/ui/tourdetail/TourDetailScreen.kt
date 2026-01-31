@@ -1,5 +1,6 @@
 package com.bandite.sonicwalkscape.ui.tourdetail
 
+import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,10 +17,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.ui.theme.*
@@ -29,9 +36,10 @@ import com.bandite.sonicwalkscape.utils.Constants
 @Composable
 fun TourDetailScreen(
     tourId: String,
+    availableLanguages: List<String> = emptyList(),
     viewModel: TourDetailViewModel,
     onBack: () -> Unit,
-    onStartTour: () -> Unit
+    onStartTour: (TourSetupConfig) -> Unit
 ) {
     val tour by viewModel.tour.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -39,10 +47,13 @@ fun TourDetailScreen(
     val isDownloaded by viewModel.isDownloaded.collectAsState()
     val isDownloading by viewModel.isDownloading.collectAsState()
     val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val downloadError by viewModel.downloadError.collectAsState()
     val preferredLanguage by viewModel.preferredLanguage.collectAsState(initial = "en")
 
+    var showSetupSheet by remember { mutableStateOf(false) }
+
     LaunchedEffect(tourId) {
-        viewModel.loadTour(tourId)
+        viewModel.loadTour(tourId, availableLanguages)
     }
 
     Box(
@@ -71,7 +82,7 @@ fun TourDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { viewModel.loadTour(tourId) },
+                        onClick = { viewModel.loadTour(tourId, availableLanguages) },
                         colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
                     ) {
                         Text(stringResource(R.string.retry), color = BrandPurple)
@@ -87,30 +98,47 @@ fun TourDetailScreen(
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // Cover image
+                        // Cover video or image
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(300.dp)
                                 .background(SurfacePurple)
                         ) {
-                            currentTour.getFullCoverImageUrl(Constants.API_BASE_URL)?.let { url ->
-                                AsyncImage(
-                                    model = url,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } ?: Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Image,
-                                    contentDescription = null,
-                                    tint = BrandMuted,
-                                    modifier = Modifier.size(64.dp)
-                                )
+                            val trailerUrl = currentTour.getFullCoverTrailerUrl(Constants.API_BASE_URL)
+                            val imageUrl = currentTour.getFullCoverImageUrl(Constants.API_BASE_URL)
+
+                            when {
+                                trailerUrl != null -> {
+                                    // Show video trailer
+                                    VideoPlayer(
+                                        videoUrl = trailerUrl,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                                imageUrl != null -> {
+                                    // Fallback to cover image
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                else -> {
+                                    // Placeholder
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Image,
+                                            contentDescription = null,
+                                            tint = BrandMuted,
+                                            modifier = Modifier.size(64.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -224,11 +252,12 @@ fun TourDetailScreen(
                         }
                     }
 
-                    // Back button (top-left, overlaid on image)
+                    // Back button (top-left, overlaid on image, below status bar)
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
-                            .padding(16.dp)
+                            .statusBarsPadding()
+                            .padding(start = 16.dp, top = 8.dp)
                             .size(40.dp)
                             .background(
                                 color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f),
@@ -263,15 +292,16 @@ fun TourDetailScreen(
                                 )
                         )
 
-                        // Button area
+                        // Button area (above navigation bar)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(BrandPurple)
+                                .navigationBarsPadding()
                                 .padding(horizontal = 20.dp, vertical = 16.dp)
                         ) {
                             Button(
-                                onClick = onStartTour,
+                                onClick = { showSetupSheet = true },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
@@ -295,6 +325,32 @@ fun TourDetailScreen(
                             }
                         }
                     }
+                }
+
+                // Tour Setup Sheet
+                if (showSetupSheet) {
+                    TourSetupSheet(
+                        availableLanguages = currentTour.languages.ifEmpty { listOf(preferredLanguage) },
+                        defaultLanguage = if (currentTour.languages.contains(preferredLanguage)) {
+                            preferredLanguage
+                        } else {
+                            currentTour.languages.firstOrNull() ?: preferredLanguage
+                        },
+                        isDownloading = isDownloading,
+                        downloadProgress = downloadProgress,
+                        downloadError = downloadError,
+                        onDownloadStart = { language ->
+                            viewModel.downloadTour(tourId, language)
+                        },
+                        onComplete = { config ->
+                            showSetupSheet = false
+                            onStartTour(config)
+                        },
+                        onDismiss = {
+                            showSetupSheet = false
+                            viewModel.clearDownloadError()
+                        }
+                    )
                 }
             }
         }
@@ -329,4 +385,43 @@ fun InfoBadge(
             )
         }
     }
+}
+
+@Composable
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+fun VideoPlayer(
+    videoUrl: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(videoUrl))
+            repeatMode = Player.REPEAT_MODE_ALL
+            volume = 0f // Muted like iOS trailer
+            prepare()
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player = exoPlayer
+                useController = false // No playback controls
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+        modifier = modifier
+    )
 }

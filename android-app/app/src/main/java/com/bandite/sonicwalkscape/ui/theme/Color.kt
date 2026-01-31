@@ -28,3 +28,7 @@ val AccentSecondary = BrandYellow
 val Success = Color(0xFF4CAF50)
 val Error = Color(0xFFEF5350)
 val Warning = BrandYellow
+
+// Map Point Colors
+val PointGreen = Color(0xFF1B5E20)  // Dark green for upcoming points
+val PointGrey = Color(0xFF757575)   // Grey for passed points

@@ -818,3 +818,270 @@ Completely rewrote the Android PlayerScreen to match the iOS PlayerView implemen
 2. **Subtitles**: Real-time sync with audio position, fetched from manifest URLs, toggle on/off
 3. **Map**: Route polyline, numbered markers, trigger radius circles with state-based colors
 4. **Controls**: Full playback controls with point navigation, seekable progress bar
+
+---
+
+# App-Wide Language Selection for Android
+
+## Problem
+When a user changes the language in the Android app settings, the preference is saved but the UI strings don't change. This is because Android's `stringResource()` follows the device's system locale, not the app's stored preference.
+
+## Solution
+Use Android's `AppCompatDelegate.setApplicationLocales()` to apply per-app language settings. This is the modern Android approach that works with API 26+ via AndroidX AppCompat.
+
+## Reference (iOS Implementation)
+- Uses `LocalizedStrings` singleton with computed properties
+- Each string accesses `UserPreferencesManager.shared.preferredLanguage`
+- When language changes, all views automatically re-render
+- No restart required
+
+## Android Approach
+1. On language change: Call `AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language))`
+2. Android automatically recreates activities with the new locale
+3. All `stringResource()` calls will return strings in the selected language
+4. On app startup: Apply stored language preference before UI renders
+
+## Tasks
+
+- [x] 1. Update MainActivity to apply stored language on startup
+- [x] 2. Update SettingsViewModel to call AppCompatDelegate.setApplicationLocales() when language changes
+- [x] 3. Complete missing Italian translations in values-it/strings.xml
+- [x] 4. Complete missing French translations in values-fr/strings.xml
+- [ ] 5. Test language changes work immediately throughout the app
+
+## Review
+
+### Summary
+Implemented app-wide language selection for Android using `AppCompatDelegate.setApplicationLocales()`. When a user changes the language in Settings, the entire app now updates to show strings in the selected language.
+
+### Files Changed
+
+**SettingsViewModel.kt**
+- Added imports for `AppCompatDelegate` and `LocaleListCompat`
+- Updated `setPreferredLanguage()` to call `AppCompatDelegate.setApplicationLocales()` after saving preference
+- Android automatically recreates activities with the new locale applied
+
+**MainActivity.kt**
+- Added `@Inject` for `UserPreferencesManager`
+- Added startup logic to apply stored language preference
+- Compares stored language with current AppCompat locale to avoid unnecessary recreation
+
+**UserPreferencesManager.kt**
+- Added `first` import from kotlinx.coroutines.flow
+- Added `getPreferredLanguageOnce()` suspend function for synchronous language retrieval on startup
+
+**values-it/strings.xml** (complete rewrite)
+- Added all missing translations from iOS `LocalizedStrings.swift`
+- Full about_text in Italian
+- All onboarding strings (title_1/2/3, text_1a/1b/1c, etc.)
+- All difficulty levels, settings, tour setup strings
+- Total: 122 strings matching English version
+
+**values-fr/strings.xml** (complete rewrite)
+- Added all missing translations from iOS `LocalizedStrings.swift`
+- Full about_text in French
+- All onboarding strings matching iOS
+- All difficulty levels, settings, tour setup strings
+- Total: 122 strings matching English version
+
+### How It Works
+
+1. **On language change (Settings)**:
+   - User taps a language row
+   - `SettingsViewModel.setPreferredLanguage(language)` is called
+   - Preference is saved to DataStore
+   - `AppCompatDelegate.setApplicationLocales()` is called
+   - Android recreates all activities with the new locale
+   - All `stringResource()` calls return strings in the new language
+
+2. **On app startup (MainActivity)**:
+   - Stored language is retrieved from DataStore
+   - If different from current AppCompat locale, applies it
+   - Ensures language persists across app restarts
+
+### Behavior
+- Language changes take effect immediately (activity recreates)
+- All screens update: Welcome, Onboarding, Discovery, Tour Detail, Player, Settings, Tour Completion
+- API calls for tour content use the preferred language from DataStore (unchanged)
+
+---
+
+# Android TourDetailScreen - Fix Video/Image Display and Button Positioning
+
+## Problem
+Three UI issues on the Android TourDetailScreen:
+1. **Video/image not showing** - Shows placeholder icon instead of the trailer video or cover image from the CMS
+2. **Back button cut off** - Top-left back button overlaps with the status bar
+3. **Bottom button cut off** - The "Start Tour" button is partially hidden at the bottom
+
+## Root Cause Analysis
+
+### Issue 1: Video/Image
+- The Android `TourDetailResponse.kt` is missing the `coverTrailerUrl` field that the API returns
+- The `TourDetailViewModel` doesn't map `coverTrailerUrl` when creating the Tour object
+- The `Tour` model has `coverTrailerUrl` but no helper method `getFullCoverTrailerUrl()`
+- The `TourDetailScreen` only checks `getFullCoverImageUrl()`, doesn't try to show video
+
+### Issue 2: Back button
+- Uses `padding(16.dp)` which doesn't account for the status bar
+- Need to use `statusBarsPadding()` to offset below the system status bar
+
+### Issue 3: Bottom button
+- Uses `padding(vertical = 16.dp)` which doesn't account for the navigation bar
+- Need to use `navigationBarsPadding()` to ensure button is above the system navigation
+
+## Tasks
+
+- [x] 1. Add `coverTrailerUrl` field to `TourDetailResponse.kt`
+- [x] 2. Map `coverTrailerUrl` in `TourDetailViewModel.loadTour()` when creating Tour
+- [x] 3. Add `getFullCoverTrailerUrl()` helper method to `Tour.kt`
+- [x] 4. Update `TourDetailScreen` to show video trailer first, then fallback to image
+- [x] 5. Fix back button positioning by adding `statusBarsPadding()`
+- [x] 6. Fix bottom button positioning by adding `navigationBarsPadding()`
+
+## Files Modified
+- `android-app/app/src/main/java/com/bandite/sonicwalkscape/data/models/TourDetailResponse.kt`
+- `android-app/app/src/main/java/com/bandite/sonicwalkscape/data/models/Tour.kt`
+- `android-app/app/src/main/java/com/bandite/sonicwalkscape/ui/tourdetail/TourDetailViewModel.kt`
+- `android-app/app/src/main/java/com/bandite/sonicwalkscape/ui/tourdetail/TourDetailScreen.kt`
+
+## Review
+
+### Summary
+Fixed three UI issues on the Android TourDetailScreen:
+1. Video trailer / cover image now displays from CMS data
+2. Back button positioned below status bar
+3. Start Tour button positioned above navigation bar
+
+### Changes Made
+
+**TourDetailResponse.kt** (line 14)
+- Added `coverTrailerUrl: String?` field to receive video URL from API
+
+**Tour.kt** (lines 55-59)
+- Added `getFullCoverTrailerUrl(baseUrl: String)` helper method matching the existing `getFullCoverImageUrl()` pattern
+
+**TourDetailViewModel.kt** (line 88)
+- Added `coverTrailerUrl = detail.coverTrailerUrl` when creating Tour object from API response
+
+**TourDetailScreen.kt**
+- Added imports for ExoPlayer (Media3) video playback
+- Updated cover media section (lines 101-143):
+  - First checks for `trailerUrl` → shows `VideoPlayer`
+  - Falls back to `imageUrl` → shows `AsyncImage`
+  - Falls back to placeholder icon if neither available
+- Fixed back button (lines 255-272): Added `statusBarsPadding()` and reduced top padding to 8dp
+- Fixed bottom button (lines 295-301): Added `navigationBarsPadding()` before padding
+- Added `VideoPlayer` composable (lines 390-427):
+  - Uses ExoPlayer with Media3
+  - Auto-plays muted, loops continuously (like iOS trailer behavior)
+  - No playback controls shown
+  - Properly releases player on dispose
+
+### Behavior
+- If tour has `coverTrailerUrl`: Auto-playing muted video loop
+- If tour has only `coverImageUrl`: Static cover image
+- If neither: Placeholder icon (unchanged)
+- Back button: Properly positioned below status bar
+- Start Tour button: Properly positioned above navigation bar
+
+---
+
+# Android Tour Completion Screen - Match iOS TourCompletionView
+
+## Problem
+The Android TourCompletionScreen doesn't match the iOS version. Current Android version:
+- Shows a simple success icon and message
+- Has only a donation button and return home button
+
+iOS version (from screenshot) shows:
+- Yellow checkmark icon + "Tour Completato!" title inline
+- Tour name in yellow (e.g., "UNSEEN")
+- Custom completion message from CMS (if available)
+- Three outlined buttons: "Info Bus", "Seguici", "Supporta"
+- One yellow filled button: "Torna alla home"
+- Close (X) button in top-right
+
+## Tasks
+
+### Data Model Updates
+- [x] 1.1 Add `completionMessage` field to `Tour.kt` (`Map<String, String>?`)
+- [x] 1.2 Add `busInfo` field to `Tour.kt` (`Map<String, String>?`)
+- [x] 1.3 Add `getDisplayCompletionMessage(language: String)` method to `Tour.kt`
+- [x] 1.4 Add `getDisplayBusInfo(language: String)` method to `Tour.kt`
+- [x] 1.5 Update `TourDetailResponse.kt` to include `completionMessage` and `busInfo`
+- [x] 1.6 Update `TourDetailViewModel.kt` to map new fields when creating Tour
+
+### Navigation Updates
+- [x] 2.1 Update `NavGraph.kt` to pass language to completion screen
+- [x] 2.2 Update `TourCompletionScreen` parameters to receive language and onClose
+
+### UI Rewrite
+- [x] 3.1 Rewrite `TourCompletionScreen.kt` to match iOS layout:
+  - Semi-transparent dark background (0.92 opacity)
+  - Yellow checkmark + title inline (Row)
+  - Tour name in yellow
+  - Completion message (if available)
+  - "Info Bus" button (only if busInfo exists) → opens AlertDialog
+  - "Seguici" button → opens ConnectBottomSheet
+  - "Supporta" button → opens external URL
+  - "Torna alla home" yellow filled capsule button
+  - Close (X) button top-right
+- [x] 3.2 Create `TourCompletionViewModel.kt` to fetch tour data
+
+### String Resources
+- [x] 4.1 Add `bus_info` string to all language files (en: "Info Bus", it: "Info Bus", fr: "Info Bus")
+- [x] 4.2 Add `follow_us` string to all language files (en: "Follow Us", it: "Seguici", fr: "Suivez-nous")
+- [x] 4.3 Add `support` string to all language files (en: "Support", it: "Supporta", fr: "Soutenir")
+- [x] 4.4 Update `return_home` string in all languages to match iOS
+
+## Review
+
+### Summary
+Completely rewrote the Android TourCompletionScreen to match the iOS TourCompletionView design and functionality.
+
+### Files Changed
+
+**Tour.kt**
+- Added `completionMessage: Map<String, String>?` field
+- Added `busInfo: Map<String, String>?` field
+- Added `getDisplayCompletionMessage(language)` helper method
+- Added `getDisplayBusInfo(language)` helper method
+
+**TourDetailResponse.kt**
+- Added `completionMessage: String?` field
+- Added `busInfo: String?` field
+
+**TourDetailViewModel.kt**
+- Updated Tour creation to map `completionMessage` and `busInfo` from API response
+
+**NavGraph.kt**
+- Updated `TourCompletion` route to include `language` parameter
+- Updated navigation call to pass language from PlayerScreen
+- Added `onClose` callback parameter
+
+**TourCompletionScreen.kt** (complete rewrite)
+- Semi-transparent dark background (92% opacity)
+- Yellow checkmark icon + "Tour Completato!" title inline
+- Tour name displayed in yellow uppercase
+- Completion message from CMS (if available)
+- "Info Bus" button (only shows if busInfo exists) → opens AlertDialog with CMS content
+- "Seguici" button → opens ConnectBottomSheet (reused from WelcomeScreen)
+- "Supporta" button → opens external donation URL
+- "Torna alla home" yellow filled capsule button
+- Close (X) button top-right with status bar padding
+
+**TourCompletionViewModel.kt** (new file)
+- Fetches tour detail from API
+- Exposes tour data as StateFlow
+
+**strings.xml (en/it/fr)**
+- Added `bus_info`, `follow_us`, `support` strings
+- Updated `tour_complete_title` and `return_home` to match iOS
+
+### Behavior
+- Screen displays custom completion message from CMS if available
+- "Info Bus" button only appears if tour has busInfo content (conditional like iOS)
+- "Seguici" opens the same Connect modal as the home page (social links + feedback form)
+- "Supporta" opens external donation URL in browser
+- Language is passed from PlayerScreen to ensure correct localization

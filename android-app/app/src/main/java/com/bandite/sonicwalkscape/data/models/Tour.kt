@@ -7,6 +7,8 @@ data class Tour(
     val slug: String,
     val title: Map<String, String>,
     val descriptionPreview: Map<String, String>,
+    val completionMessage: Map<String, String>? = null,
+    val busInfo: Map<String, String>? = null,
     val city: String,
     val durationMinutes: Int,
     val distanceKm: Double,
@@ -52,8 +54,22 @@ data class Tour(
         return descriptionPreview[language] ?: descriptionPreview["en"] ?: descriptionPreview.values.firstOrNull() ?: ""
     }
 
+    fun getDisplayCompletionMessage(language: String = "en"): String? {
+        return completionMessage?.get(language) ?: completionMessage?.get("en") ?: completionMessage?.values?.firstOrNull()
+    }
+
+    fun getDisplayBusInfo(language: String = "en"): String? {
+        return busInfo?.get(language) ?: busInfo?.get("en") ?: busInfo?.values?.firstOrNull()
+    }
+
     fun getFullCoverImageUrl(baseUrl: String): String? {
         return coverImageUrl?.let {
+            if (it.startsWith("http")) it else "$baseUrl$it"
+        }
+    }
+
+    fun getFullCoverTrailerUrl(baseUrl: String): String? {
+        return coverTrailerUrl?.let {
             if (it.startsWith("http")) it else "$baseUrl$it"
         }
     }
