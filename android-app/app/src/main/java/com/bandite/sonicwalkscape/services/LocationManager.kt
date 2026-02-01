@@ -1,9 +1,12 @@
 package com.bandite.sonicwalkscape.services
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
+import androidx.core.content.ContextCompat
 import com.bandite.sonicwalkscape.data.models.TourPoint
 import com.bandite.sonicwalkscape.utils.Constants
 import com.bandite.sonicwalkscape.utils.DebugLogger
@@ -70,6 +73,16 @@ class LocationManager(private val context: Context) {
     @SuppressLint("MissingPermission")
     fun startTracking() {
         if (_isTracking.value) return
+
+        // Check if location permission is granted
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            DebugLogger.location("Location permission not granted - cannot start tracking")
+            return
+        }
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,

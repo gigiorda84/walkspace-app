@@ -1,6 +1,12 @@
 package com.bandite.sonicwalkscape.ui.tourdetail
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.view.ViewGroup
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -23,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -51,6 +59,36 @@ fun TourDetailScreen(
     val preferredLanguage by viewModel.preferredLanguage.collectAsState(initial = "en")
 
     var showSetupSheet by remember { mutableStateOf(false) }
+    var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Check if location permission is granted
+    fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PermissionChecker.PERMISSION_GRANTED
+    }
+
+    // Permission request launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showSetupSheet = true
+        } else {
+            showPermissionDeniedDialog = true
+        }
+    }
+
+    // Function to handle start tour button click
+    fun onStartTourClick() {
+        if (hasLocationPermission()) {
+            showSetupSheet = true
+        } else {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     LaunchedEffect(tourId) {
         viewModel.loadTour(tourId, availableLanguages)
@@ -301,7 +339,7 @@ fun TourDetailScreen(
                                 .padding(horizontal = 20.dp, vertical = 16.dp)
                         ) {
                             Button(
-                                onClick = { showSetupSheet = true },
+                                onClick = { onStartTourClick() },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
@@ -350,6 +388,45 @@ fun TourDetailScreen(
                             showSetupSheet = false
                             viewModel.clearDownloadError()
                         }
+                    )
+                }
+
+                // Permission Denied Dialog
+                if (showPermissionDeniedDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showPermissionDeniedDialog = false },
+                        title = {
+                            Text(
+                                text = stringResource(R.string.location_permission_required),
+                                color = BrandCream
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.location_permission_explanation),
+                                color = BrandCream
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showPermissionDeniedDialog = false
+                                    // Open app settings
+                                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            ) {
+                                Text(stringResource(R.string.open_settings), color = BrandYellow)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showPermissionDeniedDialog = false }) {
+                                Text(stringResource(R.string.cancel), color = BrandCream)
+                            }
+                        },
+                        containerColor = BrandPurple
                     )
                 }
             }

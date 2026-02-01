@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.data.models.TourPoint
 import com.bandite.sonicwalkscape.ui.theme.*
@@ -30,6 +31,8 @@ import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 
 @Composable
 fun PlayerScreen(
@@ -186,6 +189,14 @@ private fun TourMapView(
         }
     }
 
+    // Check if location permission is granted
+    val hasLocationPermission = remember {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PermissionChecker.PERMISSION_GRANTED
+    }
+
     // Calculate bounds and center camera on tour points
     LaunchedEffect(sortedPoints) {
         if (sortedPoints.isNotEmpty()) {
@@ -203,7 +214,7 @@ private fun TourMapView(
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
             mapType = MapType.NORMAL,
-            isMyLocationEnabled = userLocation != null,
+            isMyLocationEnabled = hasLocationPermission,
             mapStyleOptions = mapStyleOptions
         ),
         uiSettings = MapUiSettings(

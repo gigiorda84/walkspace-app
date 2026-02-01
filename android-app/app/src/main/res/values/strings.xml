@@ -110,6 +110,12 @@
     <string name="download_failed">Download Failed</string>
     <string name="skip">Skip</string>
 
+    <!-- Permissions -->
+    <string name="location_permission_required">Location Permission Required</string>
+    <string name="location_permission_explanation">This app needs location access to trigger audio when you reach tour points. Please enable location permission in settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="cancel">Cancel</string>
+
     <!-- Settings -->
     <string name="language">Language</string>
     <string name="preferred_language">Preferred Language</string>

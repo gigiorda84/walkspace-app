@@ -110,6 +110,12 @@
     <string name="download_failed">Échec du téléchargement</string>
     <string name="skip">Passer</string>
 
+    <!-- Permissions -->
+    <string name="location_permission_required">Autorisation de localisation requise</string>
+    <string name="location_permission_explanation">Cette application a besoin de l\'accès à la localisation pour déclencher l\'audio lorsque vous atteignez les points du tour. Veuillez activer l\'autorisation dans les paramètres.</string>
+    <string name="open_settings">Ouvrir les paramètres</string>
+    <string name="cancel">Annuler</string>
+
     <!-- Settings -->
     <string name="language">Langue</string>
     <string name="preferred_language">Langue Préférée</string>

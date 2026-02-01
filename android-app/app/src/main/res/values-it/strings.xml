@@ -110,6 +110,12 @@
     <string name="download_failed">Download Fallito</string>
     <string name="skip">Salta</string>
 
+    <!-- Permissions -->
+    <string name="location_permission_required">Autorizzazione Posizione Richiesta</string>
+    <string name="location_permission_explanation">Questa app necessita dell\'accesso alla posizione per attivare l\'audio quando raggiungi i punti del tour. Abilita l\'autorizzazione nelle impostazioni.</string>
+    <string name="open_settings">Apri Impostazioni</string>
+    <string name="cancel">Annulla</string>
+
     <!-- Settings -->
     <string name="language">Lingua</string>
     <string name="preferred_language">Lingua Preferita</string>
