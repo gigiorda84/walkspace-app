@@ -294,11 +294,12 @@ private fun TourMarker(
         }
     }
 
-    // Clickable marker rendered on top (zIndex higher)
+    // Invisible clickable marker for tap handling
     Marker(
         state = markerState,
         title = title,
         zIndex = 1f,
+        alpha = 0f,
         onClick = {
             android.util.Log.d("SonicWalkscape", "[MARKER] Clicked: ${tourLocation.tour.id}")
             onClick()

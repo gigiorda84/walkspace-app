@@ -198,7 +198,7 @@ private fun LanguageSelectionStep(
         Text(
             text = stringResource(R.string.choose_language_subtitle),
             fontSize = 14.sp,
-            color = BrandMuted,
+            color = BrandCream,
             textAlign = TextAlign.Center
         )
 
@@ -251,7 +251,7 @@ private fun SubtitleSelectionStep(
         Text(
             text = stringResource(R.string.subtitles_question),
             fontSize = 14.sp,
-            color = BrandMuted,
+            color = BrandCream,
             textAlign = TextAlign.Center
         )
 
@@ -312,7 +312,7 @@ private fun DownloadSelectionStep(
         Text(
             text = stringResource(R.string.download_recommended_subtitle),
             fontSize = 14.sp,
-            color = BrandMuted,
+            color = BrandCream,
             textAlign = TextAlign.Center
         )
 
@@ -440,7 +440,7 @@ private fun DownloadingStep(
             Text(
                 text = stringResource(R.string.please_wait),
                 fontSize = 14.sp,
-                color = BrandMuted,
+                color = BrandCream,
                 textAlign = TextAlign.Center
             )
 
@@ -500,7 +500,7 @@ private fun OptionButton(
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
-                    color = BrandMuted
+                    color = BrandCream
                 )
             }
         }
