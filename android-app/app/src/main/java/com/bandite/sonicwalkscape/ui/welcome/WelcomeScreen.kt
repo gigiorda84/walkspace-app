@@ -76,7 +76,7 @@ fun WelcomeScreen(
             // Title
             Text(
                 text = stringResource(R.string.app_name),
-                fontSize = 52.sp,
+                fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 color = BrandCream,
                 textAlign = TextAlign.Center,

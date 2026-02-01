@@ -81,8 +81,9 @@ fun NavGraph() {
                     navController.navigate(Screen.Settings.route)
                 },
                 onHomeClick = {
-                    // TEMP: Test Tour Completion screen with actual tour ID
-                    navController.navigate(Screen.TourCompletion.createRoute("abf19196-419d-41ff-95f1-0be22ff8281f", "it"))
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Discovery.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -148,8 +149,8 @@ fun NavGraph() {
                 tourId = tourId,
                 language = language,
                 onReturnHome = {
-                    navController.navigate(Screen.Discovery.route) {
-                        popUpTo(Screen.Discovery.route) { inclusive = true }
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onClose = {
