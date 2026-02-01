@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.ui.theme.*
 import kotlinx.coroutines.launch
@@ -71,7 +74,9 @@ fun OnboardingCarouselScreen(
             .background(BrandPurple)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             // Close button (top-right)
             Row(

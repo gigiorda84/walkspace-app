@@ -1,8 +1,6 @@
 package com.bandite.sonicwalkscape.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,13 +42,10 @@ sealed class Screen(val route: String) {
 fun NavGraph() {
     val navController = rememberNavController()
     val welcomeViewModel: WelcomeViewModel = hiltViewModel()
-    val onboardingCompleted by welcomeViewModel.onboardingCompleted.collectAsState(initial = false)
-
-    val startDestination = if (onboardingCompleted) Screen.Discovery.route else Screen.Welcome.route
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = Screen.Welcome.route
     ) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(
