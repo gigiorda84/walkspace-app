@@ -48,6 +48,10 @@ class TourDownloadManager(
         return dir
     }
 
+    private fun isFileValid(file: File, expectedSizeBytes: Long): Boolean {
+        return file.exists() && file.length() == expectedSizeBytes
+    }
+
     suspend fun downloadTour(tourId: String, language: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -73,8 +77,8 @@ class TourDownloadManager(
                 // Download audio files
                 for (audioFile in manifest.audio) {
                     val file = File(getAudioDirectory(tourId), "${audioFile.pointId}.mp3")
-                    if (!file.exists()) {
-                        downloadFile(audioFile.fileUrl, file)
+                    if (!isFileValid(file, audioFile.fileSizeBytes)) {
+                        downloadFile(audioFile.fileUrl, file, audioFile.fileSizeBytes)
                     }
                     downloadedFiles++
                     _downloadProgress.value = downloadedFiles.toFloat() / totalFiles
@@ -83,8 +87,8 @@ class TourDownloadManager(
                 // Download subtitle files
                 for (subtitleFile in manifest.subtitles) {
                     val file = File(getSubtitlesDirectory(tourId), "${subtitleFile.pointId}_${subtitleFile.language}.srt")
-                    if (!file.exists()) {
-                        downloadFile(subtitleFile.fileUrl, file)
+                    if (!isFileValid(file, subtitleFile.fileSizeBytes)) {
+                        downloadFile(subtitleFile.fileUrl, file, subtitleFile.fileSizeBytes)
                     }
                     downloadedFiles++
                     _downloadProgress.value = downloadedFiles.toFloat() / totalFiles
@@ -103,21 +107,45 @@ class TourDownloadManager(
         }
     }
 
-    private fun downloadFile(url: String, destination: File) {
-        val request = Request.Builder().url(url).build()
-        val response = httpClient.newCall(request).execute()
+    private fun downloadFile(url: String, destination: File, expectedSizeBytes: Long) {
+        val maxRetries = 3
 
-        if (!response.isSuccessful) {
-            throw Exception("Download failed: ${response.code}")
-        }
+        for (attempt in 1..maxRetries) {
+            try {
+                if (destination.exists()) {
+                    destination.delete()
+                }
 
-        response.body?.byteStream()?.use { input ->
-            FileOutputStream(destination).use { output ->
-                input.copyTo(output)
+                val request = Request.Builder().url(url).build()
+                val response = httpClient.newCall(request).execute()
+
+                if (!response.isSuccessful) {
+                    throw Exception("Download failed: ${response.code}")
+                }
+
+                response.body?.byteStream()?.use { input ->
+                    FileOutputStream(destination).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                val actualSize = destination.length()
+                if (actualSize != expectedSizeBytes) {
+                    destination.delete()
+                    throw Exception("Size mismatch: expected $expectedSizeBytes, got $actualSize")
+                }
+
+                DebugLogger.network("Downloaded: ${destination.name} ($actualSize bytes)")
+                return
+
+            } catch (e: Exception) {
+                DebugLogger.network("Download attempt $attempt failed: ${e.message}")
+                if (destination.exists()) destination.delete()
+                if (attempt == maxRetries) {
+                    throw Exception("Download failed after $maxRetries attempts: ${destination.name}")
+                }
             }
         }
-
-        DebugLogger.network("Downloaded: ${destination.name}")
     }
 
     fun getAudioFile(tourId: String, pointId: String): File? {
