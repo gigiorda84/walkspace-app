@@ -1,46 +1,42 @@
-# Fix Gson/R8 ParameterizedType Error - Round 2
+# Change Android Map Colors to Dark Green Theme
 
 ## Problem
-The Android app shows error on the Discover screen:
-```
-java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType
-```
-
-This persists in version 1.0.6 even after adding initial ProGuard rules.
-
-## Root Cause Analysis
-
-The error occurs in Gson's reflection code when deserializing generic types. The current ProGuard rules preserve:
-- `Signature` attribute
-- `*Annotation*` attributes
-- Model classes
-
-But they're missing **critical attributes** for inner classes and Kotlin reflection:
-- `InnerClasses` - Required for nested classes like `TourManifest.AudioFile`, `TourPoint.Location`
-- `EnclosingMethod` - Required for anonymous classes and lambdas
-- Proper Kotlin metadata preservation
-
-The `Tour` class has `Map<String, String>` fields. When Gson deserializes these with R8 minification, it needs full type information. R8's aggressive optimization can strip inner class relationships, causing the ParameterizedType cast to fail.
+The Android app's map uses dark grey/black colors. We want to change it to a dark green theme to match the brand aesthetic.
 
 ## Tasks
 
-- [x] 1. Add `-keepattributes InnerClasses` and `-keepattributes EnclosingMethod` to ProGuard rules
-- [x] 2. Add explicit keep rules for all nested/inner classes in data models
-- [x] 3. Bump version to 1.0.7 for testing
-- [x] 4. Build and install on device
-- [ ] 5. User testing - verify Discovery page loads tours
+- [x] Update `map_style_dark.json` with dark green color values
 
-## Changes Made
+## File Modified
+`android-app/app/src/main/res/raw/map_style_dark.json`
 
-### proguard-rules.pro
-- Added `-keepattributes InnerClasses` - preserves inner class metadata
-- Added `-keepattributes EnclosingMethod` - preserves enclosing method metadata
-- Added `-keep class com.bandite.sonicwalkscape.data.models.**$* { *; }` - explicitly keeps all nested classes
-- Added `-keepclassmembers` rule for `@SerializedName` fields
+## Review
 
-### build.gradle.kts
-- Bumped versionCode from 6 to 7
-- Bumped versionName from "1.0.6" to "1.0.7"
+### Changes Made
 
-## Status
-App v1.0.7 installed on device. Awaiting user testing.
+Updated the Google Maps style JSON file with dark green colors:
+
+| Element | Old Color | New Color |
+|---------|-----------|-----------|
+| Base geometry | #212121 (dark grey) | #0D1F12 (dark forest green) |
+| Label stroke | #212121 | #0D1F12 |
+| Roads (fill) | #2c2c2c | #1A2E1C |
+| Arterial roads | #373737 | #243827 |
+| Highways | #3c3c3c | #2A4030 |
+| Controlled access highways | #4e4e4e | #3A5040 |
+| Parks | #181818 | #0A1A0D |
+| Park label stroke | #1b1b1b | #0D180F |
+| Water | #000000 | #081510 (dark teal-green) |
+
+**Unchanged**: All text label fill colors remain grey (#757575, #8a8a8a, etc.) for readability against the green backgrounds.
+
+### Impact
+- Both Discovery screen and Player screen maps use this same style file
+- Route polylines, markers, and tour point overlays are unaffected (they use app-defined colors)
+
+### Testing Required
+1. Build and run the Android app
+2. Open Discovery screen - verify dark green map background
+3. Start a tour - verify dark green map in Player screen
+4. Confirm text labels are readable
+5. Verify route polylines and markers are visible
