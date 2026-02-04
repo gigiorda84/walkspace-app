@@ -95,7 +95,7 @@ fun PlayerScreen(
             exit = fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 250.dp, start = 16.dp, end = 16.dp)
+                .padding(bottom = 320.dp, start = 16.dp, end = 16.dp)
         ) {
             currentSubtitle?.let { subtitle ->
                 SubtitleOverlay(text = subtitle)
@@ -229,7 +229,7 @@ private fun TourMapView(
             if (routePoints.isNotEmpty()) {
                 Polyline(
                     points = routePoints,
-                    color = Color(0xFF660014), // Dark red matching iOS
+                    color = BrandYellow,
                     width = 8f
                 )
             }
@@ -287,9 +287,9 @@ private fun PointMarker(
             .clip(CircleShape)
             .background(
                 when {
-                    isPassed -> PointGrey
+                    isPassed -> PointGrey.copy(alpha = 0.8f)
                     isCurrent -> BrandYellow
-                    else -> PointGreen
+                    else -> BrandYellow.copy(alpha = 0.55f)
                 }
             ),
         contentAlignment = Alignment.Center
@@ -342,6 +342,7 @@ private fun AudioControlsPanel(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .padding(16.dp),
         shape = RoundedCornerShape(20.dp),
         color = BrandPurple.copy(alpha = 0.95f),
