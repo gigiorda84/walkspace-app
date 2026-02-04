@@ -41,15 +41,6 @@ class TourPlaybackService : Service() {
         super.onCreate()
         createNotificationChannel()
         audioPlayerManager.initialize()
-
-        locationManager.onPointTriggered = { point ->
-            playPointAudio(point)
-        }
-
-        audioPlayerManager.onPlaybackCompleted = {
-            locationManager.advanceToNextPoint()
-        }
-
         DebugLogger.d("TourPlaybackService created")
     }
 

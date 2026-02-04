@@ -91,6 +91,19 @@ class LocationManager(private val context: Context) {
         )
         _isTracking.value = true
         DebugLogger.location("Started location tracking")
+
+        // Check initial position immediately (in case user is already inside first point)
+        checkInitialPosition()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkInitialPosition() {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            location?.let {
+                DebugLogger.location("Initial position check: ${it.latitude}, ${it.longitude}")
+                checkSequentialPointProximity(it)
+            }
+        }
     }
 
     fun stopTracking() {
