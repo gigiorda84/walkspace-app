@@ -18,10 +18,8 @@ import com.bandite.sonicwalkscape.utils.SubtitleCue
 import com.bandite.sonicwalkscape.utils.SubtitleParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.net.URL
 import javax.inject.Inject
 
@@ -380,11 +378,13 @@ class PlayerViewModel @Inject constructor(
                     currentLanguage
                 )
 
-                val content = if (localFile != null) {
-                    localFile.readText()
-                } else {
-                    // Fetch from URL
-                    URL(subtitleUrl).readText()
+                val content = withContext(Dispatchers.IO) {
+                    if (localFile != null) {
+                        localFile.readText()
+                    } else {
+                        // Fetch from URL
+                        URL(subtitleUrl).readText()
+                    }
                 }
 
                 currentSubtitleCues = SubtitleParser.parseSrt(content)
@@ -401,9 +401,9 @@ class PlayerViewModel @Inject constructor(
     private fun startSubtitleSync() {
         subtitleSyncJob?.cancel()
         subtitleSyncJob = viewModelScope.launch {
-            while (true) {
+            while (isActive) {
                 updateCurrentSubtitle()
-                delay(100) // Update every 100ms
+                delay(250)
             }
         }
     }
@@ -443,5 +443,7 @@ class PlayerViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopTour()
+        locationManager.onPointTriggered = null
+        audioPlayerManager.onPlaybackCompleted = null
     }
 }

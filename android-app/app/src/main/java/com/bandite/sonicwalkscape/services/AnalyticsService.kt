@@ -18,6 +18,7 @@ class AnalyticsService(
     private val userPreferencesManager: UserPreferencesManager
 ) {
     private val eventQueue = mutableListOf<AnalyticsEvent>()
+    private companion object { const val MAX_QUEUE_SIZE = 500 }
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var flushJob: Job? = null
 
@@ -66,6 +67,10 @@ class AnalyticsService(
         )
 
         synchronized(eventQueue) {
+            if (eventQueue.size >= MAX_QUEUE_SIZE) {
+                DebugLogger.analytics("Queue full ($MAX_QUEUE_SIZE), dropping oldest event")
+                eventQueue.removeAt(0)
+            }
             eventQueue.add(event)
         }
 

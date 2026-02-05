@@ -70,7 +70,7 @@ fun PlayerScreen(
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
             viewModel.audioPlayerManager.updatePosition()
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(250)
         }
     }
 

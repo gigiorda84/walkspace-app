@@ -11,9 +11,9 @@ object Constants {
     const val SUBTITLES_DIRECTORY = "subtitles"
 
     // Location
-    const val DEFAULT_TRIGGER_RADIUS_METERS = 150
-    const val LOCATION_UPDATE_INTERVAL_MS = 5000L
-    const val LOCATION_FASTEST_INTERVAL_MS = 2000L
+    const val DEFAULT_TRIGGER_RADIUS_METERS = 70
+    const val LOCATION_UPDATE_INTERVAL_MS = 7500L
+    const val LOCATION_FASTEST_INTERVAL_MS = 3000L
     const val LOCATION_MIN_DISPLACEMENT_METERS = 5f
 
     // Audio
