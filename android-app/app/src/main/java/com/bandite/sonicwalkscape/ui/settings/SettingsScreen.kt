@@ -27,15 +27,20 @@ import androidx.compose.ui.unit.sp
 import com.bandite.sonicwalkscape.BuildConfig
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenDebug: () -> Unit = {}
 ) {
     val preferredLanguage by viewModel.preferredLanguage.collectAsState(initial = "en")
     val context = LocalContext.current
+    var tapCount by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -118,12 +123,37 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // App Info section
+            // App Info section (triple-tap version to open diagnostics)
             SettingsSection(title = stringResource(R.string.about)) {
-                InfoRow(
-                    title = stringResource(R.string.version),
-                    value = BuildConfig.VERSION_NAME
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            tapCount++
+                            if (tapCount >= 5) {
+                                tapCount = 0
+                                onOpenDebug()
+                            }
+                            scope.launch {
+                                delay(2000)
+                                tapCount = 0
+                            }
+                        }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.version),
+                        fontSize = 16.sp,
+                        color = BrandCream
+                    )
+                    Text(
+                        text = BuildConfig.VERSION_NAME,
+                        fontSize = 16.sp,
+                        color = BrandCream.copy(alpha = 0.7f)
+                    )
+                }
                 HorizontalDivider(color = BorderPurple)
                 InfoRow(
                     title = stringResource(R.string.build),

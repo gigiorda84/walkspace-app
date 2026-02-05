@@ -16,6 +16,8 @@ import com.bandite.sonicwalkscape.ui.settings.SettingsScreen
 import com.bandite.sonicwalkscape.ui.settings.SettingsViewModel
 import com.bandite.sonicwalkscape.ui.tourdetail.TourDetailScreen
 import com.bandite.sonicwalkscape.ui.tourdetail.TourDetailViewModel
+import com.bandite.sonicwalkscape.ui.debug.DebugScreen
+import com.bandite.sonicwalkscape.ui.debug.DebugViewModel
 import com.bandite.sonicwalkscape.ui.welcome.OnboardingCarouselScreen
 import com.bandite.sonicwalkscape.ui.welcome.WelcomeScreen
 import com.bandite.sonicwalkscape.ui.welcome.WelcomeViewModel
@@ -36,6 +38,7 @@ sealed class Screen(val route: String) {
         fun createRoute(tourId: String, language: String) = "completion/$tourId?language=$language"
     }
     object Settings : Screen("settings")
+    object Debug : Screen("debug")
 }
 
 @Composable
@@ -157,6 +160,15 @@ fun NavGraph() {
         composable(Screen.Settings.route) {
             val viewModel: SettingsViewModel = hiltViewModel()
             SettingsScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onOpenDebug = { navController.navigate(Screen.Debug.route) }
+            )
+        }
+
+        composable(Screen.Debug.route) {
+            val viewModel: DebugViewModel = hiltViewModel()
+            DebugScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )

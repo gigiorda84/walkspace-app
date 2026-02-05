@@ -44,3 +44,11 @@
 
 # Keep generic type info for Gson
 -keep class * extends com.google.gson.TypeAdapter
+
+# Gson TypeToken - critical for generic type resolution (fixes ParameterizedType crash)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# R8 must preserve generic signatures on these for Retrofit+Gson to resolve types
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation

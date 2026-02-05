@@ -1,0 +1,97 @@
+{
+  "tour": {
+    "id": "test-milan-duomo",
+    "slug": "test-milan-duomo-walk",
+    "title": {
+      "en": "Milan Duomo Test Walk",
+      "it": "Passeggiata Test Duomo Milano"
+    },
+    "descriptionPreview": {
+      "en": "A short test tour around Milan's historic center for GPS testing",
+      "it": "Un breve tour di prova nel centro storico di Milano per test GPS"
+    },
+    "completionMessage": {
+      "en": "Test tour completed! Great job testing the GPS system.",
+      "it": "Tour di prova completato! Ottimo lavoro nel testare il sistema GPS."
+    },
+    "city": "Milan",
+    "durationMinutes": 15,
+    "distanceKm": 0.5,
+    "languages": ["en", "it"],
+    "isProtected": false,
+    "coverImageUrl": null
+  },
+  "points": [
+    {
+      "id": "point-1-duomo",
+      "order": 1,
+      "title": "Piazza del Duomo",
+      "description": "Welcome to the magnificent Piazza del Duomo, the heart of Milan. The cathedral took nearly six centuries to complete and is one of the largest churches in the world.",
+      "location": {
+        "lat": 45.464203,
+        "lng": 9.189982
+      },
+      "triggerRadiusMeters": 150
+    },
+    {
+      "id": "point-2-galleria",
+      "order": 2,
+      "title": "Galleria Vittorio Emanuele II",
+      "description": "You are now approaching Italy's oldest active shopping mall. Built in the 1860s, this stunning arcade connects Piazza del Duomo with Piazza della Scala.",
+      "location": {
+        "lat": 45.465803,
+        "lng": 9.190182
+      },
+      "triggerRadiusMeters": 120
+    },
+    {
+      "id": "point-3-scala",
+      "order": 3,
+      "title": "Teatro alla Scala",
+      "description": "Welcome to La Scala, one of the world's most famous opera houses. Since 1778, this theatre has hosted premieres of works by Verdi, Puccini, and Rossini.",
+      "location": {
+        "lat": 45.467203,
+        "lng": 9.189382
+      },
+      "triggerRadiusMeters": 120
+    },
+    {
+      "id": "point-4-castello",
+      "order": 4,
+      "title": "Castello Sforzesco",
+      "description": "You've reached the Sforza Castle, a 15th-century fortress that now houses several of Milan's museums and art collections, including Michelangelo's final sculpture.",
+      "location": {
+        "lat": 45.470603,
+        "lng": 9.179582
+      },
+      "triggerRadiusMeters": 150
+    },
+    {
+      "id": "point-5-park",
+      "order": 5,
+      "title": "Parco Sempione",
+      "description": "Congratulations on completing the test tour! You're now in Parco Sempione, Milan's largest city park, created in the 19th century as the gardens of the Sforza Castle.",
+      "location": {
+        "lat": 45.472003,
+        "lng": 9.173782
+      },
+      "triggerRadiusMeters": 150
+    }
+  ],
+  "metadata": {
+    "purpose": "GPS Testing",
+    "notes": [
+      "Points are 100-200m apart for easy walking tests",
+      "Trigger radii set to 120-150m for reliable GPS triggering",
+      "Total distance: ~500m, walkable in 10-15 minutes",
+      "Route: Duomo → Galleria → La Scala → Castello → Sempione Park",
+      "Best tested during daylight hours with clear GPS signal"
+    ],
+    "gpsTips": {
+      "bestAccuracy": "Open areas like Piazza del Duomo will have best GPS accuracy",
+      "challengingAreas": "Galleria Vittorio Emanuele (covered arcade) may have reduced GPS accuracy",
+      "urbanCanyon": "Narrow streets between points 2-3 may show GPS drift",
+      "recommendedTime": "Test during off-peak hours for easier walking between points"
+    }
+  }
+}

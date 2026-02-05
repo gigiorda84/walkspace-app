@@ -1,0 +1,83 @@
+{
+  "_comment": "CUSTOMIZABLE TEST TOUR TEMPLATE - Replace coordinates with your own location",
+  "tour": {
+    "id": "test-custom-location",
+    "slug": "test-my-location",
+    "title": {
+      "en": "My Custom Test Tour",
+      "it": "Il Mio Tour di Test Personalizzato"
+    },
+    "descriptionPreview": {
+      "en": "A custom test tour for GPS testing near my location",
+      "it": "Un tour di test personalizzato per test GPS vicino alla mia posizione"
+    },
+    "completionMessage": {
+      "en": "Test completed successfully!",
+      "it": "Test completato con successo!"
+    },
+    "city": "YOUR_CITY_NAME",
+    "durationMinutes": 10,
+    "distanceKm": 0.3,
+    "languages": ["en"],
+    "isProtected": false,
+    "coverImageUrl": null
+  },
+  "points": [
+    {
+      "id": "point-1",
+      "order": 1,
+      "title": "Starting Point",
+      "description": "Replace these coordinates with your starting location. To find coordinates: right-click in Google Maps and click the lat/lng to copy.",
+      "location": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "_comment": "👆 REPLACE THESE - Currently set to San Francisco city center"
+      },
+      "triggerRadiusMeters": 150,
+      "_instructions": {
+        "howToFindCoordinates": "1. Open Google Maps, 2. Right-click your location, 3. Click coordinates to copy, 4. Paste here",
+        "recommendedRadius": "100-150m for reliable triggering in urban areas"
+      }
+    },
+    {
+      "id": "point-2",
+      "order": 2,
+      "title": "Second Point",
+      "description": "Pick a location 100-200 meters from your first point. Use Google Maps distance tool to measure.",
+      "location": {
+        "lat": 37.7760,
+        "lng": -122.4183,
+        "_comment": "👆 REPLACE THESE - Currently ~150m north of point 1"
+      },
+      "triggerRadiusMeters": 120
+    },
+    {
+      "id": "point-3",
+      "order": 3,
+      "title": "Final Point",
+      "description": "Pick another location 100-200 meters from your second point. This creates a simple 3-point walking route.",
+      "location": {
+        "lat": 37.7771,
+        "lng": -122.4172,
+        "_comment": "👆 REPLACE THESE - Currently ~150m northeast of point 2"
+      },
+      "triggerRadiusMeters": 150
+    }
+  ],
+  "customizationSteps": [
+    "1. Find your starting location in Google Maps",
+    "2. Right-click on the map and click the coordinates to copy",
+    "3. Replace the lat/lng values for point-1",
+    "4. Find a location 100-200m away (use Maps measuring tool)",
+    "5. Get coordinates for point-2 and replace",
+    "6. Repeat for point-3",
+    "7. Update city name and tour title",
+    "8. Save and use for testing!"
+  ],
+  "tips": {
+    "pointSpacing": "100-200m between points is ideal for walking tests",
+    "triggerRadius": "Set to 100-150m for urban areas with buildings",
+    "routeType": "Linear route (A→B→C) is simplest for testing",
+    "locationChoice": "Pick open areas with good sky visibility for best GPS accuracy"
+  }
+}

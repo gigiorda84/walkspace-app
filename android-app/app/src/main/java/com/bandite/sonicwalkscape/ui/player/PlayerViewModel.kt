@@ -60,6 +60,7 @@ class PlayerViewModel @Inject constructor(
     private var audioUrlsByPointId: Map<String, String> = emptyMap()
     private var subtitleSyncJob: Job? = null
     private var currentLanguage: String = "en"
+    private var currentTourId: String? = null
 
     val currentLocation = locationManager.currentLocation
     val currentPointIndex = locationManager.currentPointIndex
@@ -119,6 +120,11 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun loadAndStartTour(tourId: String, language: String? = null) {
+        if (tourId == currentTourId) {
+            DebugLogger.d("Tour $tourId already started, skipping re-init")
+            return
+        }
+        currentTourId = tourId
         viewModelScope.launch {
             try {
                 val lang = language ?: userPreferencesManager.preferredLanguage.first()
@@ -202,7 +208,9 @@ class PlayerViewModel @Inject constructor(
     private fun startTour(tour: Tour, language: String) {
         // Try to start foreground service, but don't crash if it fails
         // (can fail due to Android 12+ background restrictions or missing permissions)
-        try {
+        if (serviceBound) {
+            DebugLogger.d("Service already bound, skipping")
+        } else try {
             val intent = Intent(context, TourPlaybackService::class.java).apply {
                 action = TourPlaybackService.ACTION_START
             }
@@ -412,6 +420,7 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun stopTour() {
+        currentTourId = null
         stopSubtitleSync()
         locationManager.stopTracking()
         audioPlayerManager.stop()

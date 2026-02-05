@@ -185,6 +185,7 @@ class LocationManager(private val context: Context) {
     fun setPointIndex(index: Int) {
         if (index < 0 || index >= tourPoints.size) return
         _currentPointIndex.value = index
+        triggeredPoints.add(tourPoints[index].id)
         _nearbyPoint.value = null
         _nextPointQueued.value = false
         DebugLogger.location("Set point index to ${index + 1}")

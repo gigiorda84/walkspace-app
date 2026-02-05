@@ -57,6 +57,10 @@ class AudioPlayerManager(private val context: Context) {
     }
 
     fun playFile(file: File, pointId: String? = null) {
+        if (pointId != null && pointId == _currentPointId.value && _isPlaying.value) {
+            DebugLogger.audio("Already playing point $pointId, skipping")
+            return
+        }
         initialize()
         exoPlayer?.let { player ->
             val mediaItem = MediaItem.fromUri(file.toURI().toString())
@@ -69,6 +73,10 @@ class AudioPlayerManager(private val context: Context) {
     }
 
     fun playUrl(url: String, pointId: String? = null) {
+        if (pointId != null && pointId == _currentPointId.value && _isPlaying.value) {
+            DebugLogger.audio("Already playing point $pointId, skipping")
+            return
+        }
         initialize()
         exoPlayer?.let { player ->
             val mediaItem = MediaItem.fromUri(url)

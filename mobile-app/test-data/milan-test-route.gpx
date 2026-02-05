@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Sonic Walkscape Test Route"
+     xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+
+  <metadata>
+    <name>Milan Duomo Test Walk</name>
+    <desc>GPS simulation route for testing sequential audio triggering in Sonic Walkscape app</desc>
+    <author>
+      <name>Sonic Walkscape Test Data</name>
+    </author>
+    <time>2025-01-05T12:00:00Z</time>
+  </metadata>
+
+  <!-- Route waypoints matching test tour points -->
+  <wpt lat="45.464203" lon="9.189982">
+    <name>Point 1: Piazza del Duomo</name>
+    <desc>Starting point - trigger radius 150m</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+
+  <wpt lat="45.465803" lon="9.190182">
+    <name>Point 2: Galleria Vittorio Emanuele II</name>
+    <desc>Second point - trigger radius 120m</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+
+  <wpt lat="45.467203" lon="9.189382">
+    <name>Point 3: Teatro alla Scala</name>
+    <desc>Third point - trigger radius 120m</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+
+  <wpt lat="45.470603" lon="9.179582">
+    <name>Point 4: Castello Sforzesco</name>
+    <desc>Fourth point - trigger radius 150m</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+
+  <wpt lat="45.472003" lon="9.173782">
+    <name>Point 5: Parco Sempione</name>
+    <desc>Final point - trigger radius 150m</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+
+  <!-- Simulated walking track with intermediate points for smooth movement -->
+  <trk>
+    <name>Milan Duomo Walking Route</name>
+    <desc>Simulated walking path at ~1.2 m/s (4.3 km/h) - typical walking speed</desc>
+    <trkseg>
+      <!-- Segment 1: Duomo to Galleria (~180m, ~2.5 minutes) -->
+      <trkpt lat="45.464203" lon="9.189982"><ele>122</ele><time>2025-01-05T12:00:00Z</time></trkpt>
+      <trkpt lat="45.464503" lon="9.190032"><ele>122</ele><time>2025-01-05T12:00:25Z</time></trkpt>
+      <trkpt lat="45.464803" lon="9.190082"><ele>122</ele><time>2025-01-05T12:00:50Z</time></trkpt>
+      <trkpt lat="45.465103" lon="9.190132"><ele>122</ele><time>2025-01-05T12:01:15Z</time></trkpt>
+      <trkpt lat="45.465403" lon="9.190157"><ele>122</ele><time>2025-01-05T12:01:40Z</time></trkpt>
+      <trkpt lat="45.465703" lon="9.190175"><ele>122</ele><time>2025-01-05T12:02:05Z</time></trkpt>
+      <trkpt lat="45.465803" lon="9.190182"><ele>122</ele><time>2025-01-05T12:02:30Z</time></trkpt>
+
+      <!-- Segment 2: Galleria to La Scala (~180m, ~2.5 minutes) -->
+      <trkpt lat="45.466003" lon="9.190082"><ele>122</ele><time>2025-01-05T12:03:00Z</time></trkpt>
+      <trkpt lat="45.466303" lon="9.189982"><ele>122</ele><time>2025-01-05T12:03:25Z</time></trkpt>
+      <trkpt lat="45.466603" lon="9.189682"><ele>122</ele><time>2025-01-05T12:03:50Z</time></trkpt>
+      <trkpt lat="45.466903" lon="9.189532"><ele>122</ele><time>2025-01-05T12:04:15Z</time></trkpt>
+      <trkpt lat="45.467103" lon="9.189432"><ele>122</ele><time>2025-01-05T12:04:40Z</time></trkpt>
+      <trkpt lat="45.467203" lon="9.189382"><ele>122</ele><time>2025-01-05T12:05:00Z</time></trkpt>
+
+      <!-- Segment 3: La Scala to Castello (~900m, ~12 minutes) -->
+      <trkpt lat="45.467503" lon="9.188882"><ele>122</ele><time>2025-01-05T12:05:40Z</time></trkpt>
+      <trkpt lat="45.467803" lon="9.188382"><ele>122</ele><time>2025-01-05T12:06:20Z</time></trkpt>
+      <trkpt lat="45.468103" lon="9.187882"><ele>123</ele><time>2025-01-05T12:07:00Z</time></trkpt>
+      <trkpt lat="45.468403" lon="9.187382"><ele>123</ele><time>2025-01-05T12:07:40Z</time></trkpt>
+      <trkpt lat="45.468703" lon="9.186882"><ele>123</ele><time>2025-01-05T12:08:20Z</time></trkpt>
+      <trkpt lat="45.469003" lon="9.185882"><ele>123</ele><time>2025-01-05T12:09:00Z</time></trkpt>
+      <trkpt lat="45.469303" lon="9.184882"><ele>123</ele><time>2025-01-05T12:09:40Z</time></trkpt>
+      <trkpt lat="45.469603" lon="9.183882"><ele>123</ele><time>2025-01-05T12:10:20Z</time></trkpt>
+      <trkpt lat="45.469903" lon="9.182382"><ele>123</ele><time>2025-01-05T12:11:00Z</time></trkpt>
+      <trkpt lat="45.470203" lon="9.181282"><ele>124</ele><time>2025-01-05T12:11:40Z</time></trkpt>
+      <trkpt lat="45.470403" lon="9.180382"><ele>124</ele><time>2025-01-05T12:12:20Z</time></trkpt>
+      <trkpt lat="45.470603" lon="9.179582"><ele>124</ele><time>2025-01-05T12:13:00Z</time></trkpt>
+
+      <!-- Segment 4: Castello to Parco Sempione (~600m, ~8 minutes) -->
+      <trkpt lat="45.470803" lon="9.178782"><ele>124</ele><time>2025-01-05T12:13:40Z</time></trkpt>
+      <trkpt lat="45.471003" lon="9.177982"><ele>124</ele><time>2025-01-05T12:14:20Z</time></trkpt>
+      <trkpt lat="45.471203" lon="9.177182"><ele>124</ele><time>2025-01-05T12:15:00Z</time></trkpt>
+      <trkpt lat="45.471403" lon="9.176382"><ele>124</ele><time>2025-01-05T12:15:40Z</time></trkpt>
+      <trkpt lat="45.471603" lon="9.175582"><ele>125</ele><time>2025-01-05T12:16:20Z</time></trkpt>
+      <trkpt lat="45.471803" lon="9.174782"><ele>125</ele><time>2025-01-05T12:17:00Z</time></trkpt>
+      <trkpt lat="45.471903" lon="9.174282"><ele>125</ele><time>2025-01-05T12:17:40Z</time></trkpt>
+      <trkpt lat="45.472003" lon="9.173782"><ele>125</ele><time>2025-01-05T12:18:20Z</time></trkpt>
+    </trkseg>
+  </trk>
+
+  <!-- Alternative route for testing (returns to start for loop testing) -->
+  <rte>
+    <name>Return Route (Optional)</name>
+    <desc>If you want to loop back to test multiple times</desc>
+    <rtept lat="45.472003" lon="9.173782"><name>Parco Sempione</name></rtept>
+    <rtept lat="45.470603" lon="9.179582"><name>Castello</name></rtept>
+    <rtept lat="45.467203" lon="9.189382"><name>La Scala</name></rtept>
+    <rtept lat="45.465803" lon="9.190182"><name>Galleria</name></rtept>
+    <rtept lat="45.464203" lon="9.189982"><name>Duomo</name></rtept>
+  </rte>
+
+</gpx>
