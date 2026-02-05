@@ -5,6 +5,7 @@ import {
   DurationAnalyticsDto,
   EngagementAnalyticsDto,
   TourAnalyticsItemDto,
+  SessionItemDto,
 } from './dto';
 
 @Injectable()
@@ -49,12 +50,12 @@ export class AdminAnalyticsService {
       },
     });
 
-    // Platform breakdown from device field
+    // Platform breakdown from osVersion field
     const iosCount = await this.prisma.analyticsEvent.count({
       where: {
         ...whereClause,
         name: 'tour_started',
-        device: { contains: 'ios', mode: 'insensitive' },
+        osVersion: { contains: 'ios', mode: 'insensitive' },
       },
     });
 
@@ -62,7 +63,7 @@ export class AdminAnalyticsService {
       where: {
         ...whereClause,
         name: 'tour_started',
-        device: { contains: 'android', mode: 'insensitive' },
+        osVersion: { contains: 'android', mode: 'insensitive' },
       },
     });
 
@@ -280,6 +281,93 @@ export class AdminAnalyticsService {
 
     // Sort by starts descending
     return result.sort((a, b) => b.starts - a.starts);
+  }
+
+  async getSessions(period: string = '30d'): Promise<SessionItemDto[]> {
+    const dateFilter = this.getDateFilter(period);
+    const whereClause = dateFilter ? { createdAt: { gte: dateFilter } } : {};
+
+    // 1. Get tour_started events (last 50)
+    const startEvents = await this.prisma.analyticsEvent.findMany({
+      where: { ...whereClause, name: 'tour_started' },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    if (startEvents.length === 0) return [];
+
+    // Collect unique anonymousIds and tourIds from starts
+    const anonIds = [...new Set(startEvents.map((e) => e.anonymousId).filter(Boolean))] as string[];
+    const tourIds = [...new Set(startEvents.map((e) => e.tourId).filter(Boolean))] as string[];
+
+    // 2. Get terminal events (tour_completed / tour_abandoned) for these users+tours
+    const terminalEvents = anonIds.length > 0 ? await this.prisma.analyticsEvent.findMany({
+      where: {
+        name: { in: ['tour_completed', 'tour_abandoned'] },
+        anonymousId: { in: anonIds },
+        tourId: { in: tourIds },
+      },
+      orderBy: { createdAt: 'asc' },
+    }) : [];
+
+    // 3. Get point_triggered events for these users+tours
+    const pointEvents = anonIds.length > 0 ? await this.prisma.analyticsEvent.findMany({
+      where: {
+        name: 'point_triggered',
+        anonymousId: { in: anonIds },
+        tourId: { in: tourIds },
+      },
+      orderBy: { createdAt: 'asc' },
+    }) : [];
+
+    // 4. Get tour names
+    const tours = tourIds.length > 0 ? await this.prisma.tour.findMany({
+      where: { id: { in: tourIds } },
+      include: { versions: { where: { status: 'published' }, take: 1 } },
+    }) : [];
+    const tourNameMap = new Map(tours.map((t) => [t.id, t.versions[0]?.title || t.slug]));
+
+    // 5. Build sessions by matching starts to terminal events
+    return startEvents.map((start) => {
+      const props = start.properties as Record<string, any> | null;
+
+      // Find the first terminal event for same anonymousId + tourId after start time
+      const terminal = terminalEvents.find(
+        (e) =>
+          e.anonymousId === start.anonymousId &&
+          e.tourId === start.tourId &&
+          e.createdAt > start.createdAt,
+      );
+
+      // Count point_triggered events between start and terminal (or now)
+      const endTime = terminal?.createdAt || new Date();
+      const pointCount = pointEvents.filter(
+        (e) =>
+          e.anonymousId === start.anonymousId &&
+          e.tourId === start.tourId &&
+          e.createdAt > start.createdAt &&
+          e.createdAt <= endTime,
+      ).length;
+
+      const terminalProps = terminal?.properties as Record<string, any> | null;
+
+      let status: 'completed' | 'abandoned' | 'in-progress' = 'in-progress';
+      if (terminal?.name === 'tour_completed') status = 'completed';
+      else if (terminal?.name === 'tour_abandoned') status = 'abandoned';
+
+      return {
+        tourId: start.tourId || '',
+        tourName: tourNameMap.get(start.tourId || '') || 'Unknown Tour',
+        startedAt: start.createdAt.toISOString(),
+        device: start.device || '\u2014',
+        osVersion: start.osVersion || '\u2014',
+        status,
+        durationMinutes: terminalProps?.durationMinutes ?? null,
+        pointsTriggered: pointCount,
+        triggerType: props?.triggerType ?? null,
+        language: start.language || null,
+      };
+    });
   }
 
   async deleteAllAnalytics(): Promise<{ deleted: number }> {

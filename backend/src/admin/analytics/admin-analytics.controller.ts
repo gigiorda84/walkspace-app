@@ -6,6 +6,7 @@ import {
   DurationAnalyticsDto,
   EngagementAnalyticsDto,
   TourAnalyticsItemDto,
+  SessionItemDto,
 } from './dto';
 import { Public } from '../../auth/decorators/public.decorator';
 
@@ -93,6 +94,26 @@ export class AdminAnalyticsController {
   })
   async getTours(@Query('period') period?: string): Promise<TourAnalyticsItemDto[]> {
     return this.adminAnalyticsService.getTourAnalytics(period || '30d');
+  }
+
+  @Get('sessions')
+  @ApiOperation({
+    summary: '[CMS] Get recent tour sessions',
+    description: 'Get list of recent individual tour sessions with status, duration, and points triggered.',
+  })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', 'all'],
+    description: 'Time period filter',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sessions retrieved successfully',
+    type: [SessionItemDto],
+  })
+  async getSessions(@Query('period') period?: string): Promise<SessionItemDto[]> {
+    return this.adminAnalyticsService.getSessions(period || '30d');
   }
 
   @Delete()

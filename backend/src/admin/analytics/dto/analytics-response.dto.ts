@@ -125,6 +125,39 @@ export class TourAnalyticsListDto {
   tours: TourAnalyticsItemDto[];
 }
 
+// Session Item Response
+export class SessionItemDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  tourId: string;
+
+  @ApiProperty({ example: 'Historic Downtown Walk' })
+  tourName: string;
+
+  @ApiProperty({ example: '2025-05-01T10:30:00.000Z' })
+  startedAt: string;
+
+  @ApiProperty({ example: 'Samsung SM-A037G' })
+  device: string;
+
+  @ApiProperty({ example: 'Android 12' })
+  osVersion: string;
+
+  @ApiProperty({ example: 'completed', enum: ['completed', 'abandoned', 'in-progress'] })
+  status: 'completed' | 'abandoned' | 'in-progress';
+
+  @ApiProperty({ example: 42.5, nullable: true })
+  durationMinutes: number | null;
+
+  @ApiProperty({ example: 8 })
+  pointsTriggered: number;
+
+  @ApiProperty({ example: 'gps', nullable: true })
+  triggerType: string | null;
+
+  @ApiProperty({ example: 'it', nullable: true })
+  language: string | null;
+}
+
 // Query params
 export class AnalyticsQueryDto {
   @ApiProperty({

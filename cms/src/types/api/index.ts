@@ -175,3 +175,16 @@ export interface TourAnalyticsItem {
   gpsTriggered: number;
   manualTriggered: number;
 }
+
+export interface SessionItem {
+  tourId: string;
+  tourName: string;
+  startedAt: string;
+  device: string;
+  osVersion: string;
+  status: 'completed' | 'abandoned' | 'in-progress';
+  durationMinutes: number | null;
+  pointsTriggered: number;
+  triggerType: string | null;
+  language: string | null;
+}

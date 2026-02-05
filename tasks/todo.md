@@ -1,57 +1,39 @@
-# Fix: Autoplay Failures + App Slowness
+# Add Sessions List to CMS Analytics
 
-## Bug Analysis (from user debug logs)
-
-### BUG 1 (CRITICAL): "Player ready" spam → app feels slow
-**Root cause**: `playPointAudio()` is called multiple times for the same point. Each call does `setMediaItem()` + `prepare()` + `play()` on ExoPlayer, even if the same file is already playing. This resets the player each time, firing STATE_READY repeatedly (50+ times in 2 seconds on Motorola).
-
-**Why it happens**: Manual skip (`setPointIndex`) doesn't add the point to `triggeredPoints`, so GPS re-triggers the same point seconds later, calling `playPointAudio` again.
-
-**Evidence**:
-- Xiaomi log: Manual skip to point 3 at 16:28:55, then GPS re-triggers point 3 at 16:28:59 (audio restarts)
-- Motorola log: 50+ "Player ready, duration: 847344ms" events in 2 seconds
-
-### BUG 2 (HIGH): Double tour initialization resets progress
-**Root cause**: `loadAndStartTour()` has no guard. It can be called again if the screen recomposes, which calls `setTourPoints()` → clears `triggeredPoints` → all point progress lost.
-
-**Evidence**: Xiaomi log shows "Manifest loaded: 9 audio, 7 subtitles" + "Set 9 tour points" at both 15:58:00 AND 15:58:06 (6 seconds apart).
-
-### BUG 3 (MEDIUM): Service bound multiple times
-**Root cause**: `startTour()` calls `startForegroundService()` + `bindService()` without checking `serviceBound`.
-
-## Plan
-
-### 1. Add guard in `AudioPlayerManager.playFile()` to skip re-prepare if same point already playing
-- [x] In `playFile()`: if `_currentPointId.value == pointId` and `_isPlaying.value`, skip setMediaItem/prepare/play
-- [x] Same guard in `playUrl()`
-
-### 2. Fix `setPointIndex()` to mark points as triggered
-- [x] In `LocationManager.setPointIndex()`: add point to `triggeredPoints` so GPS doesn't re-trigger it
-
-### 3. Guard `loadAndStartTour` against double initialization
-- [x] Add a `currentTourId` field; skip if already started for same tourId
-- [x] Reset `currentTourId` in `stopTour()` so re-starting works
-
-### 4. Guard service binding in `startTour`
-- [x] Check `serviceBound` before calling `startForegroundService` + `bindService`
+## Tasks
+- [x] 1. Backend DTO — Add `SessionItemDto` to `analytics-response.dto.ts`
+- [x] 2. Backend Service — Add `getSessions(period)` method to `admin-analytics.service.ts`
+- [x] 3. Backend Controller — Add `GET /admin/analytics/sessions` endpoint
+- [x] 4. CMS Types — Add `SessionItem` interface to `cms/src/types/api/index.ts`
+- [x] 5. CMS API Client — Add `getSessions()` to `analyticsApi` in `client.ts`
+- [x] 6. CMS Analytics Page — Add "Recent Sessions" table to `page.tsx`
 
 ## Review
 
 ### Changes Summary
-All 4 fixes are minimal guards (1-4 lines each) that prevent redundant operations without changing any core logic.
+Added a "Recent Sessions" table to the CMS analytics page. Each `tour_started` event is treated as a session. The backend matches each start to its terminal event (`tour_completed`/`tour_abandoned`) and counts `point_triggered` events in between. No schema changes needed — everything is inferred from existing analytics events.
 
 ### Files Modified
+
 | File | Change |
 |------|--------|
-| `AudioPlayerManager.kt` | Added early return in `playFile()` and `playUrl()` if same pointId is already playing |
-| `LocationManager.kt` | Added `triggeredPoints.add()` in `setPointIndex()` so manual skips are tracked |
-| `PlayerViewModel.kt` | Added `currentTourId` guard to prevent double init; added `serviceBound` check before binding |
+| `backend/src/admin/analytics/dto/analytics-response.dto.ts` | Added `SessionItemDto` class (10 fields with Swagger decorators) |
+| `backend/src/admin/analytics/admin-analytics.service.ts` | Added `getSessions()` method — 3 batch queries + in-memory matching |
+| `backend/src/admin/analytics/admin-analytics.controller.ts` | Added `GET /admin/analytics/sessions?period=` endpoint |
+| `cms/src/types/api/index.ts` | Added `SessionItem` TypeScript interface |
+| `cms/src/lib/api/client.ts` | Added `getSessions()` to `analyticsApi` object |
+| `cms/src/app/analytics/page.tsx` | Added sessions state, fetch in Promise.all, and "Recent Sessions" table with status badges |
 
-### What each fix addresses
-1. **AudioPlayerManager guard** → Eliminates "Player ready" spam (50+ events → 1 event). Directly fixes app slowness.
-2. **setPointIndex triggeredPoints** → Prevents GPS from re-triggering manually-skipped points. Fixes autoplay failures where audio restarts from beginning.
-3. **loadAndStartTour guard** → Prevents double initialization that wipes point trigger history mid-tour.
-4. **serviceBound guard** → Prevents redundant service binding.
+### How it works
+1. Backend fetches last 50 `tour_started` events (desc by date)
+2. Batch-fetches all matching `tour_completed`/`tour_abandoned` and `point_triggered` events
+3. For each start, finds the first terminal event (same anonymousId + tourId, after start time)
+4. Status: `completed` / `abandoned` / `in-progress` (no terminal event found)
+5. Duration comes from the terminal event's `properties.durationMinutes`
+6. Points count = number of `point_triggered` events between start and end
 
-### Note on trigger radius
-Both users' tours use 15-25m trigger radii. The PRD recommends 100-300m for reliability. Small radii contribute to missed triggers (user walks past while previous audio plays). This is a data/configuration issue, not a code fix.
+### Edge cases handled
+- No terminal event → status = "in-progress", duration shows "—"
+- Missing device/osVersion → shows "—"
+- Deleted tour → shows "Unknown Tour"
+- No sessions at all → "No sessions found" empty state

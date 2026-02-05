@@ -68,6 +68,7 @@ import type {
   DurationAnalytics,
   EngagementAnalytics,
   TourAnalyticsItem,
+  SessionItem,
 } from '@/types/api';
 
 export type AnalyticsPeriod = '7d' | '30d' | '90d' | 'all';
@@ -90,6 +91,11 @@ export const analyticsApi = {
 
   getTours: async (period: AnalyticsPeriod = '30d'): Promise<TourAnalyticsItem[]> => {
     const response = await apiClient.get(`/admin/analytics/tours?period=${period}`);
+    return response.data;
+  },
+
+  getSessions: async (period: AnalyticsPeriod = '30d'): Promise<SessionItem[]> => {
+    const response = await apiClient.get(`/admin/analytics/sessions?period=${period}`);
     return response.data;
   },
 

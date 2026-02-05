@@ -9,6 +9,7 @@ import type {
   DurationAnalytics,
   EngagementAnalytics,
   TourAnalyticsItem,
+  SessionItem,
 } from '@/types/api';
 
 // Stat Card Component
@@ -55,6 +56,7 @@ export default function AnalyticsPage() {
   const [duration, setDuration] = useState<DurationAnalytics | null>(null);
   const [engagement, setEngagement] = useState<EngagementAnalytics | null>(null);
   const [tours, setTours] = useState<TourAnalyticsItem[]>([]);
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -64,16 +66,18 @@ export default function AnalyticsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [overviewData, durationData, engagementData, toursData] = await Promise.all([
+      const [overviewData, durationData, engagementData, toursData, sessionsData] = await Promise.all([
         analyticsApi.getOverview(period),
         analyticsApi.getDuration(period),
         analyticsApi.getEngagement(period),
         analyticsApi.getTours(period),
+        analyticsApi.getSessions(period),
       ]);
       setOverview(overviewData);
       setDuration(durationData);
       setEngagement(engagementData);
       setTours(toursData);
+      setSessions(sessionsData);
     } catch (err) {
       setError('Failed to load analytics data');
       console.error(err);
@@ -347,6 +351,67 @@ export default function AnalyticsPage() {
                     <td className="px-6 py-4 text-sm text-gray-900 text-right">{tour.avgDurationMinutes} min</td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-right">{tour.gpsTriggered}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-right">{tour.manualTriggered}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        </section>
+
+      {/* Recent Sessions */}
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Sessions</h2>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tour</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Duration</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Points</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trigger</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lang</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {sessions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    No sessions found for this period
+                  </td>
+                </tr>
+              ) : (
+                sessions.map((session, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{session.tourName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {new Date(session.startedAt).toLocaleDateString()}{' '}
+                      {new Date(session.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      <div>{session.device}</div>
+                      <div className="text-xs text-gray-400">{session.osVersion}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                        session.status === 'completed'
+                          ? 'bg-green-100 text-green-700'
+                          : session.status === 'abandoned'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {session.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                      {session.durationMinutes != null ? `${session.durationMinutes} min` : '\u2014'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{session.pointsTriggered}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{session.triggerType || '\u2014'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{session.language || '\u2014'}</td>
                   </tr>
                 ))
               )}
