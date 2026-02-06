@@ -116,7 +116,10 @@ class AnalyticsService(
     suspend fun trackTourDownloadCompleted(tourId: String) = track("tour_download_completed", tourId = tourId)
     suspend fun trackTourStarted(tourId: String) = track("tour_started", tourId = tourId)
     suspend fun trackPointTriggered(tourId: String, pointId: String) = track("point_triggered", tourId, pointId)
-    suspend fun trackTourCompleted(tourId: String) = track("tour_completed", tourId = tourId)
+    suspend fun trackTourCompleted(tourId: String) {
+        track("tour_completed", tourId = tourId)
+        flush()
+    }
 
     fun shutdown() {
         flushJob?.cancel()

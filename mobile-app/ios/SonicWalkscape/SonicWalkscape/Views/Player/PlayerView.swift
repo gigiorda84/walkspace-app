@@ -575,6 +575,7 @@ struct PlayerView: View {
             pointsVisited: tourPoints.count,
             triggerType: primaryTriggerType
         )
+        AnalyticsService.shared.flush()
     }
 
     private func trackTourAbandoned() {
@@ -585,6 +586,7 @@ struct PlayerView: View {
             durationMinutes: duration,
             lastPointIndex: currentPointIndex
         )
+        AnalyticsService.shared.flush()
     }
 
     // MARK: - Memory Monitoring
