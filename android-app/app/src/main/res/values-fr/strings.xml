@@ -113,6 +113,8 @@
     <!-- Permissions -->
     <string name="location_permission_required">Autorisation de localisation requise</string>
     <string name="location_permission_explanation">Cette application a besoin de l\'accès à la localisation pour déclencher l\'audio lorsque vous atteignez les points du tour. Veuillez activer l\'autorisation dans les paramètres.</string>
+    <string name="background_location_title">Localisation en arrière-plan</string>
+    <string name="background_location_explanation">Pour déclencher l\'audio avec le téléphone dans votre poche, sélectionnez \"Autoriser tout le temps\" sur l\'écran suivant.</string>
     <string name="open_settings">Ouvrir les paramètres</string>
     <string name="cancel">Annuler</string>
 

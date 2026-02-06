@@ -3,6 +3,7 @@ package com.bandite.sonicwalkscape.ui.tourdetail
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -60,6 +61,7 @@ fun TourDetailScreen(
 
     var showSetupSheet by remember { mutableStateOf(false) }
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+    var showBackgroundLocationRationale by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     // Check if location permission is granted
@@ -70,12 +72,33 @@ fun TourDetailScreen(
         ) == PermissionChecker.PERMISSION_GRANTED
     }
 
-    // Permission request launcher
+    fun hasBackgroundLocationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PermissionChecker.PERMISSION_GRANTED
+        } else true
+    }
+
+    // Background location permission launcher (requested after fine location is granted)
+    val backgroundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // Proceed regardless — background is recommended but not required
+        showSetupSheet = true
+    }
+
+    // Fine location permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            showSetupSheet = true
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !hasBackgroundLocationPermission()) {
+                showBackgroundLocationRationale = true
+            } else {
+                showSetupSheet = true
+            }
         } else {
             showPermissionDeniedDialog = true
         }
@@ -84,7 +107,11 @@ fun TourDetailScreen(
     // Function to handle start tour button click
     fun onStartTourClick() {
         if (hasLocationPermission()) {
-            showSetupSheet = true
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !hasBackgroundLocationPermission()) {
+                showBackgroundLocationRationale = true
+            } else {
+                showSetupSheet = true
+            }
         } else {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -388,6 +415,47 @@ fun TourDetailScreen(
                             showSetupSheet = false
                             viewModel.clearDownloadError()
                         }
+                    )
+                }
+
+                // Background Location Rationale Dialog
+                if (showBackgroundLocationRationale) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showBackgroundLocationRationale = false
+                            showSetupSheet = true
+                        },
+                        title = {
+                            Text(
+                                text = stringResource(R.string.background_location_title),
+                                color = BrandCream
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.background_location_explanation),
+                                color = BrandCream
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showBackgroundLocationRationale = false
+                                    backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                }
+                            ) {
+                                Text(stringResource(R.string.continue_button), color = BrandYellow)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = {
+                                showBackgroundLocationRationale = false
+                                showSetupSheet = true
+                            }) {
+                                Text(stringResource(R.string.skip), color = BrandCream)
+                            }
+                        },
+                        containerColor = BrandPurple
                     )
                 }
 

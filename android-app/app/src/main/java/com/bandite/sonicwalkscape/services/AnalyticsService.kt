@@ -62,7 +62,7 @@ class AnalyticsService(
             language = language,
             device = "${Build.MANUFACTURER} ${Build.MODEL}",
             osVersion = "Android ${Build.VERSION.RELEASE}",
-            createdAt = dateFormat.format(Date()),
+            timestamp = dateFormat.format(Date()),
             properties = properties
         )
 

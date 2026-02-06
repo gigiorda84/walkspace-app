@@ -113,6 +113,8 @@
     <!-- Permissions -->
     <string name="location_permission_required">Location Permission Required</string>
     <string name="location_permission_explanation">This app needs location access to trigger audio when you reach tour points. Please enable location permission in settings.</string>
+    <string name="background_location_title">Background Location</string>
+    <string name="background_location_explanation">To trigger audio while your phone is in your pocket, please select \"Allow all the time\" on the next screen.</string>
     <string name="open_settings">Open Settings</string>
     <string name="cancel">Cancel</string>
 

@@ -128,7 +128,7 @@ data class AnalyticsEvent(
     val language: String? = null,
     val device: String? = null,
     val osVersion: String? = null,
-    val createdAt: String,
+    val timestamp: String,
     val properties: Map<String, Any>? = null
 )
 

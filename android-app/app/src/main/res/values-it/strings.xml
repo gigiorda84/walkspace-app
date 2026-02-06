@@ -113,6 +113,8 @@
     <!-- Permissions -->
     <string name="location_permission_required">Autorizzazione Posizione Richiesta</string>
     <string name="location_permission_explanation">Questa app necessita dell\'accesso alla posizione per attivare l\'audio quando raggiungi i punti del tour. Abilita l\'autorizzazione nelle impostazioni.</string>
+    <string name="background_location_title">Posizione in Background</string>
+    <string name="background_location_explanation">Per attivare l\'audio con il telefono in tasca, seleziona \"Consenti sempre\" nella schermata successiva.</string>
     <string name="open_settings">Apri Impostazioni</string>
     <string name="cancel">Annulla</string>
 
