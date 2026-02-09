@@ -104,8 +104,8 @@ class PlayerViewModel @Inject constructor(
         }
 
         audioPlayerManager.onPlaybackCompleted = {
-            locationManager.advanceToNextPoint()
             if (!locationManager.hasMorePoints) {
+                // Last point's audio finished - tour is complete
                 _isTourComplete.value = true
                 stopSubtitleSync()
                 viewModelScope.launch {
@@ -113,6 +113,9 @@ class PlayerViewModel @Inject constructor(
                         analyticsService.trackTourCompleted(tour.id)
                     }
                 }
+            } else {
+                // Not on last point - advance (may auto-trigger queued next point)
+                locationManager.advanceToNextPoint()
             }
         }
     }

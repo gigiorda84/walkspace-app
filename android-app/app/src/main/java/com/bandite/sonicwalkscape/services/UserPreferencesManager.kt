@@ -8,11 +8,18 @@ import com.bandite.sonicwalkscape.utils.Constants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.Locale
 import java.util.UUID
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = Constants.PREFS_NAME)
 
 class UserPreferencesManager(private val context: Context) {
+
+    private val deviceLanguage: String
+        get() {
+            val lang = Locale.getDefault().language
+            return if (lang in Constants.SUPPORTED_LANGUAGES) lang else Constants.DEFAULT_LANGUAGE
+        }
 
     private object PreferencesKeys {
         val ONBOARDING_COMPLETED = booleanPreferencesKey(Constants.KEY_ONBOARDING_COMPLETED)
@@ -32,7 +39,7 @@ class UserPreferencesManager(private val context: Context) {
     }
 
     val preferredLanguage: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[PreferencesKeys.PREFERRED_LANGUAGE] ?: Constants.DEFAULT_LANGUAGE
+        prefs[PreferencesKeys.PREFERRED_LANGUAGE] ?: deviceLanguage
     }
 
     val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
@@ -137,7 +144,7 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun getPreferredLanguageOnce(): String {
         return context.dataStore.data.map { prefs ->
-            prefs[PreferencesKeys.PREFERRED_LANGUAGE] ?: Constants.DEFAULT_LANGUAGE
+            prefs[PreferencesKeys.PREFERRED_LANGUAGE] ?: deviceLanguage
         }.first()
     }
 }
