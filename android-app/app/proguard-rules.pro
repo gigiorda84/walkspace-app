@@ -52,3 +52,17 @@
 # R8 must preserve generic signatures on these for Retrofit+Gson to resolve types
 -keep,allowobfuscation,allowshrinking class retrofit2.Response
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+
+# Hilt / Dagger
+-keep class dagger.hilt.** { *; }
+-keep class dagger.** { *; }
+-dontwarn dagger.hilt.**
+-keep @dagger.hilt.android.HiltAndroidApp class * { *; }
+-keep @dagger.hilt.InstallIn class * { *; }
+-keep @dagger.hilt.android.AndroidEntryPoint class * { *; }
+-keep class **_HiltModules { *; }
+-keep class **_HiltModules$* { *; }
+-keep class *_MembersInjector { *; }
+-keep class *_Factory { *; }
+-keepnames class dagger.hilt.internal.** { *; }
+-keepnames class hilt_aggregated_deps.** { *; }
