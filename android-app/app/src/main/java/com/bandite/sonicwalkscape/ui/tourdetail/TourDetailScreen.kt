@@ -26,7 +26,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -432,9 +436,26 @@ fun TourDetailScreen(
                             )
                         },
                         text = {
-                            Text(
-                                text = stringResource(R.string.background_location_explanation),
-                                color = BrandCream
+                            val privacyUrl = "${Constants.API_BASE_URL}privacy"
+                            val annotatedText = buildAnnotatedString {
+                                append(stringResource(R.string.background_location_explanation))
+                                append("\n\n")
+                                pushStringAnnotation(tag = "URL", annotation = privacyUrl)
+                                withStyle(SpanStyle(color = BrandYellow, textDecoration = TextDecoration.Underline)) {
+                                    append(stringResource(R.string.privacy_policy))
+                                }
+                                pop()
+                            }
+                            androidx.compose.foundation.text.ClickableText(
+                                text = annotatedText,
+                                style = androidx.compose.ui.text.TextStyle(color = BrandCream),
+                                onClick = { offset ->
+                                    annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                                        .firstOrNull()?.let { annotation ->
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                            context.startActivity(intent)
+                                        }
+                                }
                             )
                         },
                         confirmButton = {

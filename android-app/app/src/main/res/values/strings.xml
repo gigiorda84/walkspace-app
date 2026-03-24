@@ -113,8 +113,9 @@
     <!-- Permissions -->
     <string name="location_permission_required">Location Permission Required</string>
     <string name="location_permission_explanation">This app needs location access to trigger audio when you reach tour points. Please enable location permission in settings.</string>
-    <string name="background_location_title">Background Location</string>
-    <string name="background_location_explanation">To trigger audio while your phone is in your pocket, please select \"Allow all the time\" on the next screen.</string>
+    <string name="background_location_title">Background Location Access</string>
+    <string name="background_location_explanation">BANDITE Sonic Walkscape collects location data in the background, even when the app is not in use or your screen is locked. This is required to automatically trigger audio narration as you walk past GPS waypoints during a tour. Location data is never stored on our servers or shared with third parties.\n\nOn the next screen, please select \"Allow all the time\" to enable this feature.</string>
+    <string name="privacy_policy">Privacy Policy</string>
     <string name="open_settings">Open Settings</string>
     <string name="cancel">Cancel</string>
 
