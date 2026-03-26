@@ -154,24 +154,14 @@ class LocationManager(private val context: Context) {
             return
         }
 
-        // Check if next point was queued (user passed through while audio was playing)
-        val wasQueued = _nextPointQueued.value
-
         _currentPointIndex.value = pointIndex + 1
         _nextPointQueued.value = false
 
         val nextPoint = tourPoints[_currentPointIndex.value]
-        DebugLogger.location("Advanced to point ${_currentPointIndex.value + 1}: ${nextPoint.getDisplayTitle()}")
-
-        // If the point was queued, trigger it immediately
-        if (wasQueued) {
-            triggeredPoints.add(nextPoint.id)
-            _nearbyPoint.value = nextPoint
-            onPointTriggered?.invoke(nextPoint)
-            DebugLogger.location("Point ${nextPoint.order} AUTO-TRIGGERED from queue")
-        } else {
-            _nearbyPoint.value = null
-        }
+        triggeredPoints.add(nextPoint.id)
+        _nearbyPoint.value = nextPoint
+        onPointTriggered?.invoke(nextPoint)
+        DebugLogger.location("Point ${nextPoint.order} AUTO-TRIGGERED: ${nextPoint.getDisplayTitle()}")
     }
 
     fun resetProgress() {

@@ -127,25 +127,14 @@ class LocationManager: NSObject, ObservableObject {
             return
         }
 
-        // Check if next point was queued (user passed through while audio was playing)
-        let wasQueued = nextPointQueued
-
         currentPointIndex += 1
-        isPointActive = false
+        isPointActive = true
         nextPointQueued = false
 
         let nextPoint = tourPoints[currentPointIndex]
-        DebugLogger.gps("Advanced to point \(currentPointIndex + 1): \(nextPoint.title)")
-
-        // If the point was queued, trigger it immediately
-        if wasQueued {
-            isPointActive = true
-            nearbyPoint = nextPoint
-            triggeredPoints.insert(nextPoint.id)
-            DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED from queue: \(nextPoint.title)")
-        } else {
-            nearbyPoint = nil
-        }
+        nearbyPoint = nextPoint
+        triggeredPoints.insert(nextPoint.id)
+        DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED: \(nextPoint.title)")
     }
 }
 

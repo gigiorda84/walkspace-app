@@ -114,7 +114,7 @@
     <string name="location_permission_required">Autorizzazione Posizione Richiesta</string>
     <string name="location_permission_explanation">Questa app necessita dell\'accesso alla posizione per attivare l\'audio quando raggiungi i punti del tour. Abilita l\'autorizzazione nelle impostazioni.</string>
     <string name="background_location_title">Posizione in Background</string>
-    <string name="background_location_explanation">Per attivare l\'audio con il telefono in tasca, seleziona \"Consenti sempre\" nella schermata successiva.</string>
+    <string name="background_location_explanation">BANDITE Sonic Walkscape raccoglie dati di posizione in background, anche quando l\'app non è in uso o lo schermo è bloccato. Questo è necessario per attivare automaticamente la narrazione audio quando passi accanto ai punti GPS durante un tour. I dati di posizione non vengono mai memorizzati sui nostri server né condivisi con terze parti.\n\nNella schermata successiva, seleziona \"Consenti sempre\" per abilitare questa funzione.</string>
     <string name="open_settings">Apri Impostazioni</string>
     <string name="cancel">Annulla</string>
 

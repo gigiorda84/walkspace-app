@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -422,62 +424,105 @@ fun TourDetailScreen(
                     )
                 }
 
-                // Background Location Rationale Dialog
+                // Background Location Prominent Disclosure (full-screen per Google Play policy)
                 if (showBackgroundLocationRationale) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            showBackgroundLocationRationale = false
-                            showSetupSheet = true
-                        },
-                        title = {
-                            Text(
-                                text = stringResource(R.string.background_location_title),
-                                color = BrandCream
-                            )
-                        },
-                        text = {
-                            val privacyUrl = "${Constants.API_BASE_URL}privacy"
-                            val annotatedText = buildAnnotatedString {
-                                append(stringResource(R.string.background_location_explanation))
-                                append("\n\n")
-                                pushStringAnnotation(tag = "URL", annotation = privacyUrl)
-                                withStyle(SpanStyle(color = BrandYellow, textDecoration = TextDecoration.Underline)) {
-                                    append(stringResource(R.string.privacy_policy))
-                                }
-                                pop()
-                            }
-                            androidx.compose.foundation.text.ClickableText(
-                                text = annotatedText,
-                                style = androidx.compose.ui.text.TextStyle(color = BrandCream),
-                                onClick = { offset ->
-                                    annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                                        .firstOrNull()?.let { annotation ->
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
-                                            context.startActivity(intent)
-                                        }
-                                }
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showBackgroundLocationRationale = false
-                                    backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                                }
+                    Dialog(
+                        onDismissRequest = {},
+                        properties = DialogProperties(
+                            usePlatformDefaultWidth = false,
+                            dismissOnBackPress = false,
+                            dismissOnClickOutside = false
+                        )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(BrandPurple)
+                                .padding(24.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState()),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
-                                Text(stringResource(R.string.continue_button), color = BrandYellow)
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = BrandYellow,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text(
+                                    text = stringResource(R.string.background_location_title),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandCream,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                val privacyUrl = "${Constants.API_BASE_URL}privacy"
+                                val annotatedText = buildAnnotatedString {
+                                    append(stringResource(R.string.background_location_explanation))
+                                    append("\n\n")
+                                    pushStringAnnotation(tag = "URL", annotation = privacyUrl)
+                                    withStyle(SpanStyle(color = BrandYellow, textDecoration = TextDecoration.Underline)) {
+                                        append(stringResource(R.string.privacy_policy))
+                                    }
+                                    pop()
+                                }
+                                androidx.compose.foundation.text.ClickableText(
+                                    text = annotatedText,
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        color = BrandCream,
+                                        fontSize = 16.sp,
+                                        lineHeight = 24.sp
+                                    ),
+                                    onClick = { offset ->
+                                        annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                                            .firstOrNull()?.let { annotation ->
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                                context.startActivity(intent)
+                                            }
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(32.dp))
+                                Button(
+                                    onClick = {
+                                        showBackgroundLocationRationale = false
+                                        backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                    shape = RoundedCornerShape(50),
+                                    colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.continue_button),
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = BrandPurple,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                TextButton(
+                                    onClick = {
+                                        showBackgroundLocationRationale = false
+                                        showSetupSheet = true
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.skip),
+                                        color = BrandCream,
+                                        fontSize = 16.sp
+                                    )
+                                }
                             }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = {
-                                showBackgroundLocationRationale = false
-                                showSetupSheet = true
-                            }) {
-                                Text(stringResource(R.string.skip), color = BrandCream)
-                            }
-                        },
-                        containerColor = BrandPurple
-                    )
+                        }
+                    }
                 }
 
                 // Permission Denied Dialog
