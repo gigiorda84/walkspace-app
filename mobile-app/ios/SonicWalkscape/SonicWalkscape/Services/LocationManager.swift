@@ -128,13 +128,24 @@ class LocationManager: NSObject, ObservableObject {
         }
 
         currentPointIndex += 1
-        isPointActive = true
-        nextPointQueued = false
-
         let nextPoint = tourPoints[currentPointIndex]
-        nearbyPoint = nextPoint
-        triggeredPoints.insert(nextPoint.id)
-        DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED: \(nextPoint.title)")
+
+        if nextPointQueued {
+            // User already walked into the next radius while previous audio was playing —
+            // auto-trigger playback as soon as the current track ends.
+            isPointActive = true
+            nearbyPoint = nextPoint
+            triggeredPoints.insert(nextPoint.id)
+            nextPointQueued = false
+            DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED (queued): \(nextPoint.title)")
+        } else {
+            // User is not yet in the next radius — do NOT autoplay.
+            // Just advance the index so checkSequentialPointProximity now watches the next point;
+            // it will fire nearbyPoint when the user actually enters its radius.
+            isPointActive = false
+            nearbyPoint = nil
+            DebugLogger.gps("Point \(nextPoint.order) ARMED: waiting for user to enter radius")
+        }
     }
 }
 
