@@ -1,5 +1,6 @@
 package com.bandite.sonicwalkscape.ui.discovery
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bandite.sonicwalkscape.data.api.ApiService
@@ -8,18 +9,29 @@ import com.bandite.sonicwalkscape.services.AnalyticsService
 import com.bandite.sonicwalkscape.services.TourDownloadManager
 import com.bandite.sonicwalkscape.services.UserPreferencesManager
 import com.bandite.sonicwalkscape.utils.DebugLogger
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class DiscoveryViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val apiService: ApiService,
     private val userPreferencesManager: UserPreferencesManager,
     private val tourDownloadManager: TourDownloadManager,
     private val analyticsService: AnalyticsService
 ) : ViewModel() {
+
+    private val gson = Gson()
+    private val cacheFile: File
+        get() = File(context.filesDir, "tours_cache.json")
 
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
@@ -62,15 +74,49 @@ class DiscoveryViewModel @Inject constructor(
                         }
                     _tours.value = updatedTours
                     DebugLogger.network("Loaded ${updatedTours.size} tours")
+                    saveToursToCache(updatedTours)
                 } else {
-                    _error.value = "Failed to load tours: ${response.code()}"
                     DebugLogger.e("API error: ${response.code()}")
+                    if (!loadToursFromCache()) {
+                        _error.value = "Failed to load tours: ${response.code()}"
+                    }
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
                 DebugLogger.e("Failed to load tours", e)
+                if (!loadToursFromCache()) {
+                    _error.value = e.message ?: "Unknown error"
+                }
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private suspend fun saveToursToCache(tours: List<Tour>) {
+        withContext(Dispatchers.IO) {
+            try {
+                cacheFile.writeText(gson.toJson(tours))
+            } catch (e: Exception) {
+                DebugLogger.e("Failed to cache tours", e)
+            }
+        }
+    }
+
+    private suspend fun loadToursFromCache(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (!cacheFile.exists()) return@withContext false
+                val type = object : TypeToken<List<Tour>>() {}.type
+                val cached: List<Tour> = gson.fromJson(cacheFile.readText(), type) ?: return@withContext false
+                if (cached.isEmpty()) return@withContext false
+                _tours.value = cached.map { tour ->
+                    tour.copy(isDownloaded = tourDownloadManager.isTourDownloaded(tour.id))
+                }
+                DebugLogger.network("Offline: loaded ${cached.size} tours from cache")
+                true
+            } catch (e: Exception) {
+                DebugLogger.e("Failed to load cached tours", e)
+                false
             }
         }
     }

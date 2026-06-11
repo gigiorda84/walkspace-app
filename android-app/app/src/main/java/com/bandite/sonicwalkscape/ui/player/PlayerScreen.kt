@@ -366,9 +366,16 @@ private fun AudioControlsPanel(
 
             // Progress slider
             if (duration > 0) {
+                // Track drag position locally; only seek once when the drag ends,
+                // otherwise ExoPlayer gets a seekTo() per frame while dragging
+                var dragPosition by remember { mutableStateOf<Float?>(null) }
                 Slider(
-                    value = currentPosition.toFloat(),
-                    onValueChange = { onSeekTo(it.toLong()) },
+                    value = dragPosition ?: currentPosition.toFloat(),
+                    onValueChange = { dragPosition = it },
+                    onValueChangeFinished = {
+                        dragPosition?.let { onSeekTo(it.toLong()) }
+                        dragPosition = null
+                    },
                     valueRange = 0f..duration.toFloat(),
                     colors = SliderDefaults.colors(
                         thumbColor = BrandYellow,
@@ -384,7 +391,7 @@ private fun AudioControlsPanel(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = formatTime(currentPosition),
+                        text = formatTime(dragPosition?.toLong() ?: currentPosition),
                         color = Color.White,
                         fontSize = 12.sp
                     )

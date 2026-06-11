@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 BANDITE Sonic Walkscape is a branded mobile app for nonprofit-led sonic walking tours. The app delivers immersive, geolocated audio experiences along linear paths in various cities.
 
 **Key characteristics:**
-- iOS-first (Swift + SwiftUI), Android later
+- Native Android app (Kotlin + Jetpack Compose) — in production beta on Google Play
+- iOS app (React + TypeScript wrapped for iOS) — distributed via TestFlight
 - Web CMS for tour management (React/Next.js)
-- Backend API (Node.js + NestJS + TypeScript + PostgreSQL)
+- Backend API (Node.js + NestJS + TypeScript + Prisma + PostgreSQL), deployed on Render
 - Offline-first architecture with mandatory downloads
 - GPS-triggered sequential audio playback
 - GDPR-compliant analytics
@@ -206,12 +207,34 @@ Include properties: `user_id`, `anonymous_id`, `tour_id`, `point_id`, `language`
 - GDPR: data stored in EU region, explicit analytics consent, data deletion API
 - CMS has role-based access control
 
+## Repository Structure
+
+This is a monorepo containing all components:
+
+```
+android-app/   Native Android app (Kotlin + Jetpack Compose, Hilt, ExoPlayer/Media3,
+               Google Maps Compose, Retrofit + Gson). Currently in production beta
+               on Google Play (versionName 1.1.4, versionCode 15).
+mobile-app/    iOS app (React + TypeScript + Vite, wrapped for iOS in mobile-app/ios,
+               deployed via TestFlight). See mobile-app/TESTFLIGHT-DEPLOYMENT.md.
+backend/       NestJS + TypeScript + Prisma + PostgreSQL API.
+               Deployed on Render at https://walkspace-api.onrender.com.
+               See backend/DEPLOYMENT.md (use `prisma migrate deploy` in production).
+cms/           Next.js web CMS for tour management.
+tasks/         Working plans and todo files (todo.md is the active plan).
+PRD.md         Product requirements document.
+```
+
+Key Android app packages (under `android-app/app/src/main/java/com/bandite/sonicwalkscape/`):
+- `services/` — `AudioPlayerManager` (ExoPlayer), `LocationManager` (GPS triggering),
+  `TourDownloadManager` (offline packages), `TourPlaybackService` (foreground service),
+  `AnalyticsService`
+- `ui/` — Compose screens: `discovery/`, `tourdetail/`, `player/`, `settings/`, `debug/`
+- `data/` — Retrofit API client and models
+
 ## Project Status
 
-This repository is in the **planning phase**. See PRD.md for complete product requirements.
-
-When development begins:
-1. Set up backend repository (NestJS + PostgreSQL)
-2. Set up CMS repository (Next.js)
-3. Set up iOS app repository (Swift + SwiftUI)
-4. Configure shared infrastructure (storage, auth provider, map tiles)
+All components are **built and deployed**: the backend runs on Render, the CMS is live,
+the iOS app ships via TestFlight, and the Android app is in production beta on Google Play.
+Current work is bug fixing and release hardening (see recent git history for examples:
+Google Play prominent disclosure compliance, background location, tour completion logic).

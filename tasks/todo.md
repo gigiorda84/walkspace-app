@@ -1,67 +1,62 @@
-# Fix: Tour completion triggers too early / crash at point 8-9 transition
+# Android Debug Report Fixes (v1.1.4-beta build 12)
 
-## Analysis from user logs
+## Bug 1: "Failed to load tours: Unable to resolve host walkspace-api.onrender.com"
 
-Three devices reported issues during the "UNSEEN" tour (9 points):
+**Root cause:** The device temporarily lost internet (DNS resolution failed). The app itself
+can't prevent that — the real bug is that `DiscoveryViewModel.loadTours()` has no offline
+fallback. When the network call throws, the tour list goes empty and an error is shown,
+even though the app is supposed to be offline-first and the user may have tours fully
+downloaded on disk.
 
-1. **Xiaomi 2311DRK48G (Android 15)** — Logs cut off mid-line. Audio state shows "Paused 3:28/3:28" (finished). Has background location.
-2. **Nothing A142 (Android 14)** — Audio "Paused 9:50/9:51". Has **no background location permission** — location updates stop when screen locks.
-3. **Motorola moto g34 (Android 14)** — Only 3 log entries: went straight to completion screen "Loaded tour for completion: UNSEEN" with "No audio loaded". Has background location.
+**Fix (minimal):** Cache the last successful tours response to a JSON file
+(`filesDir/tours_cache.json`) using Gson (already a dependency). On network failure, load
+the cached list instead of showing an error. Only show the error if there is no cache.
+All changes contained in `DiscoveryViewModel.kt`.
 
-## Root Cause
+## Bug 2: "[AUDIO] Player ready" logged ~60x/second
 
-**Critical bug in `PlayerViewModel.kt` lines 110-124: `onPlaybackCompleted` callback.**
+**Root cause:** In `PlayerScreen.kt`, the progress slider calls
+`onValueChange = { onSeekTo(it.toLong()) }` — this fires on *every frame* while the user
+drags the thumb (~every 17ms). Each call hits `ExoPlayer.seekTo()`, which causes a
+BUFFERING→READY state transition, which logs "Player ready, duration: …" each time.
+Hundreds of seeks per drag also causes audio stutter and the log spam seen in the report.
 
-The current code:
-```kotlin
-audioPlayerManager.onPlaybackCompleted = {
-    locationManager.advanceToNextPoint()       // Advances index, may auto-trigger next point
-    if (!locationManager.hasMorePoints) {      // Checks AFTER advance
-        _isTourComplete.value = true           // Marks tour complete!
-    }
-}
-```
+**Fix (minimal):** Make the slider stateful during drag: keep the dragged position in a
+local `remember` state, update the UI only while dragging, and call `onSeekTo()` once in
+`onValueChangeFinished`. All changes contained in the `AudioControlsPanel` composable in
+`PlayerScreen.kt`.
 
-The problem: `hasMorePoints` is checked **AFTER** `advanceToNextPoint()`. When point 8's audio (index 7) finishes:
+## Todo
 
-- `advanceToNextPoint()` sets `currentPointIndex` to 8 (the last index)
-- If point 9 was queued, it fires `onPointTriggered` which starts loading audio **asynchronously**
-- Back in `onPlaybackCompleted`, `hasMorePoints` = `8 < 8` = **false**
-- Tour is marked complete **immediately**, before point 9's audio has a chance to play
-- UI navigates to completion screen, ViewModel gets cleared, audio stops
-
-This happens in TWO scenarios:
-- **Queued**: User reached point 9's radius while point 8 was playing → point 9 audio starts but tour immediately marked complete
-- **Not queued**: User hasn't reached point 9 yet → tour marked complete without point 9 ever playing
-
-**The fix**: Check `hasMorePoints` BEFORE calling `advanceToNextPoint()`. If we're already on the last point and its audio just finished → mark complete. Otherwise → advance (which may auto-trigger the next queued point, whose audio will eventually complete and re-enter this callback).
-
-## Tasks
-
-- [x] 1. Fix the `onPlaybackCompleted` callback ordering in `PlayerViewModel.kt` — check `hasMorePoints` BEFORE calling `advanceToNextPoint()`
-- [x] 2. Verify `advanceToNextPoint()` bounds are safe — confirmed: advanceToNextPoint() is now only called when hasMorePoints=true, so index is always valid
-- [x] 3. Fix app defaulting to English instead of device language — `UserPreferencesManager.kt`
-- [x] 4. Bump version to 1.1.3-beta (versionCode 11) and build release APK
+- [x] 1. Update CLAUDE.md: project is no longer "planning phase" — document actual repo
+      structure (android-app, mobile-app/ios, backend, cms) and current state
+- [x] 2. Fix Bug 2: slider drag → single seek on release (PlayerScreen.kt)
+- [x] 3. Fix Bug 1: cache tours list, fall back to cache on network failure
+      (DiscoveryViewModel.kt)
+- [x] 4. Compile the Android app to verify both fixes build
 
 ## Review
 
-### Change: 1 file — `PlayerViewModel.kt` (lines 110-128)
+All three changes complete; `:app:compileDebugKotlin` passes with no errors.
 
-Swapped the order of operations in `onPlaybackCompleted`:
+1. **CLAUDE.md** — replaced the stale "planning phase" status with the actual state
+   (all components deployed; Android in production beta on Play, versionCode 15), added
+   a Repository Structure section mapping the monorepo directories and the key Android
+   packages, and corrected the tech stack (native Kotlin/Compose Android app, Prisma
+   backend on Render).
 
-**Before:** `advanceToNextPoint()` first, then check `hasMorePoints` → tour marked complete prematurely because advancing to the last index makes `hasMorePoints` return false, even if a queued point's audio just started loading.
+2. **PlayerScreen.kt (Bug 2 — "Player ready" log spam)** — the progress slider was
+   calling `seekTo()` on every drag frame (~60×/sec), each one forcing an ExoPlayer
+   BUFFERING→READY transition that logged "Player ready" and stuttered playback.
+   The slider now holds the drag position in local compose state and issues a single
+   `seekTo()` in `onValueChangeFinished`. The elapsed-time label follows the thumb
+   while dragging.
 
-**After:** Check `hasMorePoints` first. If already on the last point → mark complete. Otherwise → advance. This ensures the last point's audio always plays fully before the completion screen appears.
+3. **DiscoveryViewModel.kt (Bug 1 — tours fail with DNS error when offline)** — the
+   DNS failure itself was the device losing internet; the app bug was having no offline
+   fallback. The tour list is now cached to `filesDir/tours_cache.json` (Gson, already
+   a dependency) after each successful load. On any network failure or API error the
+   cached list is shown instead of an error; the error message only appears when there
+   is no cache. Download status is recomputed from disk when loading from cache.
 
-### Change 2: `UserPreferencesManager.kt`
-
-Added a `deviceLanguage` property that reads `Locale.getDefault().language` and checks if it's in `SUPPORTED_LANGUAGES` (en, it, fr). If yes, uses it; otherwise falls back to "en".
-
-**Before:** `preferredLanguage` and `getPreferredLanguageOnce()` defaulted to `Constants.DEFAULT_LANGUAGE` ("en") when no preference was saved.
-
-**After:** They default to `deviceLanguage` instead. Italian phone → Italian app. French phone → French app. Unsupported language → English. Once the user explicitly sets a language in settings, that takes priority.
-
-## Secondary observations (not fixing now, just documenting)
-
-- **Nothing device has no background location**: Users should be warned if background location is not granted. Audio works but GPS stops when screen is off.
-- **Motorola 3-log case**: Likely the app was killed and reopened, landing on completion screen from preserved nav state. The completion fix above should prevent premature completion.
+Not changed: nothing else. Both fixes are self-contained in their respective files.
