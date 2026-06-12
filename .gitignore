@@ -66,3 +66,4 @@ secrets/
 *.pem
 *.key
 credentials.json
+sentry.properties

@@ -58,6 +58,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
 
+        <!-- Sentry crash reporting (DSN is a public identifier, safe to commit) -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="https://a96d3803d0b0510f35d0b290f3c514c0@o4511552711229440.ingest.de.sentry.io/4511552716079184" />
+
     </application>
 
 </manifest>

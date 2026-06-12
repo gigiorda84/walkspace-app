@@ -111,6 +111,21 @@ fun DebugScreen(
                 }
             }
 
+            // Crash Reporting
+            item {
+                SectionCard(title = "Crash Reporting") {
+                    Button(
+                        onClick = {
+                            throw RuntimeException("Sentry test crash from Diagnostics screen")
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Error),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Test crash (kills the app)", color = Color.White, fontSize = 13.sp)
+                    }
+                }
+            }
+
             // Crash Logs
             if (state.crashCount > 0) {
                 item {

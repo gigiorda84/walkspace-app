@@ -7,6 +7,7 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     kotlin("kapt")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("io.sentry.android.gradle")
 }
 
 // Load keystore properties
@@ -147,4 +148,15 @@ kapt {
 secrets {
     propertiesFileName = "secrets.properties"
     defaultPropertiesFileName = "local.defaults.properties"
+}
+
+sentry {
+    // Crash reporting only — no performance tracing
+    tracingInstrumentation {
+        enabled.set(false)
+    }
+    // R8 mapping upload needs credentials from sentry.properties (gitignored);
+    // skip it when the file is absent so builds never break
+    autoUploadProguardMapping.set(rootProject.file("sentry.properties").exists())
+    telemetry.set(false)
 }

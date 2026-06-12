@@ -30,6 +30,7 @@ keystore.properties
 
 # Secrets
 secrets.properties
+sentry.properties
 
 # IDE
 .idea/
