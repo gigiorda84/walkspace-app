@@ -22,6 +22,7 @@ struct TourCompletionView: View {
     @State private var isSendingRating = false
     @State private var ratingSent = false
     @State private var donationAmount: Int? = 5
+    @FocusState private var commentFocused: Bool
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
 
@@ -34,6 +35,53 @@ struct TourCompletionView: View {
             Color.black.opacity(0.92)
                 .ignoresSafeArea()
 
+            GeometryReader { geo in
+                ScrollView(showsIndicators: false) {
+                    completionContent
+                        .frame(minHeight: geo.size.height)
+                }
+                .simultaneousGesture(
+                    TapGesture().onEnded { commentFocused = false }
+                )
+            }
+
+            // Close button (top-right)
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.brandCream)
+                            .frame(width: 36, height: 36)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                    }
+                    .padding()
+                }
+                Spacer()
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(strings.done) {
+                    commentFocused = false
+                }
+            }
+        }
+        .alert("Info Bus", isPresented: $showBusInfo) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(tour.displayBusInfo ?? "")
+        }
+        .sheet(isPresented: $showFollowUs) {
+            FollowUsModal(tourId: tour.id)
+        }
+    }
+
+    private var completionContent: some View {
             VStack(spacing: 24) {
                 // Completion icon + Title inline
                 HStack(spacing: 12) {
@@ -158,6 +206,7 @@ struct TourCompletionView: View {
                                         .padding(6)
                                         .frame(minHeight: 100, maxHeight: 140)
                                         .textEditorTransparentBackground()
+                                        .focused($commentFocused)
                                 }
 
                                 Button {
@@ -208,33 +257,7 @@ struct TourCompletionView: View {
                 }
             }
             .padding(.horizontal, 32)
-
-            // Close button (top-right)
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.brandCream)
-                            .frame(width: 36, height: 36)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-                    }
-                    .padding()
-                }
-                Spacer()
-            }
-        }
-        .alert("Info Bus", isPresented: $showBusInfo) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(tour.displayBusInfo ?? "")
-        }
-        .sheet(isPresented: $showFollowUs) {
-            FollowUsModal(tourId: tour.id)
-        }
+            .padding(.vertical, 60)
     }
 
     private func openDonation(url: String, provider: String) {
@@ -246,6 +269,7 @@ struct TourCompletionView: View {
 
     private func sendRating() {
         guard rating > 0, !isSendingRating else { return }
+        commentFocused = false
         isSendingRating = true
 
         let comment = ratingComment.trimmingCharacters(in: .whitespacesAndNewlines)
