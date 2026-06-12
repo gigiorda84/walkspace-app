@@ -3,15 +3,20 @@ package com.bandite.sonicwalkscape.ui.player
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.DirectionsBus
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,9 +46,21 @@ fun TourCompletionScreen(
 ) {
     val context = LocalContext.current
     val tour by viewModel.tour.collectAsState()
+    val isSendingRating by viewModel.isSendingRating.collectAsState()
+    val ratingSent by viewModel.ratingSent.collectAsState()
 
     var showBusInfoDialog by remember { mutableStateOf(false) }
     var showConnectSheet by remember { mutableStateOf(false) }
+    var rating by remember { mutableStateOf(0) }
+    var ratingComment by remember { mutableStateOf("") }
+
+    val paypalUrl = "https://www.paypal.com/donate/?hosted_button_id=BUD638ZGFSJ3C"
+    val satispayUrl = "https://tag.satispay.com/Resonavisse"
+
+    fun openDonation(url: String, provider: String) {
+        viewModel.trackDonationClicked(provider)
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
 
     LaunchedEffect(tourId) {
         viewModel.loadTour(tourId, language)
@@ -57,7 +74,8 @@ fun TourCompletionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 32.dp, vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -105,59 +123,166 @@ fun TourCompletionScreen(
                     color = BrandCream,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Explicit donation ask
+            Text(
+                text = stringResource(R.string.donation_ask),
+                fontSize = 15.sp,
+                color = BrandCream,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
 
-            // Action buttons
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Donation hero card
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, BrandYellow, RoundedCornerShape(18.dp))
+                    .background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Info Bus button (only if busInfo exists)
+                Text(
+                    text = stringResource(R.string.support_project),
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandCream
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DonationButton(
+                        text = "PayPal",
+                        background = Color(0xFFFFC439),
+                        foreground = Color(0xFF003087),
+                        modifier = Modifier.weight(1f),
+                        onClick = { openDonation(paypalUrl, "paypal") }
+                    )
+                    DonationButton(
+                        text = "Satispay",
+                        background = Color(0xFFFF4B3E),
+                        foreground = Color.White,
+                        modifier = Modifier.weight(1f),
+                        onClick = { openDonation(satispayUrl, "satispay") }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Inline star rating
+            if (ratingSent) {
+                Text(
+                    text = stringResource(R.string.rating_thanks),
+                    fontSize = 14.sp,
+                    color = BrandYellow
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.rating_question),
+                    fontSize = 14.sp,
+                    color = BrandMuted
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    for (star in 1..5) {
+                        IconButton(onClick = { rating = star }) {
+                            Icon(
+                                imageVector = if (star <= rating) Icons.Default.Star else Icons.Outlined.StarBorder,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp),
+                                tint = if (star <= rating) BrandYellow else BrandMuted
+                            )
+                        }
+                    }
+                }
+                if (rating > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = ratingComment,
+                            onValueChange = { ratingComment = it },
+                            modifier = Modifier.weight(1f),
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.rating_comment_hint),
+                                    fontSize = 13.sp,
+                                    color = BrandCream.copy(alpha = 0.5f)
+                                )
+                            },
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = BrandCream,
+                                unfocusedTextColor = BrandCream,
+                                focusedBorderColor = BrandYellow,
+                                unfocusedBorderColor = BrandMuted
+                            )
+                        )
+                        Button(
+                            onClick = { viewModel.submitRating(rating, ratingComment, language) },
+                            enabled = !isSendingRating,
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
+                        ) {
+                            if (isSendingRating) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = BrandPurple,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = stringResource(R.string.send),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = BrandPurple
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Secondary links row
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 tour?.getDisplayBusInfo(language)?.let {
-                    CompletionOutlinedButton(
+                    SecondaryLink(
+                        icon = Icons.Outlined.DirectionsBus,
                         text = stringResource(R.string.bus_info),
                         onClick = { showBusInfoDialog = true }
                     )
                 }
-
-                // Seguici / Follow Us button
-                CompletionOutlinedButton(
+                SecondaryLink(
+                    icon = Icons.Default.FavoriteBorder,
                     text = stringResource(R.string.follow_us),
                     onClick = { showConnectSheet = true }
                 )
-
-                // Supporta / Support button
-                CompletionOutlinedButton(
-                    text = stringResource(R.string.support),
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.produzionidalbasso.com/project/unseen-sonic-walkscape-at-the-border/"))
-                        context.startActivity(intent)
-                    }
-                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Return to Home button (yellow filled)
-            Button(
-                onClick = onReturnHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandYellow
-                )
-            ) {
+            // Return to Home (demoted to text link)
+            TextButton(onClick = onReturnHome) {
                 Text(
                     text = stringResource(R.string.return_home),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    fontSize = 14.sp,
+                    color = BrandMuted,
+                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                 )
             }
         }
@@ -216,25 +341,46 @@ fun TourCompletionScreen(
 }
 
 @Composable
-private fun CompletionOutlinedButton(
+private fun DonationButton(
     text: String,
+    background: Color,
+    foreground: Color,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    OutlinedButton(
+    Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
+        modifier = modifier.height(48.dp),
         shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.White
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White)
+        colors = ButtonDefaults.buttonColors(containerColor = background)
     ) {
         Text(
             text = text,
             fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            color = foreground
+        )
+    }
+}
+
+@Composable
+private fun SecondaryLink(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    TextButton(onClick = onClick) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = BrandYellow
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = BrandCream
         )
     }
 }

@@ -89,6 +89,12 @@
     <string name="support">Supporta</string>
     <string name="support_us">Sostieni il Nostro Lavoro</string>
     <string name="return_home">Torna alla home</string>
+    <string name="donation_ask">Questo progetto vive grazie a chi lo sostiene: aiutaci a creare il prossimo percorso con una piccola donazione.</string>
+    <string name="support_project">Sostieni il progetto</string>
+    <string name="rating_question">Com\'è stata la tua esperienza?</string>
+    <string name="rating_comment_hint">Vuoi dirci qualcosa? (opzionale)</string>
+    <string name="rating_thanks">Grazie per il tuo feedback!</string>
+    <string name="send">Invia</string>
 
     <!-- Tour Setup -->
     <string name="choose_audio_language">Lingua Audio</string>

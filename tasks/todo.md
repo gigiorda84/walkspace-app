@@ -1,62 +1,62 @@
-# Android Debug Report Fixes (v1.1.4-beta build 12)
+# Tour completion screen redesign — donations + feedback (iOS + Android)
 
-## Bug 1: "Failed to load tours: Unable to resolve host walkspace-api.onrender.com"
+## Approved design (user reviewed mockup 2026-06-12)
 
-**Root cause:** The device temporarily lost internet (DNS resolution failed). The app itself
-can't prevent that — the real bug is that `DiscoveryViewModel.loadTours()` has no offline
-fallback. When the network call throws, the tour list goes empty and an error is shown,
-even though the app is supposed to be offline-first and the user may have tours fully
-downloaded on disk.
+Top to bottom:
+1. ✓ Tour completato! + tour name (unchanged)
+2. CMS completion message (unchanged) + explicit localized donation ask line
+3. **Donation hero card** (yellow border): two brand-colored deep-link buttons
+   - PayPal (#FFC439 bg, #003087 text): https://www.paypal.com/donate/?hosted_button_id=BUD638ZGFSJ3C
+   - Satispay (#FF4B3E bg, white text): https://tag.satispay.com/Resonavisse
+   - Both URLs verified live (HTTP 200). Hardcoded per user decision. NO amount chips.
+4. **Inline 5-star rating** ("Com'è stata la tua esperienza?") — tapping a star reveals an
+   optional comment field + send → existing `submitFeedback` API, rating encoded in the
+   feedback text ("Tour <title> — rating X/5 — <comment>"). No backend change.
+5. Secondary small links row: Info bus (existing alert/dialog) · Seguici (existing sheet)
+6. "Torna alla home" demoted to text/underline button (no longer the dominant yellow CTA)
 
-**Fix (minimal):** Cache the last successful tours response to a JSON file
-(`filesDir/tours_cache.json`) using Gson (already a dependency). On network failure, load
-the cached list instead of showing an error. Only show the error if there is no cache.
-All changes contained in `DiscoveryViewModel.kt`.
-
-## Bug 2: "[AUDIO] Player ready" logged ~60x/second
-
-**Root cause:** In `PlayerScreen.kt`, the progress slider calls
-`onValueChange = { onSeekTo(it.toLong()) }` — this fires on *every frame* while the user
-drags the thumb (~every 17ms). Each call hits `ExoPlayer.seekTo()`, which causes a
-BUFFERING→READY state transition, which logs "Player ready, duration: …" each time.
-Hundreds of seeks per drag also causes audio stutter and the log spam seen in the report.
-
-**Fix (minimal):** Make the slider stateful during drag: keep the dragged position in a
-local `remember` state, update the UI only while dragging, and call `onSeekTo()` once in
-`onValueChangeFinished`. All changes contained in the `AudioControlsPanel` composable in
-`PlayerScreen.kt`.
+Analytics: donation buttons send existing `donation_link_clicked` event with new
+`provider` property ("paypal" / "satispay"). No new event names.
 
 ## Todo
 
-- [x] 1. Update CLAUDE.md: project is no longer "planning phase" — document actual repo
-      structure (android-app, mobile-app/ios, backend, cms) and current state
-- [x] 2. Fix Bug 2: slider drag → single seek on release (PlayerScreen.kt)
-- [x] 3. Fix Bug 1: cache tours list, fall back to cache on network failure
-      (DiscoveryViewModel.kt)
-- [x] 4. Compile the Android app to verify both fixes build
+- [x] 1. iOS `TourCompletionView.swift`: donation card + stars/comment + demote home button
+- [x] 2. iOS `LocalizedStrings.swift`: new strings (donation ask, donate title, rating
+      question, comment placeholder) in en/it/fr
+- [x] 3. iOS `AnalyticsService.swift`: add `provider` param to trackDonationLinkClicked
+- [x] 4. Android `TourCompletionScreen.kt`: same redesign (Compose)
+- [x] 5. Android `strings.xml` (values, values-it, values-fr): same new strings
+- [x] 6. Android: donation tracking via existing `track()` with provider property
+      (added to `TourCompletionViewModel`, no AnalyticsService change needed)
+- [x] 7. Build both: Android `compileDebugKotlin` ✅ exit 0 + iOS `xcodebuild build` ✅ exit 0
 
 ## Review
 
-All three changes complete; `:app:compileDebugKotlin` passes with no errors.
+Both platforms build cleanly. Changes per file:
 
-1. **CLAUDE.md** — replaced the stale "planning phase" status with the actual state
-   (all components deployed; Android in production beta on Play, versionCode 15), added
-   a Repository Structure section mapping the monorepo directories and the key Android
-   packages, and corrected the tech stack (native Kotlin/Compose Android app, Prisma
-   backend on Render).
+**iOS**
+- `TourCompletionView.swift` — replaced the three equal outlined buttons + yellow home
+  button with: explicit donation ask text → yellow-bordered donation card with PayPal
+  (#FFC439/navy) and Satispay (#FF4B3E/white) capsule buttons that deep-link out →
+  inline 5-star rating that reveals an optional comment field + send (POSTs to the
+  existing feedback endpoint as "Tour <title> — rating X/5 — <comment>"; thanks state
+  only on success, silent retry on failure) → small icon links for Info bus / Seguici →
+  underlined muted "Torna alla home" text button. New `DonationButton` and
+  `SecondaryLink` components.
+- `LocalizedStrings.swift` — 5 new strings (donationAsk, supportProject, ratingQuestion,
+  ratingCommentPlaceholder, ratingThanks) in en/it/fr.
+- `AnalyticsService.swift` — `trackDonationLinkClicked` gains optional `provider`
+  parameter sent as event property.
 
-2. **PlayerScreen.kt (Bug 2 — "Player ready" log spam)** — the progress slider was
-   calling `seekTo()` on every drag frame (~60×/sec), each one forcing an ExoPlayer
-   BUFFERING→READY transition that logged "Player ready" and stuttered playback.
-   The slider now holds the drag position in local compose state and issues a single
-   `seekTo()` in `onValueChangeFinished`. The elapsed-time label follows the thumb
-   while dragging.
+**Android**
+- `TourCompletionScreen.kt` — same redesign in Compose; Column gains verticalScroll for
+  small screens. New `DonationButton`/`SecondaryLink` composables replace
+  `CompletionOutlinedButton`.
+- `TourCompletionViewModel.kt` — added `trackDonationClicked(provider)` (reuses the
+  whitelisted `donation_link_clicked` event with `provider` property — backend enum
+  verified) and `submitRating()` via existing `POST /feedback`.
+- `strings.xml` ×3 (en/it/fr) — 6 new strings (incl. `send`).
 
-3. **DiscoveryViewModel.kt (Bug 1 — tours fail with DNS error when offline)** — the
-   DNS failure itself was the device losing internet; the app bug was having no offline
-   fallback. The tour list is now cached to `filesDir/tours_cache.json` (Gson, already
-   a dependency) after each successful load. On any network failure or API error the
-   cached list is shown instead of an error; the error message only appears when there
-   is no cache. Download status is recomputed from disk when loading from cache.
-
-Not changed: nothing else. Both fixes are self-contained in their respective files.
+**Decisions implemented:** no amount chips; URLs hardcoded
+(PayPal hosted button BUD638ZGFSJ3C, Satispay tag Resonavisse — both verified HTTP 200);
+both platforms shipped together. Old Produzioni dal Basso link removed.

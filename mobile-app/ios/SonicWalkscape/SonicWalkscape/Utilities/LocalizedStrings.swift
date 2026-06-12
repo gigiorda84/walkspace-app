@@ -114,6 +114,11 @@ class LocalizedStrings {
     var support: String { localized("Support", "Supporta", "Soutenir") }
     var returnToDiscovery: String { localized("Return to Discovery", "Torna ai Tour", "Retour aux tours") }
     var returnToHome: String { localized("Return to home", "Torna alla home", "Retour à l'accueil") }
+    var donationAsk: String { localized("This project lives thanks to those who support it: help us create the next walk with a small donation.", "Questo progetto vive grazie a chi lo sostiene: aiutaci a creare il prossimo percorso con una piccola donazione.", "Ce projet vit grâce à ceux qui le soutiennent : aidez-nous à créer le prochain parcours avec un petit don.") }
+    var supportProject: String { localized("Support the project", "Sostieni il progetto", "Soutenez le projet") }
+    var ratingQuestion: String { localized("How was your experience?", "Com'è stata la tua esperienza?", "Comment était votre expérience ?") }
+    var ratingCommentPlaceholder: String { localized("Tell us something (optional)", "Vuoi dirci qualcosa? (opzionale)", "Dites-nous quelque chose (facultatif)") }
+    var ratingThanks: String { localized("Thanks for your feedback!", "Grazie per il tuo feedback!", "Merci pour votre avis !") }
 
     // MARK: - Follow Us Modal
 

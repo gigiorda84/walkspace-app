@@ -17,8 +17,15 @@ struct TourCompletionView: View {
 
     @State private var showBusInfo = false
     @State private var showFollowUs = false
+    @State private var rating = 0
+    @State private var ratingComment = ""
+    @State private var isSendingRating = false
+    @State private var ratingSent = false
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
+
+    private let paypalURL = "https://www.paypal.com/donate/?hosted_button_id=BUD638ZGFSJ3C"
+    private let satispayURL = "https://tag.satispay.com/Resonavisse"
 
     var body: some View {
         ZStack {
@@ -54,47 +61,124 @@ struct TourCompletionView: View {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 20)
-                        .onAppear {
-                            print("✅ Displaying completion message: \(completionMessage)")
-                        }
-                } else {
-                    EmptyView()
-                        .onAppear {
-                            print("⚠️ No completion message available for tour: \(tour.displayTitle)")
-                        }
                 }
 
-                // Action buttons
-                VStack(spacing: 12) {
+                // Explicit donation ask
+                Text(strings.donationAsk)
+                    .font(.system(size: 15))
+                    .foregroundColor(.brandCream)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 16)
+
+                // Donation hero card
+                VStack(spacing: 14) {
+                    Text(strings.supportProject)
+                        .font(.headline)
+                        .foregroundColor(.brandCream)
+
+                    HStack(spacing: 10) {
+                        DonationButton(
+                            title: "PayPal",
+                            background: Color(red: 1.0, green: 0.77, blue: 0.22),
+                            foreground: Color(red: 0.0, green: 0.19, blue: 0.53)
+                        ) {
+                            openDonation(url: paypalURL, provider: "paypal")
+                        }
+                        DonationButton(
+                            title: "Satispay",
+                            background: Color(red: 1.0, green: 0.29, blue: 0.24),
+                            foreground: .white
+                        ) {
+                            openDonation(url: satispayURL, provider: "satispay")
+                        }
+                    }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color.white.opacity(0.06))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.brandYellow, lineWidth: 1)
+                )
+
+                // Inline star rating
+                VStack(spacing: 10) {
+                    if ratingSent {
+                        Text(strings.ratingThanks)
+                            .font(.subheadline)
+                            .foregroundColor(.brandYellow)
+                    } else {
+                        Text(strings.ratingQuestion)
+                            .font(.subheadline)
+                            .foregroundColor(.brandMuted)
+
+                        HStack(spacing: 10) {
+                            ForEach(1...5, id: \.self) { star in
+                                Button {
+                                    rating = star
+                                } label: {
+                                    Image(systemName: star <= rating ? "star.fill" : "star")
+                                        .font(.system(size: 26))
+                                        .foregroundColor(star <= rating ? .brandYellow : .brandMuted)
+                                }
+                            }
+                        }
+
+                        if rating > 0 {
+                            HStack(spacing: 8) {
+                                TextField("", text: $ratingComment, prompt: Text(strings.ratingCommentPlaceholder).foregroundColor(.brandCream.opacity(0.5)))
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(10)
+                                    .foregroundColor(.brandCream)
+
+                                Button {
+                                    sendRating()
+                                } label: {
+                                    if isSendingRating {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .brandPurple))
+                                            .padding(10)
+                                    } else {
+                                        Text(strings.submit)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.brandPurple)
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 10)
+                                    }
+                                }
+                                .background(Color.brandYellow)
+                                .cornerRadius(10)
+                                .disabled(isSendingRating)
+                            }
+                        }
+                    }
+                }
+
+                // Secondary links row
+                HStack(spacing: 28) {
                     if tour.displayBusInfo != nil {
-                        ActionButton(title: strings.busInfo) {
+                        SecondaryLink(icon: "bus", title: strings.busInfo) {
                             showBusInfo = true
                         }
                     }
-                    ActionButton(title: strings.followUs) {
+                    SecondaryLink(icon: "heart", title: strings.followUs) {
                         AnalyticsService.shared.trackFollowUsClicked(tourId: tour.id)
                         showFollowUs = true
                     }
-                    ActionButton(title: strings.support) {
-                        AnalyticsService.shared.trackDonationLinkClicked(tourId: tour.id)
-                        if let url = URL(string: "https://www.produzionidalbasso.com/project/unseen-sonic-walkscape-at-the-border/") {
-                            UIApplication.shared.open(url)
-                        }
-                    }
                 }
+                .padding(.top, 4)
 
-                // Return to Home button
+                // Return to Home (demoted to text link)
                 Button(action: onReturnToHome) {
                     Text(strings.returnToHome)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.brandYellow)
-                        .clipShape(Capsule())
-                        .shadow(color: .brandYellow.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .font(.subheadline)
+                        .foregroundColor(.brandMuted)
+                        .underline()
                 }
             }
             .padding(.horizontal, 32)
@@ -124,6 +208,83 @@ struct TourCompletionView: View {
         }
         .sheet(isPresented: $showFollowUs) {
             FollowUsModal(tourId: tour.id)
+        }
+    }
+
+    private func openDonation(url: String, provider: String) {
+        AnalyticsService.shared.trackDonationLinkClicked(tourId: tour.id, provider: provider)
+        if let donationURL = URL(string: url) {
+            UIApplication.shared.open(donationURL)
+        }
+    }
+
+    private func sendRating() {
+        guard rating > 0, !isSendingRating else { return }
+        isSendingRating = true
+
+        let comment = ratingComment.trimmingCharacters(in: .whitespacesAndNewlines)
+        let feedbackText = "Tour \(tour.displayTitle) — rating \(rating)/5" + (comment.isEmpty ? "" : " — \(comment)")
+
+        Task {
+            do {
+                try await APIService.shared.submitFeedback(
+                    email: nil,
+                    name: nil,
+                    feedback: feedbackText,
+                    subscribeToNewsletter: false
+                )
+                await MainActor.run {
+                    isSendingRating = false
+                    ratingSent = true
+                }
+            } catch {
+                print("❌ Rating submission error: \(error)")
+                await MainActor.run {
+                    isSendingRating = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Donation Button Component
+
+struct DonationButton: View {
+    let title: String
+    let background: Color
+    let foreground: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(foreground)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 13)
+                .background(background)
+                .clipShape(Capsule())
+        }
+    }
+}
+
+// MARK: - Secondary Link Component
+
+struct SecondaryLink: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandYellow)
+                Text(title)
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandCream)
+            }
         }
     }
 }

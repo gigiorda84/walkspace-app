@@ -182,11 +182,11 @@ class AnalyticsService {
         )
     }
 
-    func trackDonationLinkClicked(tourId: String) {
+    func trackDonationLinkClicked(tourId: String, provider: String? = nil) {
         track(
             event: .donationLinkClicked,
             tourId: tourId,
-            properties: nil
+            properties: provider.map { ["provider": .string($0)] }
         )
     }
 
