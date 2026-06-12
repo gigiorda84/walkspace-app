@@ -119,6 +119,7 @@ class LocalizedStrings {
     var ratingQuestion: String { localized("How was your experience?", "Com'è stata la tua esperienza?", "Comment était votre expérience ?") }
     var ratingCommentPlaceholder: String { localized("Tell us something (optional)", "Vuoi dirci qualcosa? (opzionale)", "Dites-nous quelque chose (facultatif)") }
     var ratingThanks: String { localized("Thanks for your feedback!", "Grazie per il tuo feedback!", "Merci pour votre avis !") }
+    var amountFree: String { localized("Any amount", "Libera", "Libre") }
 
     // MARK: - Follow Us Modal
 

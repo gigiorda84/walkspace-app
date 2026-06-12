@@ -340,21 +340,17 @@ fun ConnectBottomSheet(
 fun NewsletterFeedbackForm() {
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var feedback by remember { mutableStateOf("") }
-    var subscribeToNewsletter by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
     var showSuccess by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
 
-    val canSubmit = subscribeToNewsletter || feedback.trim().isNotEmpty()
     val isValidEmail = email.trim().let { e ->
         e.isNotEmpty() && e.split("@").let { parts ->
             parts.size == 2 && parts[1].contains(".")
         }
     }
-    val needsEmail = subscribeToNewsletter && !isValidEmail
 
     if (showSuccess) {
         // Success state
@@ -424,50 +420,6 @@ fun NewsletterFeedbackForm() {
                 singleLine = true
             )
 
-            // Feedback field
-            OutlinedTextField(
-                value = feedback,
-                onValueChange = { feedback = it },
-                placeholder = { Text(stringResource(R.string.feedback_optional), color = BrandCream.copy(alpha = 0.5f)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 80.dp, max = 120.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = BrandCream,
-                    unfocusedTextColor = BrandCream,
-                    focusedBorderColor = BrandYellow,
-                    unfocusedBorderColor = BrandCream.copy(alpha = 0.3f),
-                    cursorColor = BrandYellow
-                ),
-                shape = RoundedCornerShape(10.dp),
-                maxLines = 4
-            )
-
-            // Newsletter checkbox
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Checkbox(
-                    checked = subscribeToNewsletter,
-                    onCheckedChange = { subscribeToNewsletter = it },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = BrandYellow,
-                        uncheckedColor = BrandCream.copy(alpha = 0.5f),
-                        checkmarkColor = BrandPurple
-                    )
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.subscribe_newsletter),
-                    fontSize = 14.sp,
-                    color = BrandCream,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-            }
-
             // Error message
             if (errorMessage != null) {
                 Text(
@@ -477,11 +429,10 @@ fun NewsletterFeedbackForm() {
                 )
             }
 
-            // Submit button
+            // Subscribe button
             Button(
                 onClick = {
-                    if (!canSubmit) return@Button
-                    if (needsEmail) {
+                    if (!isValidEmail) {
                         errorMessage = "Email required for newsletter"
                         return@Button
                     }
@@ -492,10 +443,10 @@ fun NewsletterFeedbackForm() {
                     scope.launch {
                         try {
                             val request = FeedbackRequest(
-                                email = email.trim().ifEmpty { null },
+                                email = email.trim(),
                                 name = name.trim().ifEmpty { null },
-                                feedback = feedback.trim().ifEmpty { null },
-                                subscribeToNewsletter = subscribeToNewsletter
+                                feedback = null,
+                                subscribeToNewsletter = true
                             )
                             val response = ApiClient.apiService.submitFeedback(request)
                             if (response.isSuccessful) {
@@ -503,8 +454,6 @@ fun NewsletterFeedbackForm() {
                                 showSuccess = true
                                 email = ""
                                 name = ""
-                                feedback = ""
-                                subscribeToNewsletter = false
                             } else {
                                 isSubmitting = false
                                 errorMessage = "Error sending. Please try again."
@@ -516,7 +465,7 @@ fun NewsletterFeedbackForm() {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = canSubmit && !needsEmail && !isSubmitting,
+                enabled = isValidEmail && !isSubmitting,
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BrandYellow,
@@ -533,7 +482,7 @@ fun NewsletterFeedbackForm() {
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.submit),
+                        text = stringResource(R.string.subscribe_newsletter),
                         fontWeight = FontWeight.SemiBold
                     )
                 }

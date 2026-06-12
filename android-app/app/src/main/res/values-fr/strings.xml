@@ -94,6 +94,7 @@
     <string name="rating_question">Comment était votre expérience ?</string>
     <string name="rating_comment_hint">Dites-nous quelque chose (facultatif)</string>
     <string name="rating_thanks">Merci pour votre avis !</string>
+    <string name="amount_free">Libre</string>
     <string name="send">Envoyer</string>
 
     <!-- Tour Setup -->

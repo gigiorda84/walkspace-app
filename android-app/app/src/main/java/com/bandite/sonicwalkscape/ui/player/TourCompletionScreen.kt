@@ -53,6 +53,7 @@ fun TourCompletionScreen(
     var showConnectSheet by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(0) }
     var ratingComment by remember { mutableStateOf("") }
+    var donationAmount by remember { mutableStateOf<Int?>(5) }
 
     val paypalUrl = "https://www.paypal.com/donate/?business=RESONAVISSE%40GMAIL.COM&no_recurring=0&currency_code=EUR"
     val satispayUrl = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
@@ -155,6 +156,20 @@ fun TourCompletionScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = BrandCream
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(3, 5, 10).forEach { amount ->
+                        AmountChip(
+                            label = "$amount €",
+                            selected = donationAmount == amount,
+                            onClick = { donationAmount = amount }
+                        )
+                    }
+                    AmountChip(
+                        label = stringResource(R.string.amount_free),
+                        selected = donationAmount == null,
+                        onClick = { donationAmount = null }
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -164,7 +179,10 @@ fun TourCompletionScreen(
                         background = Color(0xFFFFC439),
                         foreground = Color(0xFF003087),
                         modifier = Modifier.weight(1f),
-                        onClick = { openDonation(paypalUrl, "paypal") }
+                        onClick = {
+                            val url = donationAmount?.let { "$paypalUrl&amount=$it" } ?: paypalUrl
+                            openDonation(url, "paypal")
+                        }
                     )
                     DonationButton(
                         text = "Satispay",
@@ -206,48 +224,46 @@ fun TourCompletionScreen(
                 }
                 if (rating > 0) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = ratingComment,
-                            onValueChange = { ratingComment = it },
-                            modifier = Modifier.weight(1f),
-                            placeholder = {
-                                Text(
-                                    text = stringResource(R.string.rating_comment_hint),
-                                    fontSize = 13.sp,
-                                    color = BrandCream.copy(alpha = 0.5f)
-                                )
-                            },
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = BrandCream,
-                                unfocusedTextColor = BrandCream,
-                                focusedBorderColor = BrandYellow,
-                                unfocusedBorderColor = BrandMuted
+                    OutlinedTextField(
+                        value = ratingComment,
+                        onValueChange = { ratingComment = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 100.dp, max = 140.dp),
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.rating_comment_hint),
+                                fontSize = 13.sp,
+                                color = BrandCream.copy(alpha = 0.5f)
                             )
+                        },
+                        maxLines = 4,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = BrandCream,
+                            unfocusedTextColor = BrandCream,
+                            focusedBorderColor = BrandYellow,
+                            unfocusedBorderColor = BrandMuted
                         )
-                        Button(
-                            onClick = { viewModel.submitRating(rating, ratingComment, language) },
-                            enabled = !isSendingRating,
-                            colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
-                        ) {
-                            if (isSendingRating) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = BrandPurple,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = stringResource(R.string.send),
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = BrandPurple
-                                )
-                            }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { viewModel.submitRating(rating, ratingComment, language) },
+                        enabled = !isSendingRating,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
+                    ) {
+                        if (isSendingRating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = BrandPurple,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.send),
+                                fontWeight = FontWeight.SemiBold,
+                                color = BrandPurple
+                            )
                         }
                     }
                 }
@@ -336,6 +352,28 @@ fun TourCompletionScreen(
     if (showConnectSheet) {
         ConnectBottomSheet(
             onDismiss = { showConnectSheet = false }
+        )
+    }
+}
+
+@Composable
+private fun AmountChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = if (selected) BrandYellow else Color.Transparent,
+        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, BrandMuted)
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) Color(0xFF121110) else BrandCream
         )
     }
 }

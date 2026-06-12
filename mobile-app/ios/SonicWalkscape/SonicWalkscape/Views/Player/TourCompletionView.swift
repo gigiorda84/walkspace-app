@@ -21,6 +21,7 @@ struct TourCompletionView: View {
     @State private var ratingComment = ""
     @State private var isSendingRating = false
     @State private var ratingSent = false
+    @State private var donationAmount: Int? = 5
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
 
@@ -77,13 +78,25 @@ struct TourCompletionView: View {
                         .font(.headline)
                         .foregroundColor(.brandCream)
 
+                    HStack(spacing: 8) {
+                        ForEach([3, 5, 10], id: \.self) { amount in
+                            AmountChip(label: "\(amount) €", isSelected: donationAmount == amount) {
+                                donationAmount = amount
+                            }
+                        }
+                        AmountChip(label: strings.amountFree, isSelected: donationAmount == nil) {
+                            donationAmount = nil
+                        }
+                    }
+
                     HStack(spacing: 10) {
                         DonationButton(
                             title: "PayPal",
                             background: Color(red: 1.0, green: 0.77, blue: 0.22),
                             foreground: Color(red: 0.0, green: 0.19, blue: 0.53)
                         ) {
-                            openDonation(url: paypalURL, provider: "paypal")
+                            let url = donationAmount.map { "\(paypalURL)&amount=\($0)" } ?? paypalURL
+                            openDonation(url: url, provider: "paypal")
                         }
                         DonationButton(
                             title: "Satispay",
@@ -128,12 +141,24 @@ struct TourCompletionView: View {
                         }
 
                         if rating > 0 {
-                            HStack(spacing: 8) {
-                                TextField("", text: $ratingComment, prompt: Text(strings.ratingCommentPlaceholder).foregroundColor(.brandCream.opacity(0.5)))
-                                    .padding(10)
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(10)
-                                    .foregroundColor(.brandCream)
+                            VStack(spacing: 8) {
+                                ZStack(alignment: .topLeading) {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.white.opacity(0.1))
+
+                                    if ratingComment.isEmpty {
+                                        Text(strings.ratingCommentPlaceholder)
+                                            .foregroundColor(.brandCream.opacity(0.5))
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 12)
+                                    }
+
+                                    TextEditor(text: $ratingComment)
+                                        .foregroundColor(.brandCream)
+                                        .padding(6)
+                                        .frame(minHeight: 100, maxHeight: 140)
+                                        .textEditorTransparentBackground()
+                                }
 
                                 Button {
                                     sendRating()
@@ -141,14 +166,15 @@ struct TourCompletionView: View {
                                     if isSendingRating {
                                         ProgressView()
                                             .progressViewStyle(CircularProgressViewStyle(tint: .brandPurple))
-                                            .padding(10)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
                                     } else {
                                         Text(strings.submit)
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.brandPurple)
-                                            .padding(.horizontal, 14)
-                                            .padding(.vertical, 10)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
                                     }
                                 }
                                 .background(Color.brandYellow)
@@ -243,6 +269,30 @@ struct TourCompletionView: View {
                     isSendingRating = false
                 }
             }
+        }
+    }
+}
+
+// MARK: - Amount Chip Component
+
+struct AmountChip: View {
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundColor(isSelected ? Color(red: 0.07, green: 0.07, blue: 0.06) : .brandCream)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.brandYellow : Color.clear)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : Color.brandMuted, lineWidth: 1)
+                )
         }
     }
 }
@@ -414,17 +464,11 @@ struct FollowUsModal: View {
 struct NewsletterFeedbackForm: View {
     @State private var email = ""
     @State private var name = ""
-    @State private var feedback = ""
-    @State private var subscribeToNewsletter = false
     @State private var isSubmitting = false
     @State private var showSuccess = false
     @State private var errorMessage: String?
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
-
-    private var canSubmit: Bool {
-        subscribeToNewsletter || !feedback.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 
     private var isValidEmail: Bool {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -432,10 +476,6 @@ struct NewsletterFeedbackForm: View {
         // Simple email validation: contains @ and at least one . after @
         let parts = trimmed.split(separator: "@")
         return parts.count == 2 && parts[1].contains(".")
-    }
-
-    private var needsEmail: Bool {
-        subscribeToNewsletter && !isValidEmail
     }
 
     var body: some View {
@@ -481,44 +521,6 @@ struct NewsletterFeedbackForm: View {
                         .cornerRadius(10)
                         .foregroundColor(.brandCream)
 
-                    // Feedback field
-                    ZStack(alignment: .topLeading) {
-                        // Background to match other fields
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.white.opacity(0.1))
-
-                        if feedback.isEmpty {
-                            Text(strings.feedbackOptional)
-                                .foregroundColor(.brandCream.opacity(0.5))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 12)
-                        }
-
-                        TextEditor(text: $feedback)
-                            .foregroundColor(.brandCream)
-                            .padding(6)
-                            .frame(minHeight: 80, maxHeight: 120)
-                            .textEditorTransparentBackground()
-                    }
-
-                    // Newsletter checkbox
-                    Button {
-                        subscribeToNewsletter.toggle()
-                    } label: {
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: subscribeToNewsletter ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 22))
-                                .foregroundColor(subscribeToNewsletter ? .brandYellow : .brandMuted)
-
-                            Text(strings.subscribeNewsletter)
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.leading)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(.vertical, 8)
-
                     // Error message
                     if let error = errorMessage {
                         Text(error)
@@ -526,7 +528,7 @@ struct NewsletterFeedbackForm: View {
                             .foregroundColor(.red)
                     }
 
-                    // Submit button
+                    // Subscribe button
                     Button {
                         submitForm()
                     } label: {
@@ -535,17 +537,17 @@ struct NewsletterFeedbackForm: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .brandPurple))
                             } else {
-                                Text(strings.submit)
+                                Text(strings.subscribeNewsletter)
                                     .fontWeight(.semibold)
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(canSubmit && !needsEmail ? Color.brandYellow : Color.brandYellow.opacity(0.5))
+                        .background(isValidEmail ? Color.brandYellow : Color.brandYellow.opacity(0.5))
                         .foregroundColor(.brandPurple)
                         .cornerRadius(10)
                     }
-                    .disabled(!canSubmit || needsEmail || isSubmitting)
+                    .disabled(!isValidEmail || isSubmitting)
                 }
             }
         }
@@ -554,9 +556,7 @@ struct NewsletterFeedbackForm: View {
     }
 
     private func submitForm() {
-        guard canSubmit else { return }
-
-        if needsEmail {
+        guard isValidEmail else {
             errorMessage = strings.emailRequired
             return
         }
@@ -567,10 +567,10 @@ struct NewsletterFeedbackForm: View {
         Task {
             do {
                 try await APIService.shared.submitFeedback(
-                    email: email.isEmpty ? nil : email,
+                    email: email,
                     name: name.isEmpty ? nil : name,
-                    feedback: feedback.isEmpty ? nil : feedback,
-                    subscribeToNewsletter: subscribeToNewsletter
+                    feedback: nil,
+                    subscribeToNewsletter: true
                 )
 
                 await MainActor.run {
@@ -578,11 +578,9 @@ struct NewsletterFeedbackForm: View {
                     showSuccess = true
                     email = ""
                     name = ""
-                    feedback = ""
-                    subscribeToNewsletter = false
                 }
             } catch {
-                print("❌ Feedback submission error: \(error)")
+                print("❌ Newsletter subscription error: \(error)")
                 await MainActor.run {
                     isSubmitting = false
                     errorMessage = strings.submitError
