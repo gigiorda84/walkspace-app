@@ -24,8 +24,8 @@ struct TourCompletionView: View {
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
 
-    private let paypalURL = "https://www.paypal.com/donate/?hosted_button_id=BUD638ZGFSJ3C"
-    private let satispayURL = "https://tag.satispay.com/Resonavisse"
+    private let paypalURL = "https://www.paypal.com/donate/?business=RESONAVISSE%40GMAIL.COM&no_recurring=0&currency_code=EUR"
+    private let satispayURL = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
 
     var body: some View {
         ZStack {

@@ -54,8 +54,8 @@ fun TourCompletionScreen(
     var rating by remember { mutableStateOf(0) }
     var ratingComment by remember { mutableStateOf("") }
 
-    val paypalUrl = "https://www.paypal.com/donate/?hosted_button_id=BUD638ZGFSJ3C"
-    val satispayUrl = "https://tag.satispay.com/Resonavisse"
+    val paypalUrl = "https://www.paypal.com/donate/?business=RESONAVISSE%40GMAIL.COM&no_recurring=0&currency_code=EUR"
+    val satispayUrl = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
 
     fun openDonation(url: String, provider: String) {
         viewModel.trackDonationClicked(provider)
