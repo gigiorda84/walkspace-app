@@ -135,6 +135,10 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Sentry crash reporting (core only — no NDK native libs, keeps app 16 KB
+    // page-size compliant; ART/JVM crash capture is all this app needs)
+    implementation("io.sentry:sentry-android-core:8.14.0")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -153,6 +157,11 @@ secrets {
 sentry {
     // Crash reporting only — no performance tracing
     tracingInstrumentation {
+        enabled.set(false)
+    }
+    // Don't auto-add the full sentry-android (it bundles NDK .so libs that are
+    // not 16 KB page-aligned by AGP 8.3.2). We add sentry-android-core instead.
+    autoInstallation {
         enabled.set(false)
     }
     // R8 mapping upload needs credentials from sentry.properties (gitignored);
