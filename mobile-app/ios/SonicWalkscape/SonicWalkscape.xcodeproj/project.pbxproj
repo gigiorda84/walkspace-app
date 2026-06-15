@@ -155,7 +155,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Upload debug symbols so Sentry can symbolicate crash reports.\n# Skips silently when sentry-cli or credentials are missing so builds never break.\nif [ \"$CONFIGURATION\" != \"Release\" ]; then exit 0; fi\nif ! command -v sentry-cli >/dev/null 2>&1; then echo \"warning: sentry-cli not installed; skipping Sentry dSYM upload\"; exit 0; fi\nif [ ! -f \"$SRCROOT/sentry.properties\" ]; then echo \"warning: sentry.properties not found; skipping Sentry dSYM upload\"; exit 0; fi\nexport SENTRY_PROPERTIES=\"$SRCROOT/sentry.properties\"\nsentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\"\n";
+			shellScript = "# Upload debug symbols so Sentry can symbolicate crash reports.\n# Skips silently when sentry-cli or credentials are missing so builds never break.\nif [ \"$CONFIGURATION\" != \"Release\" ]; then exit 0; fi\n# Xcode's build PATH excludes Homebrew; add the usual locations so sentry-cli is found.\nexport PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"\nif ! command -v sentry-cli >/dev/null 2>&1; then echo \"warning: sentry-cli not installed; skipping Sentry dSYM upload\"; exit 0; fi\nif [ ! -f \"$SRCROOT/sentry.properties\" ]; then echo \"warning: sentry.properties not found; skipping Sentry dSYM upload\"; exit 0; fi\nexport SENTRY_PROPERTIES=\"$SRCROOT/sentry.properties\"\nsentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
