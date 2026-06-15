@@ -53,10 +53,15 @@ gc.giorda@gmail.com. No user action required. Works for offline crashes too
 
 ## Follow-ups (not code)
 
-- [ ] 8. Add one line to the privacy policy: crash diagnostics collected via
-      Sentry (EU-hosted) for app stability (legitimate interest).
-- [ ] 9. App Store privacy labels: declare "Diagnostics → Crash Data" on both
-      App Store Connect and Google Play Data Safety form before next release.
+- [x] 8. Privacy policy updated (backend /privacy): new "Crash Diagnostics"
+      section (Sentry, EU, 90-day retention, GDPR legitimate interest). Also
+      added /delete-account page (required by Google Play Data safety form).
+      Deployed to Render 2026-06-13 (both pages live, HTTP 200).
+- [~] 9. Store declarations (USER, in progress):
+      - App Store Connect privacy labels: Diagnostics → Crash Data — DONE.
+      - Google Play Data safety: declare Crash logs (App info & performance):
+        Collected Yes / Shared No / not ephemeral / Required / purpose
+        App functionality. IN PROGRESS.
 
 ## Notes / constraints
 
@@ -85,9 +90,22 @@ Files changed:
 - `mobile-app/ios/.../Views/Debug/DebugOverlayView.swift` — test crash button
 
 Remaining USER steps:
-1. Test crash on each platform (launch app NOT via Xcode debugger; report
-   sends on next app launch).
-2. Create org auth token in Sentry (Settings → Auth Tokens) and the two
-   sentry.properties files (templates in chat) for readable release traces.
-3. Privacy policy line + App Store / Play Store "Crash Data" declarations
-   before next release.
+1. Test crash on each platform — DONE (Android emulator + iPhone 15, emails received).
+2. Auth token + sentry.properties — DONE (org bandite, projects android/apple-ios).
+3. Privacy policy + store declarations — privacy/delete-account pages DONE & live;
+   App Store privacy labels DONE; Google Play Data safety IN PROGRESS.
+
+## Release for crash reporting (2026-06-15)
+
+Versions bumped: Android versionCode 16 / versionName 1.1.5; iOS build 13.
+
+16 KB page-size fix: the full `sentry-android` artifact bundles NDK native libs
+(libsentry.so / libsentry-android.so). Although those .so are 16 KB ELF-aligned,
+AGP 8.3.2 only zip-aligns them to 4 KB, so Google Play rejected versionCode 16
+with "does not support 16 KB memory page sizes". Fix (commit 8950c73): switched
+to `io.sentry:sentry-android-core` + disabled plugin autoInstallation, so the AAB
+ships ZERO .so files. Re-verified on emulator: test crash captured, core-only
+SDK auto-inits, no libsentry loaded. AAB rebuilt clean (8.3 MB).
+
+Upload-ready artifact: android-app/app/build/outputs/bundle/release/app-release.aab
+iOS: archive build 13 in Xcode (Product → Archive → Distribute → App Store Connect).
