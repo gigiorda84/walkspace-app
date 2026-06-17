@@ -67,6 +67,7 @@ fun TourDetailScreen(
 
     var showSetupSheet by remember { mutableStateOf(false) }
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+    var showForegroundLocationDisclosure by remember { mutableStateOf(false) }
     var showBackgroundLocationRationale by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -119,7 +120,8 @@ fun TourDetailScreen(
                 showSetupSheet = true
             }
         } else {
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            // Show prominent disclosure before requesting foreground location (Google Play policy)
+            showForegroundLocationDisclosure = true
         }
     }
 
@@ -422,6 +424,105 @@ fun TourDetailScreen(
                             viewModel.clearDownloadError()
                         }
                     )
+                }
+
+                // Foreground Location Prominent Disclosure (full-screen per Google Play policy)
+                // Must be shown BEFORE requesting ACCESS_FINE_LOCATION, with affirmative action.
+                if (showForegroundLocationDisclosure) {
+                    Dialog(
+                        onDismissRequest = {},
+                        properties = DialogProperties(
+                            usePlatformDefaultWidth = false,
+                            dismissOnBackPress = false,
+                            dismissOnClickOutside = false
+                        )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(BrandPurple)
+                                .padding(24.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState()),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = BrandYellow,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text(
+                                    text = stringResource(R.string.foreground_location_title),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandCream,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                val fgPrivacyUrl = "${Constants.API_BASE_URL}privacy"
+                                val fgAnnotatedText = buildAnnotatedString {
+                                    append(stringResource(R.string.foreground_location_explanation))
+                                    append("\n\n")
+                                    pushStringAnnotation(tag = "URL", annotation = fgPrivacyUrl)
+                                    withStyle(SpanStyle(color = BrandYellow, textDecoration = TextDecoration.Underline)) {
+                                        append(stringResource(R.string.privacy_policy))
+                                    }
+                                    pop()
+                                }
+                                androidx.compose.foundation.text.ClickableText(
+                                    text = fgAnnotatedText,
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        color = BrandCream,
+                                        fontSize = 16.sp,
+                                        lineHeight = 24.sp
+                                    ),
+                                    onClick = { offset ->
+                                        fgAnnotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                                            .firstOrNull()?.let { annotation ->
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                                context.startActivity(intent)
+                                            }
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(32.dp))
+                                Button(
+                                    onClick = {
+                                        showForegroundLocationDisclosure = false
+                                        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                    shape = RoundedCornerShape(50),
+                                    colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.continue_button),
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = BrandPurple,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                TextButton(
+                                    onClick = { showForegroundLocationDisclosure = false },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.cancel),
+                                        color = BrandCream,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Background Location Prominent Disclosure (full-screen per Google Play policy)

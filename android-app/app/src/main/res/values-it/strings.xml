@@ -118,6 +118,8 @@
     <string name="skip">Salta</string>
 
     <!-- Permissions -->
+    <string name="foreground_location_title">Accesso alla Posizione</string>
+    <string name="foreground_location_explanation">BANDITE Sonic Walkscape raccoglie e utilizza la posizione del tuo dispositivo per riprodurre automaticamente la narrazione audio quando raggiungi i punti GPS lungo un tour. La tua posizione viene usata solo per attivare l\'audio giusto nel posto giusto. Non viene mai memorizzata sui nostri server né condivisa con terze parti.\n\nNella schermata successiva, consenti l\'accesso alla posizione per iniziare il tour.</string>
     <string name="location_permission_required">Autorizzazione Posizione Richiesta</string>
     <string name="location_permission_explanation">Questa app necessita dell\'accesso alla posizione per attivare l\'audio quando raggiungi i punti del tour. Abilita l\'autorizzazione nelle impostazioni.</string>
     <string name="background_location_title">Posizione in Background</string>

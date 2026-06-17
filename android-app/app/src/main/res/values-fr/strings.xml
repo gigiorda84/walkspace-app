@@ -118,6 +118,8 @@
     <string name="skip">Passer</string>
 
     <!-- Permissions -->
+    <string name="foreground_location_title">Accès à la localisation</string>
+    <string name="foreground_location_explanation">BANDITE Sonic Walkscape collecte et utilise la localisation de votre appareil pour diffuser automatiquement la narration audio lorsque vous atteignez des points GPS le long d\'un tour. Votre localisation est utilisée uniquement pour déclencher le bon audio au bon endroit. Elle n\'est jamais stockée sur nos serveurs ni partagée avec des tiers.\n\nSur l\'écran suivant, veuillez autoriser l\'accès à la localisation pour commencer le tour.</string>
     <string name="location_permission_required">Autorisation de localisation requise</string>
     <string name="location_permission_explanation">Cette application a besoin de l\'accès à la localisation pour déclencher l\'audio lorsque vous atteignez les points du tour. Veuillez activer l\'autorisation dans les paramètres.</string>
     <string name="background_location_title">Localisation en arrière-plan</string>
