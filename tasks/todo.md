@@ -1,111 +1,53 @@
-# Automatic crash reporting — Sentry on Android + iOS
+# Fix Google Play rejection: Prominent Disclosure for Location
 
-## Goal
+## Problem
+Google Play rejected the Android app (enforced Jun 15) for **Inadequate Prominent
+Disclosure** under the User Data policy:
+- The in-app prominent disclosure does not disclose the usage of accessed/collected
+  Location data.
+- Prominent Disclosure must require affirmative user action, presented clearly and
+  unambiguously.
 
-When the app crashes on any user's phone (Android or iOS), a report with full stack
-trace, device info, and app version is automatically sent to Sentry, which emails
-gc.giorda@gmail.com. No user action required. Works for offline crashes too
-(events are cached on-device and sent when network returns).
+## Root cause
+The app shows a proper full-screen prominent disclosure only for **background**
+location. **Foreground (ACCESS_FINE_LOCATION)** permission is requested directly in
+`onStartTourClick()` (TourDetailScreen.kt) by calling
+`locationPermissionLauncher.launch(...)` with no disclosure shown first. The Settings
+"Attiva Posizione" toggle Google screenshotted is not a valid prominent disclosure
+(not shown before the request, no data-usage description, no affirmative accept/decline).
 
-## Why Sentry (decided 2026-06-12)
+## Plan (minimal change, mirrors existing background-location disclosure)
+- [x] Add `foreground_location_title` + `foreground_location_explanation` strings
+      (values, values-it, values-fr).
+- [x] Add `showForegroundLocationDisclosure` state in TourDetailScreen.
+- [x] In `onStartTourClick()`: when permission not granted, show the disclosure dialog
+      instead of launching the system permission directly.
+- [x] Add a full-screen disclosure Dialog (copy of background pattern): icon, title,
+      data-usage explanation, privacy-policy link, affirmative "Continue" button that
+      launches `locationPermissionLauncher`, and a "Not now" dismiss button.
 
-- iOS app is fully native SwiftUI — no webview/JS layer, so we need native SDKs only.
-- Sentry: one dashboard for both platforms, EU data region (GDPR), free tier
-  (~5k events/month, plenty for a beta), email alerts on new issues out of the box.
-- Simpler than Firebase Crashlytics (no google-services.json, no Google plugins).
+## Review
+**Root cause:** Foreground `ACCESS_FINE_LOCATION` was requested directly from
+`onStartTourClick()` with no in-app prominent disclosure beforehand. Google requires
+the disclosure to appear before the runtime prompt, describe the data usage, and
+require affirmative action. The Settings toggle Google screenshotted did not qualify.
 
-## Prerequisites (USER — must happen first)
+**Changes (all in TourDetailScreen + strings):**
+1. `strings.xml` (en/it/fr): added `foreground_location_title` and
+   `foreground_location_explanation` clearly stating that location is collected and
+   used to trigger audio at GPS waypoints, not stored/shared.
+2. `TourDetailScreen.kt`: new `showForegroundLocationDisclosure` state.
+3. `onStartTourClick()`: when permission is missing, shows the disclosure dialog
+   instead of launching the system permission directly.
+4. New full-screen disclosure Dialog mirroring the existing background-location one:
+   icon, title, data-usage explanation, privacy-policy link, affirmative **Continue**
+   button (which then launches the permission), and a **Cancel** button.
 
-- [x] 0. Create free Sentry account at sentry.io (EU region) + two projects.
-      DSNs received 2026-06-12 and wired into both apps.
+`PlayerScreen` only *checks* location permission and never requests it, so no change
+needed there. The only foreground-location request path in the app is now gated by the
+disclosure.
 
-## Todo — Android (native Kotlin)
+**Verification:** `./gradlew :app:compileDebugKotlin` → BUILD SUCCESSFUL.
 
-- [x] 1. Sentry Android Gradle plugin 5.8.0 added (root + app build.gradle.kts).
-      Tracing instrumentation disabled, telemetry off. Mapping upload is
-      conditional on `android-app/sentry.properties` existing (gitignored),
-      so builds never break. Verified: `:app:compileDebugKotlin` passes.
-- [x] 2. DSN added as `io.sentry.dsn` meta-data in AndroidManifest.xml.
-- [x] 3. `android-app/sentry.properties` created (org bandite, project android,
-      org auth token; gitignored). VERIFIED 2026-06-12: `assembleRelease`
-      uploaded 1 mapping file to Sentry.
-- [x] 4. "Test crash" button added to Diagnostics screen (DebugScreen.kt).
-      VERIFIED 2026-06-12: crash triggered on emulator, event reached Sentry,
-      alert email received at gc.giorda@gmail.com.
-
-## Todo — iOS (native SwiftUI)
-
-- [x] 5. `sentry-cocoa` 9.17.1 added via SPM (pbxproj edited manually:
-      package reference + product dependency + Frameworks link).
-- [x] 6. `SentrySDK.start` with DSN in SonicWalkscapeApp.swift init
-      (tracesSampleRate = 0). Added "Upload dSYMs to Sentry" Release-only build
-      phase — skips with a warning if sentry-cli or sentry.properties missing.
-      Note: ENABLE_USER_SCRIPT_SANDBOXING set NO so the script can run.
-      DONE: sentry-cli 3.5.0 installed via brew;
-      `mobile-app/ios/SonicWalkscape/sentry.properties` created (project
-      apple-ios; gitignored). VERIFIED 2026-06-12: Release build + manual
-      `sentry-cli debug-files upload` — app dSYM uploaded to Sentry.
-- [x] 7. "💥 Test crash" button added to the GPS debug overlay (toggleable from
-      the player screen). VERIFIED 2026-06-12: crash triggered on physical
-      iPhone 15 (launched via devicectl, no debugger), event reached Sentry,
-      alert email received. Caveat for future tests: crashes are NOT captured
-      while Xcode's debugger is attached.
-
-## Follow-ups (not code)
-
-- [x] 8. Privacy policy updated (backend /privacy): new "Crash Diagnostics"
-      section (Sentry, EU, 90-day retention, GDPR legitimate interest). Also
-      added /delete-account page (required by Google Play Data safety form).
-      Deployed to Render 2026-06-13 (both pages live, HTTP 200).
-- [~] 9. Store declarations (USER, in progress):
-      - App Store Connect privacy labels: Diagnostics → Crash Data — DONE.
-      - Google Play Data safety: declare Crash logs (App info & performance):
-        Collected Yes / Shared No / not ephemeral / Required / purpose
-        App functionality. IN PROGRESS.
-
-## Notes / constraints
-
-- Keep changes minimal: no custom event tracking, no performance monitoring,
-  no session replay — crashes only (set `tracesSampleRate` to 0 / leave perf off).
-- Existing analytics (AnalyticsService) is untouched; Sentry is diagnostics-only.
-- Test crash buttons must only be visible in the existing debug screens, same
-  visibility rules as the rest of the debug UI.
-
-## Review (completed 2026-06-12)
-
-Both apps now report crashes to Sentry (EU region) automatically; alert emails
-go to gc.giorda@gmail.com on every new issue. Both builds verified compiling.
-
-Files changed:
-- `android-app/build.gradle.kts` — Sentry Gradle plugin 5.8.0 declared
-- `android-app/app/build.gradle.kts` — plugin applied + sentry {} config
-  (tracing off, telemetry off, mapping upload only if sentry.properties exists)
-- `android-app/app/src/main/AndroidManifest.xml` — io.sentry.dsn meta-data
-- `android-app/app/src/main/java/.../ui/debug/DebugScreen.kt` — test crash button
-- `android-app/.gitignore`, `.gitignore` — sentry.properties ignored
-- `mobile-app/ios/.../SonicWalkscape.xcodeproj/project.pbxproj` — sentry-cocoa
-  9.17.1 via SPM, "Upload dSYMs to Sentry" Release build phase (self-skipping),
-  ENABLE_USER_SCRIPT_SANDBOXING = NO
-- `mobile-app/ios/.../SonicWalkscapeApp.swift` — SentrySDK.start (crashes only)
-- `mobile-app/ios/.../Views/Debug/DebugOverlayView.swift` — test crash button
-
-Remaining USER steps:
-1. Test crash on each platform — DONE (Android emulator + iPhone 15, emails received).
-2. Auth token + sentry.properties — DONE (org bandite, projects android/apple-ios).
-3. Privacy policy + store declarations — privacy/delete-account pages DONE & live;
-   App Store privacy labels DONE; Google Play Data safety IN PROGRESS.
-
-## Release for crash reporting (2026-06-15)
-
-Versions bumped: Android versionCode 16 / versionName 1.1.5; iOS build 13.
-
-16 KB page-size fix: the full `sentry-android` artifact bundles NDK native libs
-(libsentry.so / libsentry-android.so). Although those .so are 16 KB ELF-aligned,
-AGP 8.3.2 only zip-aligns them to 4 KB, so Google Play rejected versionCode 16
-with "does not support 16 KB memory page sizes". Fix (commit 8950c73): switched
-to `io.sentry:sentry-android-core` + disabled plugin autoInstallation, so the AAB
-ships ZERO .so files. Re-verified on emulator: test crash captured, core-only
-SDK auto-inits, no libsentry loaded. AAB rebuilt clean (8.3 MB).
-
-Upload-ready artifact: android-app/app/build/outputs/bundle/release/app-release.aab
-iOS: archive build 13 in Xcode (Product → Archive → Distribute → App Store Connect).
+**Release steps (manual):** bump `versionCode`/`versionName`, build a new AAB, upload
+to Play Console, and reply to the policy issue / submit the new version for review.
