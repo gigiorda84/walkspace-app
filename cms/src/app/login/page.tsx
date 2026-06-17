@@ -5,9 +5,11 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { LoginRequest, LoginResponse } from '@/types/api';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,14 +24,11 @@ export default function LoginPage() {
       setIsLoading(true);
       setError('');
 
-      const response = await apiClient.post('/admin/auth/login', data);
-      const { accessToken, user } = response.data;
+      const response = await apiClient.post<LoginResponse>('/admin/auth/login', data);
+      const { accessToken, refreshToken, user } = response.data;
 
-      // Update auth context (which also stores in localStorage)
-      localStorage.setItem('auth_token', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      login(accessToken, refreshToken, user);
 
-      // Redirect to tours page
       router.push('/tours');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password');
