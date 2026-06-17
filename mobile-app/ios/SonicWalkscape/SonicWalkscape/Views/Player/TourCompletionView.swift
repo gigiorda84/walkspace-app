@@ -21,12 +21,11 @@ struct TourCompletionView: View {
     @State private var ratingComment = ""
     @State private var isSendingRating = false
     @State private var ratingSent = false
-    @State private var donationAmount: Int? = 5
     @FocusState private var commentFocused: Bool
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
 
-    private let paypalURL = "https://www.paypal.com/donate/?business=RESONAVISSE%40GMAIL.COM&no_recurring=0&currency_code=EUR"
+    private let paypalURL = "https://www.paypal.com/ncp/payment/BCCRZMKCREBBE"
     private let satispayURL = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
 
     var body: some View {
@@ -126,25 +125,13 @@ struct TourCompletionView: View {
                         .font(.headline)
                         .foregroundColor(.brandCream)
 
-                    HStack(spacing: 8) {
-                        ForEach([3, 5, 10], id: \.self) { amount in
-                            AmountChip(label: "\(amount) €", isSelected: donationAmount == amount) {
-                                donationAmount = amount
-                            }
-                        }
-                        AmountChip(label: strings.amountFree, isSelected: donationAmount == nil) {
-                            donationAmount = nil
-                        }
-                    }
-
                     HStack(spacing: 10) {
                         DonationButton(
                             title: "PayPal",
                             background: Color(red: 1.0, green: 0.77, blue: 0.22),
                             foreground: Color(red: 0.0, green: 0.19, blue: 0.53)
                         ) {
-                            let url = donationAmount.map { "\(paypalURL)&amount=\($0)" } ?? paypalURL
-                            openDonation(url: url, provider: "paypal")
+                            openDonation(url: paypalURL, provider: "paypal")
                         }
                         DonationButton(
                             title: "Satispay",
