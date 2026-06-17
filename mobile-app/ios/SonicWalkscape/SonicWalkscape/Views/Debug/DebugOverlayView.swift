@@ -63,21 +63,6 @@ struct DebugOverlayView: View {
                 }
             }
 
-            // Sentry pipeline test — crashes the app; report is sent on next launch
-            Button {
-                fatalError("Sentry test crash from GPS debug overlay")
-            } label: {
-                Text("💥 Test crash")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.red.opacity(0.6))
-                    )
-            }
-
             // Progress Bar
             if totalPoints > 0 {
                 VStack(alignment: .leading, spacing: 4) {
