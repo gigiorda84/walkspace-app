@@ -18,6 +18,7 @@ import com.bandite.sonicwalkscape.ui.tourdetail.TourDetailScreen
 import com.bandite.sonicwalkscape.ui.tourdetail.TourDetailViewModel
 import com.bandite.sonicwalkscape.ui.debug.DebugScreen
 import com.bandite.sonicwalkscape.ui.debug.DebugViewModel
+import com.bandite.sonicwalkscape.ui.welcome.LocationDisclosureScreen
 import com.bandite.sonicwalkscape.ui.welcome.OnboardingCarouselScreen
 import com.bandite.sonicwalkscape.ui.welcome.WelcomeScreen
 import com.bandite.sonicwalkscape.ui.welcome.WelcomeViewModel
@@ -25,6 +26,7 @@ import com.bandite.sonicwalkscape.ui.welcome.WelcomeViewModel
 sealed class Screen(val route: String) {
     object Welcome : Screen("welcome")
     object Onboarding : Screen("onboarding")
+    object LocationDisclosure : Screen("location_disclosure")
     object Discovery : Screen("discovery")
     object TourDetail : Screen("tour/{tourId}?languages={languages}") {
         fun createRoute(tourId: String, languages: List<String>) =
@@ -61,8 +63,24 @@ fun NavGraph() {
             OnboardingCarouselScreen(
                 onComplete = {
                     welcomeViewModel.completeOnboarding()
-                    navController.navigate(Screen.Discovery.route) {
+                    navController.navigate(Screen.LocationDisclosure.route) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.LocationDisclosure.route) {
+            LocationDisclosureScreen(
+                viewModel = welcomeViewModel,
+                onAccept = {
+                    navController.navigate(Screen.Discovery.route) {
+                        popUpTo(Screen.LocationDisclosure.route) { inclusive = true }
+                    }
+                },
+                onDecline = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.LocationDisclosure.route) { inclusive = true }
                     }
                 }
             )

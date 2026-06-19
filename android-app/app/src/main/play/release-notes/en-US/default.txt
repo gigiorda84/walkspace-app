@@ -1,0 +1,1 @@
+Added a first-launch screen that clearly explains how location is used (to trigger audio at GPS waypoints) before any location permission is requested, per Google Play policy.

@@ -8,6 +8,7 @@ plugins {
     kotlin("kapt")
     id("org.jetbrains.kotlin.plugin.compose")
     id("io.sentry.android.gradle")
+    id("com.github.triplet.play")
 }
 
 // Load keystore properties
@@ -36,8 +37,8 @@ android {
         applicationId = "com.bandite.sonicwalkscape"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
-        versionName = "1.1.6"
+        versionCode = 20
+        versionName = "1.1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -152,6 +153,20 @@ kapt {
 secrets {
     propertiesFileName = "secrets.properties"
     defaultPropertiesFileName = "local.defaults.properties"
+}
+
+// Google Play Publishing (Gradle Play Publisher).
+// Credentials come from a service-account JSON that is gitignored (see README below).
+// Publish with:  ./gradlew :app:publishReleaseBundle
+// Change `track` to the track you want to release to (internal | alpha | beta | production).
+play {
+    val credentialsFile = rootProject.file("play-service-account.json")
+    if (credentialsFile.exists()) {
+        serviceAccountCredentials.set(credentialsFile)
+    }
+    defaultToAppBundles.set(true)
+    track.set("internal")
+    releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
 }
 
 sentry {

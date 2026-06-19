@@ -1,0 +1,1 @@
+Aggiunta una schermata al primo avvio che spiega chiaramente come viene usata la posizione (per attivare l'audio ai punti GPS) prima di richiedere il permesso, secondo le norme di Google Play.

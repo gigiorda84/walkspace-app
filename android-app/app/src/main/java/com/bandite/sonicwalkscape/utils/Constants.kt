@@ -36,6 +36,7 @@ object Constants {
     // SharedPreferences/DataStore keys
     const val PREFS_NAME = "sonic_walkscape_prefs"
     const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
+    const val KEY_LOCATION_DISCLOSURE_ACCEPTED = "location_disclosure_accepted"
     const val KEY_PREFERRED_LANGUAGE = "preferred_language"
     const val KEY_ANALYTICS_ENABLED = "analytics_enabled"
     const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"

@@ -51,3 +51,95 @@ disclosure.
 
 **Release steps (manual):** bump `versionCode`/`versionName`, build a new AAB, upload
 to Play Console, and reply to the policy issue / submit the new version for review.
+
+---
+
+# Round 2: rejected AGAIN (versionCode 19) — same Settings screenshot
+
+## Problem
+Google re-rejected with the identical "Inadequate Prominent Disclosure" verdict and
+again attached a screenshot of the **Settings → Enable Location** row, not the
+Start-Tour flow.
+
+## Root cause (round 2)
+The round-1 disclosure is only reachable by tapping **Start Tour** on a tour when
+location isn't already granted. A reviewer who can't start a tour (tours are
+voucher-gated/protected; the Render free-tier backend cold-starts and may return an
+empty/erroring tour list during review) never sees it. The only location UI they
+reliably reach is **Settings → "Enable Location"**, which just opens OS settings and
+shows a hardcoded green check — not a prominent disclosure. Privacy policy page was
+verified OK (discloses location + background use). Note: reviewer screenshot shows
+v1.0.1/build 2 — user to confirm in Play Console which build was actually reviewed.
+
+## Plan (first-launch disclosure — guaranteed reachable)
+- [x] Constants: add `KEY_LOCATION_DISCLOSURE_ACCEPTED`.
+- [x] UserPreferencesManager: add `locationDisclosureAccepted` Flow +
+      `setLocationDisclosureAccepted()`.
+- [x] WelcomeViewModel: expose accepted flag + `acceptLocationDisclosure()`.
+- [x] New `LocationDisclosureScreen` (full-screen, reuses existing
+      `foreground_location_title` / `foreground_location_explanation` /
+      `privacy_policy` strings): icon, title, data-usage text, privacy link,
+      affirmative **Continue**, and **Cancel** (returns to Welcome).
+- [x] NavGraph: route Onboarding `onComplete` → `LocationDisclosure`; the screen
+      auto-forwards to Discovery if already accepted (no re-show for returning users).
+- [x] Bump versionCode 19 → 20, versionName 1.1.6 → 1.1.7.
+- [x] `./gradlew :app:compileDebugKotlin` → BUILD SUCCESSFUL.
+
+## Review
+**What changed:** Added a first-launch prominent disclosure that every user/reviewer
+hits on the guaranteed startup path (Welcome → Onboarding → **LocationDisclosure** →
+Discovery), before any location access. It reuses the round-1 disclosure copy (data
+type = device location, use = trigger audio at GPS waypoints, never stored/shared),
+links to the privacy policy, and requires affirmative action (**Continue**) with a
+**Cancel** that returns to Welcome. Acceptance is persisted, so returning users are
+forwarded straight to Discovery without re-seeing it. The round-1 Start-Tour disclosure
+stays as a second safety net.
+
+**Files:** `utils/Constants.kt`, `services/UserPreferencesManager.kt`,
+`ui/welcome/WelcomeViewModel.kt`, new `ui/welcome/LocationDisclosureScreen.kt`,
+`ui/navigation/NavGraph.kt`, `app/build.gradle.kts` (version bump).
+
+**Diagnosis note (Chrome):** Verified the privacy policy at
+`walkspace-api.onrender.com/privacy` is live and fully discloses location + background
+use — not the cause. Reviewer screenshot shows v1.0.1/build 2, which matches no
+submitted build (15/18/19) — confirm in Play Console which versionCode the rejection is
+attached to; if it's an old build, the fix may already be present and an appeal applies.
+
+**Release steps (manual):** build a signed AAB (versionCode 20), upload to Play
+Console, and on the Publishing overview "send changes for review" / reply to the
+policy issue.
+
+---
+
+# Release tooling: API publishing (Gradle Play Publisher)
+
+Signed AAB built: `app/build/outputs/bundle/release/app-release.aab` (versionCode 20,
+1.1.7). No publishing automation existed, so set up GPP for repeatable uploads.
+
+- [x] Added `com.github.triplet.play` 3.12.1 (root + `:app`), `play { }` block
+      (track=`internal`, AAB default, releaseStatus=COMPLETED, gitignored
+      `play-service-account.json`).
+- [x] Gitignored `play-service-account.json`.
+- [x] Release notes in `app/src/main/play/release-notes/{en-US,it-IT,fr-FR}/default.txt`.
+- [x] `android-app/PUBLISHING.md` documents service-account creation + release commands.
+- [x] Verified `:app:tasks` registers `publishReleaseBundle` (config resolves).
+- [ ] **User action:** create Play service account JSON (see PUBLISHING.md), drop it at
+      `android-app/play-service-account.json`, then `./gradlew :app:publishReleaseBundle`
+      (start on `internal`, then switch `track` to the rejected track and re-run).
+
+## Submission (Jun 19 2026, via Play Console UI in Chrome)
+- App is on the **Production** track. Live release = **vc12 (1.1.4-beta)**; rejected
+  release = **vc19 (1.1.6)** → so Google DID review the round-1 disclosure build and
+  rejected it (the rejection-email screenshot showing v1.0.1/build 2 was stale/misleading).
+- Created a new **Production** release with **vc20 (1.1.7)** (round-2 first-launch
+  disclosure); vc19 left under "Not included". AAB uploaded by the user (Chrome
+  extension file_upload is sandboxed to session-shared files, so it couldn't push the
+  build path — user selected it manually).
+- User submitted the changes for review. NOTE: the submission bundled 2 pre-existing
+  pending changes too — **Data safety questionnaire** completion and **Closed testing →
+  pause track**.
+- Could not visually confirm via Chrome: the Play Console SPA never reaches
+  `document_idle`, so claude-in-chrome screenshot/read tools time out on that page.
+
+**Security note:** `android-app/secrets.properties` (contains MAPS_API_KEY) is committed
+to git despite being gitignored — should be untracked + key rotated (flagged separately).

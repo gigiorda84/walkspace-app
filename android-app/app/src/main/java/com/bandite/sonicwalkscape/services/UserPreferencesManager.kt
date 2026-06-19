@@ -23,6 +23,7 @@ class UserPreferencesManager(private val context: Context) {
 
     private object PreferencesKeys {
         val ONBOARDING_COMPLETED = booleanPreferencesKey(Constants.KEY_ONBOARDING_COMPLETED)
+        val LOCATION_DISCLOSURE_ACCEPTED = booleanPreferencesKey(Constants.KEY_LOCATION_DISCLOSURE_ACCEPTED)
         val PREFERRED_LANGUAGE = stringPreferencesKey(Constants.KEY_PREFERRED_LANGUAGE)
         val ANALYTICS_ENABLED = booleanPreferencesKey(Constants.KEY_ANALYTICS_ENABLED)
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey(Constants.KEY_NOTIFICATIONS_ENABLED)
@@ -36,6 +37,10 @@ class UserPreferencesManager(private val context: Context) {
 
     val onboardingCompleted: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[PreferencesKeys.ONBOARDING_COMPLETED] ?: false
+    }
+
+    val locationDisclosureAccepted: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[PreferencesKeys.LOCATION_DISCLOSURE_ACCEPTED] ?: false
     }
 
     val preferredLanguage: Flow<String> = context.dataStore.data.map { prefs ->
@@ -69,6 +74,12 @@ class UserPreferencesManager(private val context: Context) {
     suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[PreferencesKeys.ONBOARDING_COMPLETED] = completed
+        }
+    }
+
+    suspend fun setLocationDisclosureAccepted(accepted: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[PreferencesKeys.LOCATION_DISCLOSURE_ACCEPTED] = accepted
         }
     }
 

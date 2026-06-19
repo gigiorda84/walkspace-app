@@ -14,7 +14,14 @@ class WelcomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val onboardingCompleted: Flow<Boolean> = userPreferencesManager.onboardingCompleted
+    val locationDisclosureAccepted: Flow<Boolean> = userPreferencesManager.locationDisclosureAccepted
     val preferredLanguage: Flow<String> = userPreferencesManager.preferredLanguage
+
+    fun acceptLocationDisclosure() {
+        viewModelScope.launch {
+            userPreferencesManager.setLocationDisclosureAccepted(true)
+        }
+    }
 
     fun setPreferredLanguage(language: String) {
         viewModelScope.launch {

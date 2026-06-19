@@ -1,0 +1,1 @@
+Ajout d'un écran au premier lancement expliquant clairement l'utilisation de la localisation (déclencher l'audio aux points GPS) avant toute demande d'autorisation, conformément aux règles de Google Play.
