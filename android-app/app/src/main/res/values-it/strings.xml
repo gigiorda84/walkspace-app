@@ -120,6 +120,7 @@
     <!-- Permissions -->
     <string name="foreground_location_title">Accesso alla Posizione</string>
     <string name="foreground_location_explanation">BANDITE Sonic Walkscape raccoglie e utilizza la posizione del tuo dispositivo per riprodurre automaticamente la narrazione audio quando raggiungi i punti GPS lungo un tour. La tua posizione viene usata solo per attivare l\'audio giusto nel posto giusto. Non viene mai memorizzata sui nostri server né condivisa con terze parti.\n\nNella schermata successiva, consenti l\'accesso alla posizione per iniziare il tour.</string>
+    <string name="foreground_location_disclosure_intro">BANDITE Sonic Walkscape raccoglie e utilizza la posizione del tuo dispositivo, anche in background mentre un tour è attivo, per riprodurre automaticamente la narrazione audio quando raggiungi i punti GPS lungo un tour. La tua posizione viene usata solo per attivare l\'audio giusto nel posto giusto. Non viene mai memorizzata sui nostri server né condivisa con terze parti.\n\nTi verrà chiesto di consentire l\'accesso alla posizione quando avvii un tour.</string>
     <string name="location_permission_required">Autorizzazione Posizione Richiesta</string>
     <string name="location_permission_explanation">Questa app necessita dell\'accesso alla posizione per attivare l\'audio quando raggiungi i punti del tour. Abilita l\'autorizzazione nelle impostazioni.</string>
     <string name="background_location_title">Posizione in Background</string>
@@ -133,6 +134,8 @@
     <string name="location">Posizione</string>
     <string name="enable_location">Attiva Posizione</string>
     <string name="location_description">Necessario per la riproduzione audio GPS</string>
+    <string name="location_settings_disclosure">BANDITE Sonic Walkscape raccoglie la tua posizione, anche in background mentre un tour è attivo, per riprodurre automaticamente la narrazione audio quando raggiungi i punti GPS lungo il percorso. La tua posizione è usata solo per questo scopo. Non viene mai memorizzata sui nostri server né condivisa con terze parti.</string>
+    <string name="manage_location_access">Gestisci l\'accesso alla posizione</string>
     <string name="about">Informazioni</string>
     <string name="version">Versione</string>
     <string name="build">Build</string>

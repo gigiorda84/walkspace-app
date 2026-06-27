@@ -93,7 +93,7 @@ fun LocationDisclosureScreen(
 
             val privacyUrl = "${Constants.API_BASE_URL}privacy"
             val annotatedText = buildAnnotatedString {
-                append(stringResource(R.string.foreground_location_explanation))
+                append(stringResource(R.string.foreground_location_disclosure_intro))
                 append("\n\n")
                 pushStringAnnotation(tag = "URL", annotation = privacyUrl)
                 withStyle(SpanStyle(color = BrandYellow, textDecoration = TextDecoration.Underline)) {
