@@ -141,5 +141,37 @@ Signed AAB built: `app/build/outputs/bundle/release/app-release.aab` (versionCod
 - Could not visually confirm via Chrome: the Play Console SPA never reaches
   `document_idle`, so claude-in-chrome screenshot/read tools time out on that page.
 
+---
+
+# Round 3: vc20 (1.1.7) also REJECTED — same issue, STALE evidence
+
+## What Play Console shows (verified Jun 21 via Chrome)
+- Policy issue: "Prominent Disclosure and Consent Requirement: Inadequate Prominent
+  Disclosure" — Rejected Jun 20 2026. Verdict text identical to before.
+- Evidence: `IN_APP_EXPERIENCE-1778.png` = the **Settings screen**, and its About
+  section reads **Version 1.0.1 / Build 2** — a build that matches NONE of our
+  submissions (live 12, prior 17/19, rejected 20). Settings renders version from
+  `BuildConfig`, so a vc20 build cannot show 1.0.1/2 → Google re-rejected on a
+  reused/stale screenshot that predates every disclosure change.
+
+## Response (user chose: appeal + code fix)
+- [x] Code fix: Settings Location section is now a real in-app disclosure — full
+      data-usage paragraph (`location_settings_disclosure`, en/it/fr) + Privacy
+      Policy link, and a neutral "Manage location access" row that opens OS settings.
+      Removed the misleading always-green check (deleted `LocationToggleRow`).
+- [x] Bump versionCode 20 → 21, versionName 1.1.7 → 1.1.8.
+- [x] `compileDebugKotlin` + `bundleRelease` → BUILD SUCCESSFUL (signed AAB at
+      app/build/outputs/bundle/release/app-release.aab, vc21).
+- [x] Drafted appeal: `tasks/appeal-draft.md` (argues stale 1.0.1 evidence + lists
+      the first-launch disclosure and new Settings disclosure).
+- [x] **Appeal SUBMITTED** Jun 21 via Play Console (reason: "I believe this is
+      incorrect", 899/1000 chars). Policy page shows "Appeal submitted". Google
+      replies by email to gc.giorda@gmail.com within ~7 days.
+- [ ] **Holding vc21** (built, signed, ready) until the appeal result, to avoid a
+      parallel review getting auto-rejected on the same reused screenshot. If the
+      appeal is denied → upload `app/build/outputs/bundle/release/app-release.aab`
+      (vc21) and send for review.
+- [ ] vc21 code changes are committed-pending (not yet committed/pushed).
+
 **Security note:** `android-app/secrets.properties` (contains MAPS_API_KEY) is committed
 to git despite being gitignored — should be untracked + key rotated (flagged separately).
