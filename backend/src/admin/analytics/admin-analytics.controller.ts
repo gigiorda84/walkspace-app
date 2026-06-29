@@ -1,4 +1,5 @@
-import { Controller, Get, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AdminAnalyticsService } from './admin-analytics.service';
 import {
@@ -116,16 +117,36 @@ export class AdminAnalyticsController {
     return this.adminAnalyticsService.getSessions(period || '30d');
   }
 
-  @Delete()
+  @Get('export')
   @ApiOperation({
-    summary: '[CMS] Delete all analytics data',
-    description: 'Permanently delete all analytics events. This action cannot be undone.',
+    summary: '[CMS] Export raw analytics events',
+    description: 'Download all analytics events for the period as CSV or JSON. Read-only: data is never modified or deleted.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Analytics data deleted successfully',
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', 'all'],
+    description: 'Time period filter',
   })
-  async deleteAll(): Promise<{ deleted: number }> {
-    return this.adminAnalyticsService.deleteAllAnalytics();
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: ['csv', 'json'],
+    description: 'Export format (default csv)',
+  })
+  @ApiResponse({ status: 200, description: 'Analytics export file' })
+  async exportEvents(
+    @Res() res: Response,
+    @Query('period') period?: string,
+    @Query('format') format?: string,
+  ): Promise<void> {
+    const fmt = format === 'json' ? 'json' : 'csv';
+    const { body, contentType, filename } = await this.adminAnalyticsService.exportEvents(
+      period || 'all',
+      fmt,
+    );
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(body);
   }
 }

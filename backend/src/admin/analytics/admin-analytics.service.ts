@@ -8,6 +8,11 @@ import {
   SessionItemDto,
 } from './dto';
 
+// A session with no terminal event older than this is treated as "incomplete"
+// (likely abandoned but the app never reported it) instead of staying "in-progress"
+// forever. Tours run ~30–60 min, so 6h is a safe cutoff.
+const STALE_SESSION_HOURS = 6;
+
 @Injectable()
 export class AdminAnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -182,10 +187,30 @@ export class AdminAnalyticsService {
         : 0,
     }));
 
-    // Get donation clicks
-    const donationClicks = await this.prisma.analyticsEvent.count({
+    // Get donation clicks with provider breakdown (PayPal / Satispay)
+    const donationEvents = await this.prisma.analyticsEvent.findMany({
       where: { ...whereClause, name: 'donation_link_clicked' },
+      select: { properties: true },
     });
+
+    const providerCounts: Record<string, number> = {};
+    donationEvents.forEach((event) => {
+      const props = event.properties as Record<string, any> | null;
+      const provider = props?.provider || 'unknown';
+      providerCounts[provider] = (providerCounts[provider] || 0) + 1;
+    });
+
+    const donationBreakdown = Object.entries(providerCounts)
+      .map(([provider, clicks]) => ({
+        provider,
+        clicks,
+        percentOfCompletions: totalCompletions > 0
+          ? Math.round((clicks / totalCompletions) * 1000) / 10
+          : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks);
+
+    const donationClicks = donationEvents.length;
 
     // Total contact clicks = sum of all channel clicks
     const totalContactClicks = contactEvents.length;
@@ -201,6 +226,7 @@ export class AdminAnalyticsService {
         : 0,
       channelBreakdown,
       donationClicks,
+      donationBreakdown,
       donationPercent: totalCompletions > 0
         ? Math.round((donationClicks / totalCompletions) * 1000) / 10
         : 0,
@@ -257,10 +283,18 @@ export class AdminAnalyticsService {
         select: { properties: true },
       });
 
+      // Average only over completions that actually reported a duration > 0.
+      // (Older Android builds send tour_completed without durationMinutes; counting
+      // those as 0 would drag the average down artificially.)
       let totalDuration = 0;
+      let completionsWithDuration = 0;
       completedEvents.forEach((event) => {
         const props = event.properties as Record<string, any> | null;
-        totalDuration += props?.durationMinutes || 0;
+        const duration = props?.durationMinutes || 0;
+        if (duration > 0) {
+          totalDuration += duration;
+          completionsWithDuration++;
+        }
       });
 
       const tourName = tour.versions[0]?.title || tour.slug;
@@ -271,9 +305,10 @@ export class AdminAnalyticsService {
         starts,
         completions,
         completionRate: starts > 0 ? Math.round((completions / starts) * 1000) / 10 : 0,
-        avgDurationMinutes: completions > 0
-          ? Math.round((totalDuration / completions) * 10) / 10
+        avgDurationMinutes: completionsWithDuration > 0
+          ? Math.round((totalDuration / completionsWithDuration) * 10) / 10
           : 0,
+        completionsWithDuration,
         gpsTriggered,
         manualTriggered,
       });
@@ -351,9 +386,14 @@ export class AdminAnalyticsService {
 
       const terminalProps = terminal?.properties as Record<string, any> | null;
 
-      let status: 'completed' | 'abandoned' | 'in-progress' = 'in-progress';
+      let status: 'completed' | 'abandoned' | 'in-progress' | 'incomplete' = 'in-progress';
       if (terminal?.name === 'tour_completed') status = 'completed';
       else if (terminal?.name === 'tour_abandoned') status = 'abandoned';
+      else {
+        // No terminal event: still running if recent, otherwise stale/abandoned.
+        const ageMs = Date.now() - start.createdAt.getTime();
+        if (ageMs > STALE_SESSION_HOURS * 60 * 60 * 1000) status = 'incomplete';
+      }
 
       return {
         tourId: start.tourId || '',
@@ -370,8 +410,50 @@ export class AdminAnalyticsService {
     });
   }
 
-  async deleteAllAnalytics(): Promise<{ deleted: number }> {
-    const result = await this.prisma.analyticsEvent.deleteMany({});
-    return { deleted: result.count };
+  // Export raw analytics events for the period as a downloadable file.
+  // Read-only: data is never modified or deleted.
+  async exportEvents(
+    period: string = 'all',
+    format: 'csv' | 'json' = 'csv',
+  ): Promise<{ body: string; contentType: string; filename: string }> {
+    const dateFilter = this.getDateFilter(period);
+    const whereClause = dateFilter ? { createdAt: { gte: dateFilter } } : {};
+
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === 'json') {
+      return {
+        body: JSON.stringify(events, null, 2),
+        contentType: 'application/json',
+        filename: `analytics-${period}-${stamp}.json`,
+      };
+    }
+
+    const columns = [
+      'id', 'name', 'createdAt', 'userId', 'anonymousId', 'tourId',
+      'pointId', 'language', 'device', 'osVersion', 'properties',
+    ];
+    const escape = (value: unknown): string => {
+      if (value === null || value === undefined) return '';
+      const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+    const rows = events.map((e) =>
+      columns
+        .map((col) => escape(col === 'createdAt' ? e.createdAt.toISOString() : (e as any)[col]))
+        .join(','),
+    );
+    const csv = [columns.join(','), ...rows].join('\n');
+
+    return {
+      body: csv,
+      contentType: 'text/csv',
+      filename: `analytics-${period}-${stamp}.csv`,
+    };
   }
 }

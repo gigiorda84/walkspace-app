@@ -60,6 +60,16 @@ class PlayerViewModel @Inject constructor(
     private var currentLanguage: String = "en"
     private var currentTourId: String? = null
 
+    // Tour timing/trigger tracking for analytics.
+    // Android is a GPS-first on-site app: a tour always begins location tracking, so
+    // starts are reported as "gps". The completed/abandoned trigger type reflects whether
+    // GPS actually drove the playback ("manual" until the first GPS-triggered point).
+    private var tourStartTimeMs: Long = 0L
+    private var primaryTriggerType: String = "manual"
+
+    private fun elapsedMinutes(): Int =
+        if (tourStartTimeMs > 0L) ((System.currentTimeMillis() - tourStartTimeMs) / 60000L).toInt() else 0
+
     val currentLocation = locationManager.currentLocation
     val currentPointIndex = locationManager.currentPointIndex
     val distanceToNextPoint = locationManager.distanceToNextPoint
@@ -93,6 +103,7 @@ class PlayerViewModel @Inject constructor(
 
     private fun setupCallbacks() {
         locationManager.onPointTriggered = { point ->
+            primaryTriggerType = "gps"
             _currentPoint.value = point
             loadSubtitlesForPoint(point.id)
             playPointAudio(point)
@@ -108,9 +119,10 @@ class PlayerViewModel @Inject constructor(
                 // Last point's audio finished - tour is complete
                 _isTourComplete.value = true
                 stopSubtitleSync()
+                val minutes = elapsedMinutes()
                 viewModelScope.launch {
                     _tour.value?.let { tour ->
-                        analyticsService.trackTourCompleted(tour.id)
+                        analyticsService.trackTourCompleted(tour.id, minutes, primaryTriggerType)
                     }
                 }
             } else {
@@ -163,7 +175,9 @@ class PlayerViewModel @Inject constructor(
                         fetchManifest(tourId, lang)
 
                         startTour(tour, lang)
-                        analyticsService.trackTourStarted(tourId)
+                        tourStartTimeMs = System.currentTimeMillis()
+                        primaryTriggerType = "manual"
+                        analyticsService.trackTourStarted(tourId, "gps")
                     }
                 }
             } catch (e: Exception) {
@@ -309,9 +323,10 @@ class PlayerViewModel @Inject constructor(
             _isTourComplete.value = true
             audioPlayerManager.stop()
             stopSubtitleSync()
+            val minutes = elapsedMinutes()
             viewModelScope.launch {
                 _tour.value?.let { tour ->
-                    analyticsService.trackTourCompleted(tour.id)
+                    analyticsService.trackTourCompleted(tour.id, minutes, primaryTriggerType)
                 }
             }
             return
@@ -423,6 +438,16 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun stopTour() {
+        // Report abandonment when the user exits a started tour before completing it.
+        val abandonedTour = _tour.value
+        if (abandonedTour != null && tourStartTimeMs > 0L && !_isTourComplete.value) {
+            val minutes = elapsedMinutes()
+            viewModelScope.launch {
+                analyticsService.trackTourAbandoned(abandonedTour.id, minutes)
+            }
+        }
+        tourStartTimeMs = 0L
+
         currentTourId = null
         stopSubtitleSync()
         locationManager.stopTracking()

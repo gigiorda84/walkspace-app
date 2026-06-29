@@ -1,3 +1,104 @@
+# Analytics dashboard: donations breakdown, completion/duration accuracy, export
+
+## Obiettivo (richiesta utente)
+Migliorare la pagina /analytics del CMS: (1) sezione Donations che rifletta i nuovi
+pulsanti PayPal/Satispay; (2) conteggio più sensato di tour completati/interrotti
+(niente in-progress eterni) e durata realistica; (3) verifica generale dei dati;
+(4) MAI cancellare i dati + aggiungere export. Scope deciso: **CMS+backend ora**,
+**Android preparato a parte (no release in questo ciclo, appeal 1.1.8 in corso)**.
+Export: **CSV + JSON**.
+
+## Cause radice individuate (verificate nel codice)
+- **Donations senza breakdown:** le app inviano `donation_link_clicked` con
+  `properties.provider` ("paypal"/"satispay"), ma il backend fa solo `count()` totale
+  (admin-analytics.service.ts:186). La card mostra un solo numero.
+- **In-progress eterni:** lo stato deriva dall'ASSENZA di evento terminale
+  (admin-analytics.service.ts:354). L'app **Android non invia MAI `tour_abandoned`**
+  (AnalyticsService.kt) → ogni tour Android non completato resta in-progress per sempre.
+- **Durata troppo corta:** Android invia `tour_completed` **senza `durationMinutes` né
+  `triggerType`** (AnalyticsService.kt:119). Quindi: (a) la sezione "Tour Duration"
+  (bucket per triggerType) esclude Android; (b) la media per-tour divide per TUTTE le
+  completion incluse quelle Android a durata 0 (service.ts:274) → media abbassata.
+- **Trigger Method GPS/Manual** ignora Android (niente `triggerType` su `tour_started`).
+- **Bottone "Delete All Data"** presente nel CMS → da togliere (mai cancellare).
+
+## Piano — Backend (NestJS)  [solo letture aggregate, MAI scritture/cancellazioni sui dati grezzi]
+- [ ] `getEngagementAnalytics`: aggiungere `donationBreakdown` (conteggio per
+      `properties.provider`: paypal / satispay / unknown, con % sulle completion),
+      mantenendo `donationClicks` totale. Aggiornare `EngagementAnalyticsDto`.
+- [ ] `getSessions`: introdurre soglia anti-stallo. Se nessun evento terminale e lo
+      start è più vecchio di `STALE_SESSION_HOURS` (proposta: 6h; i tour durano ~30–60min)
+      → nuovo stato `'incomplete'`. `'in-progress'` resta solo per sessioni recenti.
+      (Classificazione a sola lettura: i dati grezzi non vengono toccati.)
+- [ ] `getTourAnalytics`: calcolare `avgDurationMinutes` solo sulle completion con
+      `durationMinutes > 0` (non gonfiare il denominatore con le completion Android a 0).
+      Aggiungere `completionsWithDuration` per trasparenza.
+- [ ] Nuovo `exportEvents(period, format)` + endpoint `GET /admin/analytics/export`
+      (`format=csv|json`) con `Content-Disposition: attachment`. Esporta gli eventi
+      grezzi (CSV piatto / JSON con properties annidate). Nessuna cancellazione.
+
+## Piano — CMS (Next.js)
+- [ ] `types/api`: aggiungere `donationBreakdown`, `completionsWithDuration`, stato
+      `'incomplete'`.
+- [ ] `lib/api/client.ts`: aggiungere `getExportUrl()/downloadExport(format)`.
+- [ ] `analytics/page.tsx`:
+      - Card Donations: breakdown PayPal vs Satispay (come channelBreakdown), oltre al totale.
+      - Sostituire il bottone rosso "Delete All Data" con **Export CSV / Export JSON**.
+      - Rimuovere il modale di conferma cancellazione.
+      - Recent Sessions: rendere il nuovo stato `incomplete` (colore/etichetta distinti).
+      - Piccola nota informativa dove la durata/trigger Android non è ancora tracciata.
+
+## Piano — Android (PREPARATO, NESSUNA release in questo ciclo)
+- [ ] `AnalyticsService.kt`: `trackTourStarted(tourId, triggerType)`,
+      `trackTourCompleted(tourId, durationMinutes, triggerType)`, nuovo
+      `trackTourAbandoned(tourId, durationMinutes)`.
+- [ ] `PlayerViewModel`: registrare timestamp di start, calcolare `durationMinutes`,
+      passare `triggerType`, ed emettere `tour_abandoned` all'uscita senza completamento.
+- [ ] **NON** bumpare versionCode/versionName, **NON** pubblicare. Solo compileDebugKotlin
+      per verificare. Le modifiche restano pronte per la prossima release.
+
+## Verifica finale
+- [x] Backend `tsc --noEmit` → OK. CMS `tsc --noEmit` → OK. Android
+      `:app:compileDebugKotlin` → BUILD SUCCESSFUL. CMS `next build` → (vedi Review).
+- [x] Sezione Review qui sotto.
+
+## Review
+**Backend (NestJS)** — `admin-analytics.service.ts` + `analytics-response.dto.ts` + `admin-analytics.controller.ts`:
+- `getEngagementAnalytics`: nuovo `donationBreakdown` per provider (paypal/satispay/unknown)
+  con % sulle completion; `donationClicks` ora = numero eventi.
+- `getTourAnalytics`: `avgDurationMinutes` calcolata SOLO sulle completion con
+  `durationMinutes > 0` (+ campo `completionsWithDuration`). Le completion Android a 0
+  non abbassano più la media.
+- `getSessions`: costante `STALE_SESSION_HOURS = 6`. Sessioni senza evento terminale e
+  più vecchie di 6h → stato `incomplete` (prima restavano `in-progress` all'infinito).
+  Riclassificazione solo a lettura: i dati grezzi non sono toccati.
+- `exportEvents(period, format)` + `GET /admin/analytics/export?format=csv|json` con
+  `Content-Disposition: attachment`. **Endpoint DELETE rimosso** (mai cancellare).
+
+**CMS (Next.js)** — `types/api`, `lib/api/client.ts`, `app/analytics/page.tsx`:
+- Card Donations con breakdown PayPal/Satispay.
+- Bottone rosso "Delete All Data" + modale → rimossi, sostituiti da **Export CSV / Export JSON**
+  (scaricano via blob, rispettano il period selezionato).
+- Recent Sessions: stato `incomplete` con badge grigio distinto.
+- Nota nella sezione Duration sui dati Android non ancora tracciati.
+
+**Android (PRONTO, NESSUNA release in questo ciclo — no version bump)** —
+`services/AnalyticsService.kt`, `ui/player/PlayerViewModel.kt`:
+- `tour_started` ora invia `triggerType="gps"` (app GPS-first, parte sempre il tracking).
+- `tour_completed` ora invia `durationMinutes` (now − start) e `triggerType`
+  (`primaryTriggerType`: "manual" finché un punto non viene triggerato via GPS → "gps").
+- Nuovo `tour_abandoned` emesso da `stopTour()` (Close button) quando si esce da un
+  tour iniziato e non completato, con `durationMinutes`.
+- `compileDebugKotlin` OK. **Da verificare su device prima della prossima release**
+  (in particolare la consegna dell'evento abbandono all'uscita), poi bump versione.
+
+**Deploy:** le migliorie CMS/backend richiedono il deploy del backend su Render e del
+CMS su Vercel. La pagina /analytics riflette i nuovi dati dopo il deploy. Lato dati
+storici: le sessioni Android vecchie restano senza durata/trigger (non riscrivibili),
+ma da ora in poi (post-release Android) saranno complete.
+
+---
+
 # Fix Google Play rejection: Prominent Disclosure for Location
 
 ## Problem

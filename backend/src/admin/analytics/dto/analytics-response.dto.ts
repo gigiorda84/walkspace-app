@@ -67,6 +67,17 @@ export class ChannelBreakdownDto {
   percentOfCompletions: number;
 }
 
+export class DonationBreakdownDto {
+  @ApiProperty({ example: 'paypal', description: 'Donation provider (paypal, satispay, unknown)' })
+  provider: string;
+
+  @ApiProperty({ example: 18 })
+  clicks: number;
+
+  @ApiProperty({ example: 9.7, description: 'Percentage of completions' })
+  percentOfCompletions: number;
+}
+
 export class EngagementAnalyticsDto {
   @ApiProperty({ example: 85 })
   followUsClicks: number;
@@ -85,6 +96,9 @@ export class EngagementAnalyticsDto {
 
   @ApiProperty({ example: 32 })
   donationClicks: number;
+
+  @ApiProperty({ type: [DonationBreakdownDto], description: 'Donation clicks broken down by provider (PayPal, Satispay)' })
+  donationBreakdown: DonationBreakdownDto[];
 
   @ApiProperty({ example: 17.3, description: 'Percentage of completions' })
   donationPercent: number;
@@ -110,8 +124,11 @@ export class TourAnalyticsItemDto {
   @ApiProperty({ example: 79.2 })
   completionRate: number;
 
-  @ApiProperty({ example: 42.5 })
+  @ApiProperty({ example: 42.5, description: 'Average duration in minutes, computed only over completions that reported a duration' })
   avgDurationMinutes: number;
+
+  @ApiProperty({ example: 60, description: 'Number of completions that reported a duration (used as the avgDuration denominator)' })
+  completionsWithDuration: number;
 
   @ApiProperty({ example: 85 })
   gpsTriggered: number;
@@ -142,8 +159,12 @@ export class SessionItemDto {
   @ApiProperty({ example: 'Android 12' })
   osVersion: string;
 
-  @ApiProperty({ example: 'completed', enum: ['completed', 'abandoned', 'in-progress'] })
-  status: 'completed' | 'abandoned' | 'in-progress';
+  @ApiProperty({
+    example: 'completed',
+    enum: ['completed', 'abandoned', 'in-progress', 'incomplete'],
+    description: '"incomplete" = no terminal event and started more than STALE_SESSION_HOURS ago (likely abandoned but the app never reported it)',
+  })
+  status: 'completed' | 'abandoned' | 'in-progress' | 'incomplete';
 
   @ApiProperty({ example: 42.5, nullable: true })
   durationMinutes: number | null;
