@@ -428,7 +428,7 @@ struct FollowUsModal: View {
                             CircularSocialButton(
                                 icon: "globe",
                                 label: "Website",
-                                url: "https://lebandite.wordpress.com/",
+                                url: "https://www.bandite.eu/",
                                 tourId: tourId
                             )
                             CircularSocialButton(

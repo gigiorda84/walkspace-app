@@ -316,7 +316,7 @@ fun ConnectBottomSheet(
                     icon = Icons.Outlined.Language,
                     label = stringResource(R.string.website),
                     onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://lebandite.wordpress.com/")))
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.bandite.eu/")))
                     }
                 )
                 SocialButton(
