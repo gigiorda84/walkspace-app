@@ -264,7 +264,8 @@ fun AboutBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectBottomSheet(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onContactClick: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -302,6 +303,7 @@ fun ConnectBottomSheet(
                     icon = Icons.Outlined.CameraAlt,
                     label = stringResource(R.string.instagram),
                     onClick = {
+                        onContactClick("instagram")
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/bandite_artivism/")))
                     }
                 )
@@ -309,6 +311,7 @@ fun ConnectBottomSheet(
                     icon = Icons.Outlined.People,
                     label = stringResource(R.string.facebook),
                     onClick = {
+                        onContactClick("facebook")
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/17aVMP7t4u/")))
                     }
                 )
@@ -316,13 +319,15 @@ fun ConnectBottomSheet(
                     icon = Icons.Outlined.Language,
                     label = stringResource(R.string.website),
                     onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://lebandite.wordpress.com/")))
+                        onContactClick("website")
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.bandite.eu/")))
                     }
                 )
                 SocialButton(
                     icon = Icons.Outlined.Email,
                     label = stringResource(R.string.email_label),
                     onClick = {
+                        onContactClick("email")
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mailto:resonavisse@gmail.com")))
                     }
                 )

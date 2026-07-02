@@ -120,6 +120,7 @@
     <!-- Permissions -->
     <string name="foreground_location_title">Accès à la localisation</string>
     <string name="foreground_location_explanation">BANDITE Sonic Walkscape collecte et utilise la localisation de votre appareil pour diffuser automatiquement la narration audio lorsque vous atteignez des points GPS le long d\'un tour. Votre localisation est utilisée uniquement pour déclencher le bon audio au bon endroit. Elle n\'est jamais stockée sur nos serveurs ni partagée avec des tiers.\n\nSur l\'écran suivant, veuillez autoriser l\'accès à la localisation pour commencer le tour.</string>
+    <string name="foreground_location_disclosure_intro">BANDITE Sonic Walkscape collecte et utilise la localisation de votre appareil, y compris en arrière-plan pendant qu\'un tour est actif, pour diffuser automatiquement la narration audio lorsque vous atteignez des points GPS le long d\'un tour. Votre localisation est utilisée uniquement pour déclencher le bon audio au bon endroit. Elle n\'est jamais stockée sur nos serveurs ni partagée avec des tiers.\n\nIl vous sera demandé d\'autoriser l\'accès à la localisation lorsque vous démarrez un tour.</string>
     <string name="location_permission_required">Autorisation de localisation requise</string>
     <string name="location_permission_explanation">Cette application a besoin de l\'accès à la localisation pour déclencher l\'audio lorsque vous atteignez les points du tour. Veuillez activer l\'autorisation dans les paramètres.</string>
     <string name="background_location_title">Localisation en arrière-plan</string>
@@ -133,6 +134,8 @@
     <string name="location">Localisation</string>
     <string name="enable_location">Activer la localisation</string>
     <string name="location_description">Requis pour la lecture audio GPS</string>
+    <string name="location_settings_disclosure">BANDITE Sonic Walkscape collecte votre position, y compris en arrière-plan pendant qu\'un tour est actif, afin de diffuser automatiquement la narration audio lorsque vous atteignez les points GPS du parcours. Votre position est utilisée uniquement à cette fin. Elle n\'est jamais stockée sur nos serveurs ni partagée avec des tiers.</string>
+    <string name="manage_location_access">Gérer l\'accès à la localisation</string>
     <string name="about">À propos</string>
     <string name="version">Version</string>
     <string name="build">Build</string>

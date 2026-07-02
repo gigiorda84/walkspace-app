@@ -1,145 +1,103 @@
-# Fix Google Play rejection: Prominent Disclosure for Location
+# Analytics end-to-end verification & fixes
 
-## Problem
-Google Play rejected the Android app (enforced Jun 15) for **Inadequate Prominent
-Disclosure** under the User Data policy:
-- The in-app prominent disclosure does not disclose the usage of accessed/collected
-  Location data.
-- Prominent Disclosure must require affirmative user action, presented clearly and
-  unambiguously.
+## Goal
+Make sure both apps (Android + iOS) send correct analytics to the CMS, that the CMS
+dashboard displays the relevant data, and that all tour started / completed / donation
+data can be saved (exported).
 
-## Root cause
-The app shows a proper full-screen prominent disclosure only for **background**
-location. **Foreground (ACCESS_FINE_LOCATION)** permission is requested directly in
-`onStartTourClick()` (TourDetailScreen.kt) by calling
-`locationPermissionLauncher.launch(...)` with no disclosure shown first. The Settings
-"Attiva Posizione" toggle Google screenshotted is not a valid prominent disclosure
-(not shown before the request, no data-usage description, no affirmative accept/decline).
+## What already works (verified this session)
+- Both apps POST to `https://walkspace-api.onrender.com/analytics/events` with matching
+  field names (`anonymousId`, `tourId`, `pointId`, `language`, `device`, `osVersion`,
+  `timestamp`, `properties`) and matching event-name strings.
+- Backend ingests + stores every event (`AnalyticsEvent` table, JSONB `properties`).
+- Backend aggregates via `/admin/analytics/{overview,duration,engagement,tours,sessions}`.
+- CMS dashboard (`cms/src/app/analytics/page.tsx`) shows: starts, completions, completion
+  rate, unique devices, platform split, trigger split, duration analytics, contact-channel
+  breakdown, donation provider breakdown, per-tour table, recent sessions.
+- CSV/JSON export of raw events already exists (`/admin/analytics/export`).
 
-## Plan (minimal change, mirrors existing background-location disclosure)
-- [x] Add `foreground_location_title` + `foreground_location_explanation` strings
-      (values, values-it, values-fr).
-- [x] Add `showForegroundLocationDisclosure` state in TourDetailScreen.
-- [x] In `onStartTourClick()`: when permission not granted, show the disclosure dialog
-      instead of launching the system permission directly.
-- [x] Add a full-screen disclosure Dialog (copy of background pattern): icon, title,
-      data-usage explanation, privacy-policy link, affirmative "Continue" button that
-      launches `locationPermissionLauncher`, and a "Not now" dismiss button.
+## Confirmed gaps (root causes)
+1. **Android sends NO post-tour engagement events.**
+   - iOS fires `follow_us_clicked` and `contact_clicked` (channel = instagram/facebook/
+     website/email). Android's "Follow Us" button (TourCompletionScreen.kt:287) + the four
+     social buttons in `ConnectBottomSheet` (WelcomeScreen.kt:301-328) fire nothing.
+   - Effect: CMS engagement/contact breakdown reflects iOS users only.
+2. **CMS never displays `follow_us_clicked`.**
+   - Backend returns `followUsClicks` / `followUsPercent` in the engagement DTO, but the
+     dashboard doesn't render them.
+3. **(Consistency) `tour_started` triggerType differs by platform.**
+   - Android always sends `triggerType:"gps"` on start; iOS sends `"manual"` initially.
+     Skews the start-time "Trigger Method" split. Completion triggerType is correct on both.
+4. **(Enhancement) Donation amount not captured.**
+   - Both apps let the user pick €3/€5/€10/custom but only send `provider`, not the amount.
 
-## Review
-**Root cause:** Foreground `ACCESS_FINE_LOCATION` was requested directly from
-`onStartTourClick()` with no in-app prominent disclosure beforehand. Google requires
-the disclosure to appear before the runtime prompt, describe the data usage, and
-require affirmative action. The Settings toggle Google screenshotted did not qualify.
+## Plan (CONFIRMED — full scope, Android now, add summary export)
+### Android (new build required)
+- [ ] Fire `follow_us_clicked` from `TourCompletionScreen` "Follow Us" button.
+- [ ] Fire `contact_clicked` (channel = instagram/facebook/website/email) from the four
+      `ConnectBottomSheet` social buttons (only when opened from the completion screen,
+      matching iOS which tracks only when a tourId is present).
+- [ ] Add donation `amount` (€) to `donation_link_clicked` properties (Android has the
+      amount chips; iOS has none, so amount stays Android-only + optional server-side).
 
-**Changes (all in TourDetailScreen + strings):**
-1. `strings.xml` (en/it/fr): added `foreground_location_title` and
-   `foreground_location_explanation` clearly stating that location is collected and
-   used to trigger audio at GPS waypoints, not stored/shared.
-2. `TourDetailScreen.kt`: new `showForegroundLocationDisclosure` state.
-3. `onStartTourClick()`: when permission is missing, shows the disclosure dialog
-   instead of launching the system permission directly.
-4. New full-screen disclosure Dialog mirroring the existing background-location one:
-   icon, title, data-usage explanation, privacy-policy link, affirmative **Continue**
-   button (which then launches the permission), and a **Cancel** button.
+### Backend
+- [ ] Engagement: aggregate donation amount (total raised + avg + per-provider total).
+- [ ] Make the GPS/Manual trigger split authoritative: compute overview + per-tour trigger
+      breakdown from `tour_completed` events (real primary trigger) instead of the
+      provisional `tour_started` placeholder. No app discontinuity, platform-independent.
+- [ ] Add aggregated **summary** export (overview + per-tour + donations) via
+      `/admin/analytics/export?type=summary`, alongside the existing raw export.
 
-`PlayerScreen` only *checks* location permission and never requests it, so no change
-needed there. The only foreground-location request path in the app is now gated by the
-disclosure.
+### CMS
+- [ ] Show Follow-Us clicks (+ % of completions) in Post-Tour Engagement.
+- [ ] Show donation amount (total raised + avg) and per-provider amount in Donations.
+- [ ] Add "Export Summary" button (CSV/JSON).
+- [ ] Note the trigger split is "among completed tours".
 
-**Verification:** `./gradlew :app:compileDebugKotlin` → BUILD SUCCESSFUL.
-
-**Release steps (manual):** bump `versionCode`/`versionName`, build a new AAB, upload
-to Play Console, and reply to the policy issue / submit the new version for review.
-
----
-
-# Round 2: rejected AGAIN (versionCode 19) — same Settings screenshot
-
-## Problem
-Google re-rejected with the identical "Inadequate Prominent Disclosure" verdict and
-again attached a screenshot of the **Settings → Enable Location** row, not the
-Start-Tour flow.
-
-## Root cause (round 2)
-The round-1 disclosure is only reachable by tapping **Start Tour** on a tour when
-location isn't already granted. A reviewer who can't start a tour (tours are
-voucher-gated/protected; the Render free-tier backend cold-starts and may return an
-empty/erroring tour list during review) never sees it. The only location UI they
-reliably reach is **Settings → "Enable Location"**, which just opens OS settings and
-shows a hardcoded green check — not a prominent disclosure. Privacy policy page was
-verified OK (discloses location + background use). Note: reviewer screenshot shows
-v1.0.1/build 2 — user to confirm in Play Console which build was actually reviewed.
-
-## Plan (first-launch disclosure — guaranteed reachable)
-- [x] Constants: add `KEY_LOCATION_DISCLOSURE_ACCEPTED`.
-- [x] UserPreferencesManager: add `locationDisclosureAccepted` Flow +
-      `setLocationDisclosureAccepted()`.
-- [x] WelcomeViewModel: expose accepted flag + `acceptLocationDisclosure()`.
-- [x] New `LocationDisclosureScreen` (full-screen, reuses existing
-      `foreground_location_title` / `foreground_location_explanation` /
-      `privacy_policy` strings): icon, title, data-usage text, privacy link,
-      affirmative **Continue**, and **Cancel** (returns to Welcome).
-- [x] NavGraph: route Onboarding `onComplete` → `LocationDisclosure`; the screen
-      auto-forwards to Discovery if already accepted (no re-show for returning users).
-- [x] Bump versionCode 19 → 20, versionName 1.1.6 → 1.1.7.
-- [x] `./gradlew :app:compileDebugKotlin` → BUILD SUCCESSFUL.
+### Not doing (documented follow-ups)
+- iOS donation-amount selector: iOS uses a fixed PayPal NCP link with no amount field, so
+  adding amount there needs a UI + payment-link change — out of scope, flagged for later.
 
 ## Review
-**What changed:** Added a first-launch prominent disclosure that every user/reviewer
-hits on the guaranteed startup path (Welcome → Onboarding → **LocationDisclosure** →
-Discovery), before any location access. It reuses the round-1 disclosure copy (data
-type = device location, use = trigger audio at GPS waypoints, never stored/shared),
-links to the privacy policy, and requires affirmative action (**Continue**) with a
-**Cancel** that returns to Welcome. Acceptance is persisted, so returning users are
-forwarded straight to Discovery without re-seeing it. The round-1 Start-Tour disclosure
-stays as a second safety net.
+All changes implemented and compile-verified (backend `tsc` clean, CMS `tsc` clean,
+Android `compileDebugKotlin` exit 0). iOS needed no changes — it already fires the
+engagement events correctly.
 
-**Files:** `utils/Constants.kt`, `services/UserPreferencesManager.kt`,
-`ui/welcome/WelcomeViewModel.kt`, new `ui/welcome/LocationDisclosureScreen.kt`,
-`ui/navigation/NavGraph.kt`, `app/build.gradle.kts` (version bump).
+### Android (needs a new Play build to take effect)
+- `TourCompletionViewModel`: `trackDonationClicked` now takes an optional `amount`;
+  added `trackFollowUsClicked()` and `trackContactClicked(channel)`.
+- `TourCompletionScreen`: "Follow Us" now fires `follow_us_clicked`; donation buttons pass
+  the selected amount; the Connect sheet receives a contact callback.
+- `WelcomeScreen.ConnectBottomSheet`: added optional `onContactClick(channel)` fired by the
+  Instagram/Facebook/Website/Email buttons (no-op when opened outside the completion flow,
+  matching iOS which only tracks contacts with a tour context).
 
-**Diagnosis note (Chrome):** Verified the privacy policy at
-`walkspace-api.onrender.com/privacy` is live and fully discloses location + background
-use — not the cause. Reviewer screenshot shows v1.0.1/build 2, which matches no
-submitted build (15/18/19) — confirm in Play Console which versionCode the rejection is
-attached to; if it's an old build, the fix may already be present and an appeal applies.
+### Backend
+- `getEngagementAnalytics`: aggregates donation amount — per-provider `totalAmount`, plus
+  `totalDonationAmount`, `donationsWithAmount`, `avgDonationAmount`. Amount is optional, so
+  iOS clicks (no amount) are simply excluded from money totals.
+- `getOverview` + `getTourAnalytics`: GPS/Manual split now computed from `tour_completed`
+  (the authoritative "primary trigger type") instead of the provisional `tour_started`
+  placeholder — meaningful and platform-independent, with no historical discontinuity.
+- Added `exportSummary()` + `type=summary` on `/admin/analytics/export`: aggregated CSV/JSON
+  report (overview + per-tour + donations) alongside the existing raw export. Read-only.
+- DTOs updated to match.
 
-**Release steps (manual):** build a signed AAB (versionCode 20), upload to Play
-Console, and on the Publishing overview "send changes for review" / reply to the
-policy issue.
+### CMS
+- Donations card shows total € raised and average when amounts are present, plus per-provider €.
+- Contact & Social card now shows Follow-Us clicks.
+- "Export Summary" button (aggregated report) added next to the raw CSV/JSON buttons.
+- Trigger Method card labelled "How completed tours were experienced".
 
----
+### Verification
+- backend `npx tsc --noEmit`: clean.
+- cms `npx tsc --noEmit`: clean.
+- android `./gradlew compileDebugKotlin`: exit 0.
+- Live browser check of /analytics not run: page is auth-gated and renders only from a
+  running backend + seeded data, which isn't available in this session.
 
-# Release tooling: API publishing (Gradle Play Publisher)
-
-Signed AAB built: `app/build/outputs/bundle/release/app-release.aab` (versionCode 20,
-1.1.7). No publishing automation existed, so set up GPP for repeatable uploads.
-
-- [x] Added `com.github.triplet.play` 3.12.1 (root + `:app`), `play { }` block
-      (track=`internal`, AAB default, releaseStatus=COMPLETED, gitignored
-      `play-service-account.json`).
-- [x] Gitignored `play-service-account.json`.
-- [x] Release notes in `app/src/main/play/release-notes/{en-US,it-IT,fr-FR}/default.txt`.
-- [x] `android-app/PUBLISHING.md` documents service-account creation + release commands.
-- [x] Verified `:app:tasks` registers `publishReleaseBundle` (config resolves).
-- [ ] **User action:** create Play service account JSON (see PUBLISHING.md), drop it at
-      `android-app/play-service-account.json`, then `./gradlew :app:publishReleaseBundle`
-      (start on `internal`, then switch `track` to the rejected track and re-run).
-
-## Submission (Jun 19 2026, via Play Console UI in Chrome)
-- App is on the **Production** track. Live release = **vc12 (1.1.4-beta)**; rejected
-  release = **vc19 (1.1.6)** → so Google DID review the round-1 disclosure build and
-  rejected it (the rejection-email screenshot showing v1.0.1/build 2 was stale/misleading).
-- Created a new **Production** release with **vc20 (1.1.7)** (round-2 first-launch
-  disclosure); vc19 left under "Not included". AAB uploaded by the user (Chrome
-  extension file_upload is sandboxed to session-shared files, so it couldn't push the
-  build path — user selected it manually).
-- User submitted the changes for review. NOTE: the submission bundled 2 pre-existing
-  pending changes too — **Data safety questionnaire** completion and **Closed testing →
-  pause track**.
-- Could not visually confirm via Chrome: the Play Console SPA never reaches
-  `document_idle`, so claude-in-chrome screenshot/read tools time out on that page.
-
-**Security note:** `android-app/secrets.properties` (contains MAPS_API_KEY) is committed
-to git despite being gitignored — should be untracked + key rotated (flagged separately).
+### Deploy notes
+- Backend + CMS changes deploy immediately (Render / CMS host).
+- Android engagement + donation-amount events require a new versionCode build + Play release.
+- iOS donation amount is NOT captured (no amount selector; fixed PayPal NCP link). Documented
+  as a follow-up if per-amount donation reporting is wanted on iOS too.

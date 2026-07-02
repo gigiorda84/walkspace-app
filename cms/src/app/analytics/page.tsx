@@ -49,8 +49,7 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('30d');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [duration, setDuration] = useState<DurationAnalytics | null>(null);
@@ -86,16 +85,14 @@ export default function AnalyticsPage() {
     }
   }
 
-  async function handleDeleteAll() {
-    setDeleting(true);
+  async function handleExport(format: 'csv' | 'json', type: 'raw' | 'summary' = 'raw') {
+    setExporting(true);
     try {
-      await analyticsApi.deleteAll();
-      setShowDeleteConfirm(false);
-      fetchAnalytics();
+      await analyticsApi.exportEvents(period, format, type);
     } catch (err) {
-      console.error('Failed to delete analytics:', err);
+      console.error('Failed to export analytics:', err);
     } finally {
-      setDeleting(false);
+      setExporting(false);
     }
   }
 
@@ -154,41 +151,28 @@ export default function AnalyticsPage() {
             ))}
           </select>
           <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+            onClick={() => handleExport('csv', 'summary')}
+            disabled={exporting}
+            className="px-4 py-2 text-sm text-white bg-gray-900 rounded-lg hover:bg-gray-700 disabled:opacity-50"
           >
-            Delete All Data
+            {exporting ? 'Exporting…' : 'Export Summary'}
+          </button>
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={exporting}
+            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            Export Raw CSV
+          </button>
+          <button
+            onClick={() => handleExport('json')}
+            disabled={exporting}
+            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            Export Raw JSON
           </button>
         </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete All Analytics Data?</h3>
-            <p className="text-gray-600 mb-6">
-              This will permanently delete all analytics events. This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAll}
-                className="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
-                disabled={deleting}
-              >
-                {deleting ? 'Deleting...' : 'Delete All'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Overview Section */}
       <section className="mb-8">
@@ -225,7 +209,8 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Trigger Method</h3>
+            <h3 className="font-medium text-gray-900 mb-1">Trigger Method</h3>
+            <p className="text-xs text-gray-500 mb-4">How completed tours were experienced</p>
             <ProgressBar
               label="GPS (On-site)"
               value={overview?.triggerBreakdown.gps || 0}
@@ -244,7 +229,11 @@ export default function AnalyticsPage() {
 
       {/* Duration Section */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Tour Duration</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Tour Duration</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Averages use only completions that reported a duration and trigger type. Older
+          Android builds don&apos;t send these yet, so they&apos;re excluded here (fixed in an upcoming app release).
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm font-medium text-gray-500">Completed via GPS</p>
@@ -284,6 +273,13 @@ export default function AnalyticsPage() {
             <h3 className="font-medium text-gray-900 mb-4">Contact & Social</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Follow Us Clicks</span>
+                <div className="text-right">
+                  <span className="font-semibold text-gray-900">{engagement?.followUsClicks || 0}</span>
+                  <span className="text-gray-500 text-sm ml-2">({engagement?.followUsPercent || 0}% of completions)</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Total Contact Clicks</span>
                 <div className="text-right">
                   <span className="font-semibold text-gray-900">{engagement?.totalContactClicks || 0}</span>
@@ -304,15 +300,42 @@ export default function AnalyticsPage() {
 
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="font-medium text-gray-900 mb-4">Donations</h3>
-            <div className="text-center py-4">
+            <div className="text-center pt-2 pb-4">
               <p className="text-5xl font-bold text-purple-600">{engagement?.donationClicks || 0}</p>
               <p className="text-gray-500 mt-2">Donation link clicks</p>
-              <p className="text-lg font-medium text-gray-900 mt-4">
-                {engagement?.donationPercent || 0}% of completions
+              <p className="text-sm text-gray-500 mt-1">
+                {engagement?.donationPercent || 0}% of {engagement?.totalCompletions || 0} completed tours
               </p>
-              <p className="text-sm text-gray-500">
-                out of {engagement?.totalCompletions || 0} completed tours
-              </p>
+            </div>
+            {(engagement?.donationsWithAmount || 0) > 0 && (
+              <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">€{engagement?.totalDonationAmount || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Total selected ({engagement?.donationsWithAmount} clicks)</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">€{engagement?.avgDonationAmount || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Avg per click</p>
+                </div>
+              </div>
+            )}
+            <div className="space-y-3 border-t border-gray-100 pt-4 mt-4">
+              {(engagement?.donationBreakdown?.length || 0) === 0 ? (
+                <p className="text-sm text-gray-400 text-center">No donation clicks yet</p>
+              ) : (
+                engagement?.donationBreakdown.map((d) => (
+                  <div key={d.provider} className="flex justify-between items-center">
+                    <span className="text-gray-600 capitalize">
+                      {d.provider === 'paypal' ? 'PayPal' : d.provider === 'satispay' ? 'Satispay' : d.provider}
+                    </span>
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900">{d.clicks}</span>
+                      {d.totalAmount > 0 && <span className="text-gray-500 text-sm ml-2">€{d.totalAmount}</span>}
+                      <span className="text-gray-500 text-sm ml-2">({d.percentOfCompletions}%)</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -401,6 +424,8 @@ export default function AnalyticsPage() {
                           ? 'bg-green-100 text-green-700'
                           : session.status === 'abandoned'
                           ? 'bg-orange-100 text-orange-700'
+                          : session.status === 'incomplete'
+                          ? 'bg-gray-200 text-gray-600'
                           : 'bg-blue-100 text-blue-700'
                       }`}>
                         {session.status}

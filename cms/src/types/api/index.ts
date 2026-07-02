@@ -154,6 +154,13 @@ export interface ChannelBreakdown {
   percentOfCompletions: number;
 }
 
+export interface DonationBreakdown {
+  provider: string;
+  clicks: number;
+  totalAmount: number;
+  percentOfCompletions: number;
+}
+
 export interface EngagementAnalytics {
   followUsClicks: number;
   followUsPercent: number;
@@ -161,7 +168,11 @@ export interface EngagementAnalytics {
   totalContactPercent: number;
   channelBreakdown: ChannelBreakdown[];
   donationClicks: number;
+  donationBreakdown: DonationBreakdown[];
   donationPercent: number;
+  totalDonationAmount: number;
+  donationsWithAmount: number;
+  avgDonationAmount: number;
   totalCompletions: number;
 }
 
@@ -172,6 +183,7 @@ export interface TourAnalyticsItem {
   completions: number;
   completionRate: number;
   avgDurationMinutes: number;
+  completionsWithDuration: number;
   gpsTriggered: number;
   manualTriggered: number;
 }
@@ -182,7 +194,7 @@ export interface SessionItem {
   startedAt: string;
   device: string;
   osVersion: string;
-  status: 'completed' | 'abandoned' | 'in-progress';
+  status: 'completed' | 'abandoned' | 'in-progress' | 'incomplete';
   durationMinutes: number | null;
   pointsTriggered: number;
   triggerType: string | null;

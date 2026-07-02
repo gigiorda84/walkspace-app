@@ -59,7 +59,7 @@ fun TourCompletionScreen(
     val satispayUrl = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
 
     fun openDonation(url: String, provider: String) {
-        viewModel.trackDonationClicked(provider)
+        viewModel.trackDonationClicked(provider, donationAmount)
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
@@ -287,7 +287,10 @@ fun TourCompletionScreen(
                 SecondaryLink(
                     icon = Icons.Default.FavoriteBorder,
                     text = stringResource(R.string.follow_us),
-                    onClick = { showConnectSheet = true }
+                    onClick = {
+                        viewModel.trackFollowUsClicked()
+                        showConnectSheet = true
+                    }
                 )
             }
 
@@ -352,7 +355,8 @@ fun TourCompletionScreen(
     // Connect Bottom Sheet
     if (showConnectSheet) {
         ConnectBottomSheet(
-            onDismiss = { showConnectSheet = false }
+            onDismiss = { showConnectSheet = false },
+            onContactClick = { channel -> viewModel.trackContactClicked(channel) }
         )
     }
 }

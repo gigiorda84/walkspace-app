@@ -62,12 +62,30 @@ class TourCompletionViewModel @Inject constructor(
         }
     }
 
-    fun trackDonationClicked(provider: String) {
+    fun trackDonationClicked(provider: String, amount: Int?) {
         viewModelScope.launch {
+            val properties = mutableMapOf<String, Any>("provider" to provider)
+            if (amount != null) properties["amount"] = amount
             analyticsService.track(
                 "donation_link_clicked",
                 tourId = _tour.value?.id,
-                properties = mapOf("provider" to provider)
+                properties = properties
+            )
+        }
+    }
+
+    fun trackFollowUsClicked() {
+        viewModelScope.launch {
+            analyticsService.track("follow_us_clicked", tourId = _tour.value?.id)
+        }
+    }
+
+    fun trackContactClicked(channel: String) {
+        viewModelScope.launch {
+            analyticsService.track(
+                "contact_clicked",
+                tourId = _tour.value?.id,
+                properties = mapOf("channel" to channel)
             )
         }
     }

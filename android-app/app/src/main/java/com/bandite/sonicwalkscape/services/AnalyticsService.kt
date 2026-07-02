@@ -114,10 +114,23 @@ class AnalyticsService(
     suspend fun trackTourViewed(tourId: String) = track("tour_viewed", tourId = tourId)
     suspend fun trackTourDownloadStarted(tourId: String) = track("tour_download_started", tourId = tourId)
     suspend fun trackTourDownloadCompleted(tourId: String) = track("tour_download_completed", tourId = tourId)
-    suspend fun trackTourStarted(tourId: String) = track("tour_started", tourId = tourId)
+    suspend fun trackTourStarted(tourId: String, triggerType: String) =
+        track("tour_started", tourId = tourId, properties = mapOf("triggerType" to triggerType))
     suspend fun trackPointTriggered(tourId: String, pointId: String) = track("point_triggered", tourId, pointId)
-    suspend fun trackTourCompleted(tourId: String) {
-        track("tour_completed", tourId = tourId)
+    suspend fun trackTourCompleted(tourId: String, durationMinutes: Int, triggerType: String) {
+        track(
+            "tour_completed",
+            tourId = tourId,
+            properties = mapOf("durationMinutes" to durationMinutes, "triggerType" to triggerType)
+        )
+        flush()
+    }
+    suspend fun trackTourAbandoned(tourId: String, durationMinutes: Int) {
+        track(
+            "tour_abandoned",
+            tourId = tourId,
+            properties = mapOf("durationMinutes" to durationMinutes)
+        )
         flush()
     }
 
