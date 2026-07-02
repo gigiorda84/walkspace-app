@@ -92,6 +92,15 @@ Export: **CSV + JSON**.
 - `compileDebugKotlin` OK. **Da verificare su device prima della prossima release**
   (in particolare la consegna dell'evento abbandono all'uscita), poi bump versione.
 
+## DA INCLUDERE NELLA PROSSIMA RELEASE DELLE APP (Android + iOS)
+Modifiche già committate ma NON ancora rilasciate (in attesa dell'esito appeal 1.1.8):
+- [ ] **Analytics instrumentation Android** (durationMinutes + triggerType su
+      completed/started, nuovo `tour_abandoned`) — vedi sopra. Test su device.
+- [ ] **Link sito → `https://www.bandite.eu/`** (era `lebandite.wordpress.com`),
+      pulsante "Website" su Android (`WelcomeScreen.kt`) e iOS
+      (`TourCompletionView.swift`). Commit `e015556`.
+- [ ] Al momento del rilascio: bump versionCode/versionName Android + build iOS.
+
 **Deploy:** le migliorie CMS/backend richiedono il deploy del backend su Render e del
 CMS su Vercel. La pagina /analytics riflette i nuovi dati dopo il deploy. Lato dati
 storici: le sessioni Android vecchie restano senza durata/trigger (non riscrivibili),
