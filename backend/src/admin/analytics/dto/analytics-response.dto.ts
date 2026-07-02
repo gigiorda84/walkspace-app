@@ -74,6 +74,9 @@ export class DonationBreakdownDto {
   @ApiProperty({ example: 18 })
   clicks: number;
 
+  @ApiProperty({ example: 90, description: 'Sum of selected donation amounts (EUR) for this provider. 0 when clicks carried no amount (e.g. iOS).' })
+  totalAmount: number;
+
   @ApiProperty({ example: 9.7, description: 'Percentage of completions' })
   percentOfCompletions: number;
 }
@@ -102,6 +105,15 @@ export class EngagementAnalyticsDto {
 
   @ApiProperty({ example: 17.3, description: 'Percentage of completions' })
   donationPercent: number;
+
+  @ApiProperty({ example: 240, description: 'Total selected donation amount (EUR) across all clicks that reported an amount' })
+  totalDonationAmount: number;
+
+  @ApiProperty({ example: 20, description: 'Number of donation clicks that reported an amount (denominator for avgDonationAmount)' })
+  donationsWithAmount: number;
+
+  @ApiProperty({ example: 12, description: 'Average selected donation amount (EUR), over clicks that reported an amount' })
+  avgDonationAmount: number;
 
   @ApiProperty({ example: 185 })
   totalCompletions: number;

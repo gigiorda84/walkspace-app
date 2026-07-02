@@ -99,15 +99,20 @@ export const analyticsApi = {
     return response.data;
   },
 
-  exportEvents: async (period: AnalyticsPeriod = 'all', format: 'csv' | 'json' = 'csv'): Promise<void> => {
+  exportEvents: async (
+    period: AnalyticsPeriod = 'all',
+    format: 'csv' | 'json' = 'csv',
+    type: 'raw' | 'summary' = 'raw',
+  ): Promise<void> => {
     const response = await apiClient.get(
-      `/admin/analytics/export?period=${period}&format=${format}`,
+      `/admin/analytics/export?period=${period}&format=${format}&type=${type}`,
       { responseType: 'blob' },
     );
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.download = `analytics-${period}.${format}`;
+    const prefix = type === 'summary' ? 'analytics-summary' : 'analytics';
+    link.download = `${prefix}-${period}.${format}`;
     document.body.appendChild(link);
     link.click();
     link.remove();

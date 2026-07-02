@@ -119,8 +119,8 @@ export class AdminAnalyticsController {
 
   @Get('export')
   @ApiOperation({
-    summary: '[CMS] Export raw analytics events',
-    description: 'Download all analytics events for the period as CSV or JSON. Read-only: data is never modified or deleted.',
+    summary: '[CMS] Export analytics',
+    description: 'Download analytics for the period as CSV or JSON. type=raw (default) dumps every event; type=summary gives an aggregated overview + per-tour + donations report. Read-only: data is never modified or deleted.',
   })
   @ApiQuery({
     name: 'period',
@@ -134,17 +134,23 @@ export class AdminAnalyticsController {
     enum: ['csv', 'json'],
     description: 'Export format (default csv)',
   })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['raw', 'summary'],
+    description: 'raw = every event (default); summary = aggregated report',
+  })
   @ApiResponse({ status: 200, description: 'Analytics export file' })
   async exportEvents(
     @Res() res: Response,
     @Query('period') period?: string,
     @Query('format') format?: string,
+    @Query('type') type?: string,
   ): Promise<void> {
     const fmt = format === 'json' ? 'json' : 'csv';
-    const { body, contentType, filename } = await this.adminAnalyticsService.exportEvents(
-      period || 'all',
-      fmt,
-    );
+    const { body, contentType, filename } = type === 'summary'
+      ? await this.adminAnalyticsService.exportSummary(period || 'all', fmt)
+      : await this.adminAnalyticsService.exportEvents(period || 'all', fmt);
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(body);

@@ -72,15 +72,18 @@ export class AdminAnalyticsService {
       },
     });
 
-    // Trigger breakdown from properties.triggerType
-    const allStarts = await this.prisma.analyticsEvent.findMany({
-      where: { ...whereClause, name: 'tour_started' },
+    // Trigger breakdown from completed tours' authoritative triggerType.
+    // The tour_started triggerType is only a provisional placeholder (iOS sends "manual",
+    // Android sends "gps" before any GPS point fires), so it isn't meaningful. The
+    // tour_completed event carries the real "primary trigger type" the user experienced.
+    const completedForTrigger = await this.prisma.analyticsEvent.findMany({
+      where: { ...whereClause, name: 'tour_completed' },
       select: { properties: true },
     });
 
     let gpsCount = 0;
     let manualCount = 0;
-    allStarts.forEach((event) => {
+    completedForTrigger.forEach((event) => {
       const props = event.properties as Record<string, any> | null;
       if (props?.triggerType === 'gps') gpsCount++;
       else if (props?.triggerType === 'manual') manualCount++;
@@ -193,17 +196,30 @@ export class AdminAnalyticsService {
       select: { properties: true },
     });
 
+    // Count clicks and sum the selected amount (€) per provider. Amount is optional:
+    // Android sends it from the amount chips; iOS has no amount selector, so those
+    // clicks have no amount and are simply excluded from the money totals.
     const providerCounts: Record<string, number> = {};
+    const providerAmounts: Record<string, number> = {};
+    let totalDonationAmount = 0;
+    let donationsWithAmount = 0;
     donationEvents.forEach((event) => {
       const props = event.properties as Record<string, any> | null;
       const provider = props?.provider || 'unknown';
       providerCounts[provider] = (providerCounts[provider] || 0) + 1;
+      const amount = Number(props?.amount);
+      if (Number.isFinite(amount) && amount > 0) {
+        providerAmounts[provider] = (providerAmounts[provider] || 0) + amount;
+        totalDonationAmount += amount;
+        donationsWithAmount++;
+      }
     });
 
     const donationBreakdown = Object.entries(providerCounts)
       .map(([provider, clicks]) => ({
         provider,
         clicks,
+        totalAmount: Math.round((providerAmounts[provider] || 0) * 100) / 100,
         percentOfCompletions: totalCompletions > 0
           ? Math.round((clicks / totalCompletions) * 1000) / 10
           : 0,
@@ -229,6 +245,11 @@ export class AdminAnalyticsService {
       donationBreakdown,
       donationPercent: totalCompletions > 0
         ? Math.round((donationClicks / totalCompletions) * 1000) / 10
+        : 0,
+      totalDonationAmount: Math.round(totalDonationAmount * 100) / 100,
+      donationsWithAmount,
+      avgDonationAmount: donationsWithAmount > 0
+        ? Math.round((totalDonationAmount / donationsWithAmount) * 100) / 100
         : 0,
       totalCompletions,
     };
@@ -263,24 +284,19 @@ export class AdminAnalyticsService {
         where: { ...tourWhere, name: 'tour_completed' },
       });
 
-      // Get trigger breakdown
-      const startEvents = await this.prisma.analyticsEvent.findMany({
-        where: { ...tourWhere, name: 'tour_started' },
-        select: { properties: true },
-      });
-
-      let gpsTriggered = 0;
-      let manualTriggered = 0;
-      startEvents.forEach((event) => {
-        const props = event.properties as Record<string, any> | null;
-        if (props?.triggerType === 'gps') gpsTriggered++;
-        else if (props?.triggerType === 'manual') manualTriggered++;
-      });
-
-      // Get avg duration from completed events
+      // Get completed events (used for both trigger breakdown and avg duration).
       const completedEvents = await this.prisma.analyticsEvent.findMany({
         where: { ...tourWhere, name: 'tour_completed' },
         select: { properties: true },
+      });
+
+      // Trigger breakdown from completions' authoritative triggerType (matches overview).
+      let gpsTriggered = 0;
+      let manualTriggered = 0;
+      completedEvents.forEach((event) => {
+        const props = event.properties as Record<string, any> | null;
+        if (props?.triggerType === 'gps') gpsTriggered++;
+        else if (props?.triggerType === 'manual') manualTriggered++;
       });
 
       // Average only over completions that actually reported a duration > 0.
@@ -438,14 +454,9 @@ export class AdminAnalyticsService {
       'id', 'name', 'createdAt', 'userId', 'anonymousId', 'tourId',
       'pointId', 'language', 'device', 'osVersion', 'properties',
     ];
-    const escape = (value: unknown): string => {
-      if (value === null || value === undefined) return '';
-      const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
-      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-    };
     const rows = events.map((e) =>
       columns
-        .map((col) => escape(col === 'createdAt' ? e.createdAt.toISOString() : (e as any)[col]))
+        .map((col) => this.csvEscape(col === 'createdAt' ? e.createdAt.toISOString() : (e as any)[col]))
         .join(','),
     );
     const csv = [columns.join(','), ...rows].join('\n');
@@ -455,5 +466,80 @@ export class AdminAnalyticsService {
       contentType: 'text/csv',
       filename: `analytics-${period}-${stamp}.csv`,
     };
+  }
+
+  // Export an aggregated, human-readable summary (overview + per-tour + donations)
+  // for the period. Read-only: derived from the same data, nothing is modified.
+  async exportSummary(
+    period: string = 'all',
+    format: 'csv' | 'json' = 'csv',
+  ): Promise<{ body: string; contentType: string; filename: string }> {
+    const [overview, tours, engagement] = await Promise.all([
+      this.getOverview(period),
+      this.getTourAnalytics(period),
+      this.getEngagementAnalytics(period),
+    ]);
+
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === 'json') {
+      return {
+        body: JSON.stringify({ period, generatedAt: new Date().toISOString(), overview, tours, engagement }, null, 2),
+        contentType: 'application/json',
+        filename: `analytics-summary-${period}-${stamp}.json`,
+      };
+    }
+
+    const lines: string[] = [];
+    lines.push('Sonic Walkscape — Analytics Summary');
+    lines.push(`Period,${period}`);
+    lines.push(`Generated,${stamp}`);
+    lines.push('');
+
+    lines.push('Overview');
+    lines.push('Metric,Value');
+    lines.push(`Total Starts,${overview.totalStarts}`);
+    lines.push(`Total Completions,${overview.totalCompletions}`);
+    lines.push(`Completion Rate,${overview.totalStarts > 0
+      ? Math.round((overview.totalCompletions / overview.totalStarts) * 1000) / 10
+      : 0}%`);
+    lines.push(`Unique Devices,${overview.uniqueDevices}`);
+    lines.push(`iOS Starts,${overview.platformBreakdown.ios}`);
+    lines.push(`Android Starts,${overview.platformBreakdown.android}`);
+    lines.push(`GPS Completions,${overview.triggerBreakdown.gps}`);
+    lines.push(`Manual Completions,${overview.triggerBreakdown.manual}`);
+    lines.push('');
+
+    lines.push('Tours');
+    lines.push('Tour,Starts,Completions,Completion Rate,Avg Duration (min)');
+    tours.forEach((t) => {
+      lines.push([
+        this.csvEscape(t.tourName),
+        t.starts,
+        t.completions,
+        `${t.completionRate}%`,
+        t.avgDurationMinutes,
+      ].join(','));
+    });
+    lines.push('');
+
+    lines.push('Donations');
+    lines.push('Provider,Clicks,Total Amount (EUR)');
+    engagement.donationBreakdown.forEach((d) => {
+      lines.push([this.csvEscape(d.provider), d.clicks, d.totalAmount ?? 0].join(','));
+    });
+    lines.push(['Total', engagement.donationClicks, engagement.totalDonationAmount ?? 0].join(','));
+
+    return {
+      body: lines.join('\n'),
+      contentType: 'text/csv',
+      filename: `analytics-summary-${period}-${stamp}.csv`,
+    };
+  }
+
+  private csvEscape(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
   }
 }
