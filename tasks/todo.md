@@ -101,3 +101,50 @@ engagement events correctly.
 - Android engagement + donation-amount events require a new versionCode build + Play release.
 - iOS donation amount is NOT captured (no amount selector; fixed PayPal NCP link). Documented
   as a follow-up if per-amount donation reporting is wanted on iOS too.
+
+---
+
+# Sentry ANDROID-2: CameraUpdateFactory NPE crash
+
+## Problem
+- Sentry issue ANDROID-2: `NullPointerException: CameraUpdateFactory is not initialized`
+  (26 events / 15 users, first seen 15 Jun 2026, still live on release 1.1.9+22).
+- Culprit: `DiscoveryScreen.kt:95` — the fit-to-bounds `LaunchedEffect(tourLocations)` called
+  `CameraUpdateFactory.newLatLngBounds()` as soon as tours loaded, which on slow devices ran
+  before the Google Map finished initializing the factory → crash on the discovery screen.
+
+## Fix (todo)
+- [x] Add `mapLoaded` state, set from `GoogleMap(onMapLoaded = { mapLoaded = true })`.
+- [x] Gate the animation: `LaunchedEffect(tourLocations, mapLoaded)` runs only when
+      `mapLoaded && tourLocations.isNotEmpty()`.
+- [x] Verify: `./gradlew :app:compileDebugKotlin` — clean.
+- [ ] Ship in next Android build (1.1.10 / next versionCode) + Play release.
+- [ ] Resolve ANDROID-2 in Sentry once the fix is confirmed live.
+
+## Review
+- One file changed (`DiscoveryScreen.kt`), ~5 lines. Fit-to-bounds behavior preserved; it now
+  waits for the map to be ready so `CameraUpdateFactory` is guaranteed initialized.
+
+---
+
+# Sentry cleanup: test-crash triggers + issue triage
+
+## Context
+Reviewed all remaining Sentry issues. Only ANDROID-2 was a real recurring crash (fixed above).
+Two "issues" were deliberate test crashes; two were single-event ANRs on old builds.
+
+## Actions taken
+- [x] Android: gated the "Test crash" button in `DebugScreen.kt` behind `if (BuildConfig.DEBUG)`
+      so it no longer ships in production release builds. (`compileDebugKotlin` clean.)
+- [x] iOS: no change needed — the test-crash trigger was already removed from
+      `DebugOverlayView.swift` in a later build (crash came from old build 1.4+12).
+- [x] Resolved ANDROID-1 (test crash) and APPLE-IOS-1 (test crash) in Sentry.
+
+## Left open (monitor, not actionable)
+- ANDROID-3 (Background ANR) and ANDROID-4 (ANR): 1 event each, builds 1.1.5/1.1.6, generic
+  native `future::get` stack with no in-app frame. Revisit only if they recur on 1.1.9+ with a
+  clearer stack.
+
+## Note
+- Android diagnostics screen is still reachable in prod via 5-taps-on-version gesture in Settings
+  (intentional). Only the crash button is now debug-only; the rest of the diagnostics stay.

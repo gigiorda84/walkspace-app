@@ -1,5 +1,6 @@
 package com.bandite.sonicwalkscape.ui.debug
 
+import com.bandite.sonicwalkscape.BuildConfig
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -111,17 +112,19 @@ fun DebugScreen(
                 }
             }
 
-            // Crash Reporting
-            item {
-                SectionCard(title = "Crash Reporting") {
-                    Button(
-                        onClick = {
-                            throw RuntimeException("Sentry test crash from Diagnostics screen")
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Error),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Test crash (kills the app)", color = Color.White, fontSize = 13.sp)
+            // Crash Reporting — test-crash trigger only exists in debug builds
+            if (BuildConfig.DEBUG) {
+                item {
+                    SectionCard(title = "Crash Reporting") {
+                        Button(
+                            onClick = {
+                                throw RuntimeException("Sentry test crash from Diagnostics screen")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Error),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Test crash (kills the app)", color = Color.White, fontSize = 13.sp)
+                        }
                     }
                 }
             }
