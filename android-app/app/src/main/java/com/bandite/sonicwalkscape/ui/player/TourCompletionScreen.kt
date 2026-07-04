@@ -55,7 +55,7 @@ fun TourCompletionScreen(
     var ratingComment by remember { mutableStateOf("") }
     var donationAmount by remember { mutableStateOf<Int?>(5) }
 
-    val paypalUrl = "https://www.paypal.com/donate/?business=RESONAVISSE%40GMAIL.COM&no_recurring=0&currency_code=EUR"
+    val paypalUrl = "https://www.paypal.com/ncp/payment/T7WKLYNTXBDDL"
     val satispayUrl = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
 
     fun openDonation(url: String, provider: String) {
@@ -181,8 +181,10 @@ fun TourCompletionScreen(
                         foreground = Color(0xFF003087),
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            val url = donationAmount?.let { "$paypalUrl&amount=$it" } ?: paypalUrl
-                            openDonation(url, "paypal")
+                            // NCP payment link has a fixed amount page; the amount
+                            // can't be passed via URL, so open it as-is. The selected
+                            // amount is still recorded in analytics via openDonation.
+                            openDonation(paypalUrl, "paypal")
                         }
                     )
                     DonationButton(
