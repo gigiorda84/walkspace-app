@@ -20,7 +20,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.bandite.sonicwalkscape"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -36,9 +36,9 @@ android {
     defaultConfig {
         applicationId = "com.bandite.sonicwalkscape"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 24
-        versionName = "1.1.11"
+        targetSdk = 36
+        versionCode = 25
+        versionName = "1.1.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
