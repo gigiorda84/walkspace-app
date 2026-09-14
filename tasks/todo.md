@@ -182,15 +182,19 @@ Two "issues" were deliberate test crashes; two were single-event ANRs on old bui
       linking sentry-cocoa#8317 / PR #8840, re-enable once the heartbeat fix ships). Consistent
       with the existing intent "Crash reporting only". Crash reporting is unaffected.
 - [x] Build check: `xcodebuild -scheme SonicWalkscape -sdk iphonesimulator build` → BUILD SUCCEEDED.
-- [x] Bumped iOS build to `1.5 (15)` (`CURRENT_PROJECT_VERSION` in both configs of `project.pbxproj`).
-- [ ] Upload 1.5 (15) to TestFlight / App Store (manual, see mobile-app/TESTFLIGHT-DEPLOYMENT.md).
+- [x] Bumped iOS to `1.6 (15)` (`MARKETING_VERSION` + `CURRENT_PROJECT_VERSION` in both configs of
+      `project.pbxproj`). NOTE: App Store Connect rejected `1.5 (15)` — version 1.5 is already
+      approved, so its train is closed ("Invalid Pre-Release Train"); a new marketing version is
+      required, not just a new build number.
+- [ ] Upload 1.6 (15) to TestFlight / App Store: open
+      `mobile-app/ios/SonicWalkscape/build/SonicWalkscape-1.6-15.xcarchive` → Organizer → Distribute App.
 - [ ] Sentry: mark APPLE-IOS-2 resolved once the new build is live (old 1.5 (14) installs can still
       emit it until then).
 - [x] Sentry sweep — ANDROID-4 archived (`archived_forever`).
 
 ## Review
 - 2 files changed: `SonicWalkscapeApp.swift` (+6 lines: one option + comment) and
-  `project.pbxproj` (build 14 → 15). No app logic touched; crash reporting still on.
+  `project.pbxproj` (1.5 (14) → 1.6 (15)). No app logic touched; crash reporting still on.
 - Root cause is upstream (sentry-cocoa V2 has no main-thread heartbeat). Re-enable
   `enableAppHangTracking` once a sentry-cocoa release includes PR #8840.
 - Sentry is otherwise clean: no other open issues in either project.
@@ -333,8 +337,8 @@ Two "issues" were deliberate test crashes; two were single-event ANRs on old bui
 - (Raw CSV export already contains `properties.source`, so this is for convenience, not data.)
 
 ## Release
-- Ships with the already-prepared Android 1.1.12 / vc25 and iOS 1.5 (15) if those haven't been
-  uploaded yet; otherwise bump to 1.1.13 / vc26 and 1.5 (16).
+- Ships with Android 1.1.12 / vc25 and iOS 1.6 (15) (both built from `efba3ee`; AAB at
+  `android-app/app/build/outputs/bundle/release/app-release.aab`).
 - Backend + CMS deploy independently (Render / CMS host). Backend is backwards compatible:
   old app builds send no `source` → counted as `completion`.
 
