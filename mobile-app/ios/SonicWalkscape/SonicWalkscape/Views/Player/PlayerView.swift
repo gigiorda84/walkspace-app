@@ -54,6 +54,11 @@ struct PlayerView: View {
     // Debug mode
     @State private var showDebugOverlay: Bool = false
 
+    // Early-exit donation ask: shown once per player session, only after at least one point
+    // has played (no ask to someone who left while still waiting for location).
+    @State private var showExitSheet: Bool = false
+    @State private var exitAskShown: Bool = false
+
     var currentPoint: TourPoint {
         tourPoints[safe: currentPointIndex] ?? tourPoints[0]
     }
@@ -101,7 +106,7 @@ struct PlayerView: View {
             // Close button
             VStack {
                 HStack {
-                    Button(action: { dismiss() }) {
+                    Button(action: { requestExit() }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.brandCream)
@@ -209,6 +214,28 @@ struct PlayerView: View {
                     }
                 )
             }
+        }
+        // Early-exit ask. Any dismissal (swipe, "Not now") exits the tour exactly as before.
+        .sheet(isPresented: $showExitSheet, onDismiss: { dismiss() }) {
+            ExitDonationSheet(
+                onDonate: { provider in
+                    AnalyticsService.shared.trackDonationLinkClicked(
+                        tourId: tour.id,
+                        provider: provider,
+                        source: "exit"
+                    )
+                },
+                onExit: { showExitSheet = false }
+            )
+        }
+    }
+
+    private func requestExit() {
+        if gpsTriggeredCount + manualTriggeredCount > 0 && !exitAskShown {
+            exitAskShown = true
+            showExitSheet = true
+        } else {
+            dismiss()
         }
     }
 
@@ -629,6 +656,52 @@ struct BufferingOverlayView: View {
                 Text("Buffering...")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+// MARK: - Exit Donation Sheet
+
+/// "Thanks for walking with us" + donation card, shown when the user leaves a tour early.
+/// Tapping a provider opens Safari and leaves the sheet up until the user comes back.
+struct ExitDonationSheet: View {
+    let onDonate: (_ provider: String) -> Void
+    let onExit: () -> Void
+
+    private var strings: LocalizedStrings { LocalizedStrings.shared }
+
+    var body: some View {
+        ZStack {
+            Color.brandPurple.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    Text(strings.exitThanksTitle)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.brandCream)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 32)
+
+                    Text(strings.donationAsk)
+                        .font(.system(size: 15))
+                        .foregroundColor(.brandCream)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    DonationCard(onDonate: onDonate)
+
+                    Button(action: onExit) {
+                        Text(strings.notNow)
+                            .font(.subheadline)
+                            .foregroundColor(.brandMuted)
+                    }
+                    .padding(.top, 4)
+
+                    Spacer(minLength: 40)
+                }
+                .padding(.horizontal, 20)
             }
         }
     }

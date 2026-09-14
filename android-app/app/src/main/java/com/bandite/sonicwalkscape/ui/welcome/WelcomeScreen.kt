@@ -36,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.data.api.ApiClient
 import com.bandite.sonicwalkscape.data.api.FeedbackRequest
+import com.bandite.sonicwalkscape.ui.components.DonationCard
 import com.bandite.sonicwalkscape.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -197,10 +198,11 @@ fun WelcomeScreen(
         )
     }
 
-    // Connect Modal
+    // Connect & Support Modal
     if (showConnectSheet) {
         ConnectBottomSheet(
-            onDismiss = { showConnectSheet = false }
+            onDismiss = { showConnectSheet = false },
+            onDonate = { provider, amount -> viewModel.trackDonationClicked(provider, amount) }
         )
     }
 }
@@ -265,7 +267,11 @@ fun AboutBottomSheet(
 @Composable
 fun ConnectBottomSheet(
     onDismiss: () -> Unit,
-    onContactClick: (String) -> Unit = {}
+    onContactClick: (String) -> Unit = {},
+    // Donation block shown first. Hidden when opened from the completion screen,
+    // where the donation card is already on screen.
+    showDonation: Boolean = true,
+    onDonate: (provider: String, amount: Int?) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -293,6 +299,23 @@ fun ConnectBottomSheet(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Support the project (donation)
+            if (showDonation) {
+                Text(
+                    text = stringResource(R.string.donation_ask),
+                    fontSize = 15.sp,
+                    color = BrandCream,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                DonationCard(onDonate = onDonate)
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
 
             // Social buttons row
             Row(

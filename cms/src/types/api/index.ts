@@ -161,6 +161,12 @@ export interface DonationBreakdown {
   percentOfCompletions: number;
 }
 
+export interface DonationBySource {
+  source: string; // completion | connect | exit
+  clicks: number;
+  totalAmount: number;
+}
+
 export interface EngagementAnalytics {
   followUsClicks: number;
   followUsPercent: number;
@@ -169,6 +175,7 @@ export interface EngagementAnalytics {
   channelBreakdown: ChannelBreakdown[];
   donationClicks: number;
   donationBreakdown: DonationBreakdown[];
+  donationBySource: DonationBySource[];
   donationPercent: number;
   totalDonationAmount: number;
   donationsWithAmount: number;

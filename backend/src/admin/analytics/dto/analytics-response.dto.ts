@@ -81,6 +81,17 @@ export class DonationBreakdownDto {
   percentOfCompletions: number;
 }
 
+export class DonationBySourceDto {
+  @ApiProperty({ example: 'completion', description: 'Where the donation was started in the app: completion, connect (Welcome sheet), exit (early-exit ask)' })
+  source: string;
+
+  @ApiProperty({ example: 18 })
+  clicks: number;
+
+  @ApiProperty({ example: 90, description: 'Sum of selected donation amounts (EUR) for this placement. 0 when clicks carried no amount (e.g. iOS).' })
+  totalAmount: number;
+}
+
 export class EngagementAnalyticsDto {
   @ApiProperty({ example: 85 })
   followUsClicks: number;
@@ -102,6 +113,9 @@ export class EngagementAnalyticsDto {
 
   @ApiProperty({ type: [DonationBreakdownDto], description: 'Donation clicks broken down by provider (PayPal, Satispay)' })
   donationBreakdown: DonationBreakdownDto[];
+
+  @ApiProperty({ type: [DonationBySourceDto], description: 'Donation clicks broken down by placement in the app (completion, connect, exit)' })
+  donationBySource: DonationBySourceDto[];
 
   @ApiProperty({ example: 17.3, description: 'Percentage of completions' })
   donationPercent: number;

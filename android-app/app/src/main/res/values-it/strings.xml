@@ -7,7 +7,7 @@
     <string name="select_language">Seleziona la tua lingua</string>
     <string name="continue_button">Continua</string>
     <string name="start_exploring">Inizia a esplorare</string>
-    <string name="connect">Contattaci</string>
+    <string name="connect">Contatti e sostegno</string>
 
     <!-- About Modal -->
     <string name="about_text">BANDITE è un collettivo fondato nel 2023 da Valentina Bosio e Simona Sala, due artiste le cui esperienze di ricerca e creazione si incontrano al confine tra arte e attivismo. Il loro lavoro nasce da un approccio antropologico al teatro fisico e si muove fluidamente tra teatro, danza, arti visive, video e tecnologie multimediali. L\'obiettivo è quello di superare i linguaggi performativi tradizionali, intrecciando codici espressivi diversi per restituire al teatro la sua natura di spazio collettivo, un luogo di riflessione e di confronto con le complessità del presente.\n\nL\'urgenza è quella di osservare e raccontare ciò che resta ai margini, le storie e le identità invisibili o dimenticate dalle narrazioni ufficiali. Il percorso di BANDITE si fonda su un\'idea di arte come pratica di attraversamento, capace di unire territori, linguaggi e comunità. Il collettivo cerca costantemente di costruire spazi di dialogo tra corpi e memorie, tra dimensione reale e digitale, tra presente e ancestrale. L\'obiettivo non è rappresentare, ma attivare, generare esperienze in cui il pubblico diventa parte di un rito collettivo di ascolto, consapevolezza e trasmissione.\n\nBANDITE è il cuore pulsante dell\'associazione Resonavisse: un\'associazione culturale ideata per essere uno spazio vivo di esplorazione, creazione e condivisione. Un campo aperto, in continua trasformazione, dove praticare l\'arte come incontro, intuizione e possibilità.</string>
@@ -91,6 +91,8 @@
     <string name="return_home">Torna alla home</string>
     <string name="donation_ask">Questo progetto vive grazie a chi lo sostiene: aiutaci a creare il prossimo percorso con una piccola donazione.</string>
     <string name="support_project">Sostieni il progetto</string>
+    <string name="exit_thanks_title">Grazie per aver camminato con noi</string>
+    <string name="not_now">Non ora</string>
     <string name="rating_question">Com\'è stata la tua esperienza?</string>
     <string name="rating_comment_hint">Vuoi dirci qualcosa? (opzionale)</string>
     <string name="rating_thanks">Grazie per il tuo feedback!</string>

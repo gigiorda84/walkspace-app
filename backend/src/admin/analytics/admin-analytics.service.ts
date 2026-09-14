@@ -201,15 +201,22 @@ export class AdminAnalyticsService {
     // clicks have no amount and are simply excluded from the money totals.
     const providerCounts: Record<string, number> = {};
     const providerAmounts: Record<string, number> = {};
+    // Same per placement ("source": completion / connect / exit). Events from builds
+    // before the source tag existed only came from the completion screen.
+    const sourceCounts: Record<string, number> = {};
+    const sourceAmounts: Record<string, number> = {};
     let totalDonationAmount = 0;
     let donationsWithAmount = 0;
     donationEvents.forEach((event) => {
       const props = event.properties as Record<string, any> | null;
       const provider = props?.provider || 'unknown';
+      const source = props?.source || 'completion';
       providerCounts[provider] = (providerCounts[provider] || 0) + 1;
+      sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       const amount = Number(props?.amount);
       if (Number.isFinite(amount) && amount > 0) {
         providerAmounts[provider] = (providerAmounts[provider] || 0) + amount;
+        sourceAmounts[source] = (sourceAmounts[source] || 0) + amount;
         totalDonationAmount += amount;
         donationsWithAmount++;
       }
@@ -223,6 +230,14 @@ export class AdminAnalyticsService {
         percentOfCompletions: totalCompletions > 0
           ? Math.round((clicks / totalCompletions) * 1000) / 10
           : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks);
+
+    const donationBySource = Object.entries(sourceCounts)
+      .map(([source, clicks]) => ({
+        source,
+        clicks,
+        totalAmount: Math.round((sourceAmounts[source] || 0) * 100) / 100,
       }))
       .sort((a, b) => b.clicks - a.clicks);
 
@@ -243,6 +258,7 @@ export class AdminAnalyticsService {
       channelBreakdown,
       donationClicks,
       donationBreakdown,
+      donationBySource,
       donationPercent: totalCompletions > 0
         ? Math.round((donationClicks / totalCompletions) * 1000) / 10
         : 0,

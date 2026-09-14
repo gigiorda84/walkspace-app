@@ -437,6 +437,19 @@ class PlayerViewModel @Inject constructor(
         _currentSubtitle.value = cue?.text
     }
 
+    /** Donation started from the early-exit ask shown when leaving the tour. */
+    fun trackDonationClicked(provider: String, amount: Int?) {
+        viewModelScope.launch {
+            val properties = mutableMapOf<String, Any>("provider" to provider, "source" to "exit")
+            if (amount != null) properties["amount"] = amount
+            analyticsService.track(
+                "donation_link_clicked",
+                tourId = _tour.value?.id,
+                properties = properties
+            )
+        }
+    }
+
     fun stopTour() {
         // Report abandonment when the user exits a started tour before completing it.
         val abandonedTour = _tour.value

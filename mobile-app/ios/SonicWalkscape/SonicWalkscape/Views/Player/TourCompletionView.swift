@@ -25,9 +25,6 @@ struct TourCompletionView: View {
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
 
-    private let paypalURL = "https://www.paypal.com/ncp/payment/BCCRZMKCREBBE"
-    private let satispayURL = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
-
     var body: some View {
         ZStack {
             // Semi-transparent background overlay
@@ -76,7 +73,8 @@ struct TourCompletionView: View {
             Text(tour.displayBusInfo ?? "")
         }
         .sheet(isPresented: $showFollowUs) {
-            FollowUsModal(tourId: tour.id)
+            // Donation card is already on this screen, so hide it in the sheet
+            FollowUsModal(tourId: tour.id, showDonation: false)
         }
     }
 
@@ -120,37 +118,13 @@ struct TourCompletionView: View {
                     .padding(.horizontal, 16)
 
                 // Donation hero card
-                VStack(spacing: 14) {
-                    Text(strings.supportProject)
-                        .font(.headline)
-                        .foregroundColor(.brandCream)
-
-                    HStack(spacing: 10) {
-                        DonationButton(
-                            title: "PayPal",
-                            background: Color(red: 1.0, green: 0.77, blue: 0.22),
-                            foreground: Color(red: 0.0, green: 0.19, blue: 0.53)
-                        ) {
-                            openDonation(url: paypalURL, provider: "paypal")
-                        }
-                        DonationButton(
-                            title: "Satispay",
-                            background: Color(red: 1.0, green: 0.29, blue: 0.24),
-                            foreground: .white
-                        ) {
-                            openDonation(url: satispayURL, provider: "satispay")
-                        }
-                    }
+                DonationCard { provider in
+                    AnalyticsService.shared.trackDonationLinkClicked(
+                        tourId: tour.id,
+                        provider: provider,
+                        source: "completion"
+                    )
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(Color.white.opacity(0.06))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.brandYellow, lineWidth: 1)
-                )
 
                 // Inline star rating
                 VStack(spacing: 10) {
@@ -247,13 +221,6 @@ struct TourCompletionView: View {
             .padding(.vertical, 60)
     }
 
-    private func openDonation(url: String, provider: String) {
-        AnalyticsService.shared.trackDonationLinkClicked(tourId: tour.id, provider: provider)
-        if let donationURL = URL(string: url) {
-            UIApplication.shared.open(donationURL)
-        }
-    }
-
     private func sendRating() {
         guard rating > 0, !isSendingRating else { return }
         commentFocused = false
@@ -280,51 +247,6 @@ struct TourCompletionView: View {
                     isSendingRating = false
                 }
             }
-        }
-    }
-}
-
-// MARK: - Amount Chip Component
-
-struct AmountChip: View {
-    let label: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundColor(isSelected ? Color(red: 0.07, green: 0.07, blue: 0.06) : .brandCream)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(isSelected ? Color.brandYellow : Color.clear)
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(isSelected ? Color.clear : Color.brandMuted, lineWidth: 1)
-                )
-        }
-    }
-}
-
-// MARK: - Donation Button Component
-
-struct DonationButton: View {
-    let title: String
-    let background: Color
-    let foreground: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(foreground)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 13)
-                .background(background)
-                .clipShape(Capsule())
         }
     }
 }
@@ -400,6 +322,9 @@ struct ActionButton: View {
 
 struct FollowUsModal: View {
     var tourId: String? = nil
+    // Donation block shown first. Hidden when opened from the completion screen,
+    // where the donation card is already on screen.
+    var showDonation: Bool = true
     @Environment(\.dismiss) private var dismiss
 
     private var strings: LocalizedStrings { LocalizedStrings.shared }
@@ -411,6 +336,26 @@ struct FollowUsModal: View {
 
                 ScrollView {
                     VStack(spacing: 32) {
+                        // Support the project (donation)
+                        if showDonation {
+                            VStack(spacing: 16) {
+                                Text(strings.donationAsk)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.brandCream)
+                                    .multilineTextAlignment(.center)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                DonationCard { provider in
+                                    AnalyticsService.shared.trackDonationLinkClicked(
+                                        provider: provider,
+                                        source: "connect"
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
+                        }
+
                         // Circular social buttons row
                         HStack(spacing: 24) {
                             CircularSocialButton(
@@ -439,7 +384,7 @@ struct FollowUsModal: View {
                             )
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                        .padding(.top, showDonation ? 0 : 20)
 
                         // Newsletter & Feedback Form
                         NewsletterFeedbackForm()

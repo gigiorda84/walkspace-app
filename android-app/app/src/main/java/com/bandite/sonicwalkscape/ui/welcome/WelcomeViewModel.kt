@@ -2,6 +2,7 @@ package com.bandite.sonicwalkscape.ui.welcome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bandite.sonicwalkscape.services.AnalyticsService
 import com.bandite.sonicwalkscape.services.UserPreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
-    private val userPreferencesManager: UserPreferencesManager
+    private val userPreferencesManager: UserPreferencesManager,
+    private val analyticsService: AnalyticsService
 ) : ViewModel() {
 
     val onboardingCompleted: Flow<Boolean> = userPreferencesManager.onboardingCompleted
@@ -32,6 +34,15 @@ class WelcomeViewModel @Inject constructor(
     fun completeOnboarding() {
         viewModelScope.launch {
             userPreferencesManager.setOnboardingCompleted(true)
+        }
+    }
+
+    /** Donation started from the Connect & Support sheet (no tour context). */
+    fun trackDonationClicked(provider: String, amount: Int?) {
+        viewModelScope.launch {
+            val properties = mutableMapOf<String, Any>("provider" to provider, "source" to "connect")
+            if (amount != null) properties["amount"] = amount
+            analyticsService.track("donation_link_clicked", properties = properties)
         }
     }
 }

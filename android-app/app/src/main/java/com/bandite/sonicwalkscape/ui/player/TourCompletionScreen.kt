@@ -1,13 +1,9 @@
 package com.bandite.sonicwalkscape.ui.player
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bandite.sonicwalkscape.R
+import com.bandite.sonicwalkscape.ui.components.DonationCard
 import com.bandite.sonicwalkscape.ui.theme.*
 import com.bandite.sonicwalkscape.ui.welcome.ConnectBottomSheet
 
@@ -44,7 +40,6 @@ fun TourCompletionScreen(
     onClose: () -> Unit,
     viewModel: TourCompletionViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val tour by viewModel.tour.collectAsState()
     val isSendingRating by viewModel.isSendingRating.collectAsState()
     val ratingSent by viewModel.ratingSent.collectAsState()
@@ -53,15 +48,6 @@ fun TourCompletionScreen(
     var showConnectSheet by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(0) }
     var ratingComment by remember { mutableStateOf("") }
-    var donationAmount by remember { mutableStateOf<Int?>(5) }
-
-    val paypalUrl = "https://www.paypal.com/ncp/payment/T7WKLYNTXBDDL"
-    val satispayUrl = "https://web.satispay.com/app/open/shops/9e84213e-eae7-40de-9ded-952e7f2cb4f2"
-
-    fun openDonation(url: String, provider: String) {
-        viewModel.trackDonationClicked(provider, donationAmount)
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
 
     LaunchedEffect(tourId) {
         viewModel.loadTour(tourId, language)
@@ -142,60 +128,9 @@ fun TourCompletionScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Donation hero card
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, BrandYellow, RoundedCornerShape(18.dp))
-                    .background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.support_project),
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BrandCream
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(3, 5, 10).forEach { amount ->
-                        AmountChip(
-                            label = "$amount €",
-                            selected = donationAmount == amount,
-                            onClick = { donationAmount = amount }
-                        )
-                    }
-                    AmountChip(
-                        label = stringResource(R.string.amount_free),
-                        selected = donationAmount == null,
-                        onClick = { donationAmount = null }
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    DonationButton(
-                        text = "PayPal",
-                        background = Color(0xFFFFC439),
-                        foreground = Color(0xFF003087),
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            // NCP payment link has a fixed amount page; the amount
-                            // can't be passed via URL, so open it as-is. The selected
-                            // amount is still recorded in analytics via openDonation.
-                            openDonation(paypalUrl, "paypal")
-                        }
-                    )
-                    DonationButton(
-                        text = "Satispay",
-                        background = Color(0xFFFF4B3E),
-                        foreground = Color.White,
-                        modifier = Modifier.weight(1f),
-                        onClick = { openDonation(satispayUrl, "satispay") }
-                    )
-                }
-            }
+            DonationCard(
+                onDonate = { provider, amount -> viewModel.trackDonationClicked(provider, amount) }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -354,56 +289,12 @@ fun TourCompletionScreen(
         )
     }
 
-    // Connect Bottom Sheet
+    // Connect Bottom Sheet (donation card is already on this screen, so hide it in the sheet)
     if (showConnectSheet) {
         ConnectBottomSheet(
             onDismiss = { showConnectSheet = false },
-            onContactClick = { channel -> viewModel.trackContactClicked(channel) }
-        )
-    }
-}
-
-@Composable
-private fun AmountChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(50),
-        color = if (selected) BrandYellow else Color.Transparent,
-        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, BrandMuted)
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (selected) Color(0xFF121110) else BrandCream
-        )
-    }
-}
-
-@Composable
-private fun DonationButton(
-    text: String,
-    background: Color,
-    foreground: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(containerColor = background)
-    ) {
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = foreground
+            onContactClick = { channel -> viewModel.trackContactClicked(channel) },
+            showDonation = false
         )
     }
 }

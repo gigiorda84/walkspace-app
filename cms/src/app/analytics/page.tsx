@@ -337,6 +337,23 @@ export default function AnalyticsPage() {
                 ))
               )}
             </div>
+            {/* By placement in the app: completion screen / Connect & Support sheet / early-exit ask */}
+            {(engagement?.donationBySource?.length || 0) > 0 && (
+              <div className="space-y-3 border-t border-gray-100 pt-4 mt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase">By placement</p>
+                {engagement?.donationBySource.map((d) => (
+                  <div key={d.source} className="flex justify-between items-center">
+                    <span className="text-gray-600">
+                      {d.source === 'completion' ? 'Tour completion' : d.source === 'connect' ? 'Connect & Support' : d.source === 'exit' ? 'Early exit' : d.source}
+                    </span>
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900">{d.clicks}</span>
+                      {d.totalAmount > 0 && <span className="text-gray-500 text-sm ml-2">€{d.totalAmount}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
