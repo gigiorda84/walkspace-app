@@ -7,7 +7,7 @@
     <string name="select_language">Sélectionnez votre langue</string>
     <string name="continue_button">Continuer</string>
     <string name="start_exploring">Commencer</string>
-    <string name="connect">Se connecter</string>
+    <string name="connect">Contact et soutien</string>
 
     <!-- About Modal -->
     <string name="about_text">BANDITE est un collectif fondé en 2023 par Valentina Bosio et Simona Sala, deux artistes dont les parcours de recherche et de création se rencontrent à la croisée de l\'art et de l\'activisme. Leur travail naît d\'une approche anthropologique du théâtre physique et se déploie de manière fluide entre théâtre, danse, arts visuels, vidéo et technologies multimédias. L\'objectif est de dépasser les langages performatifs traditionnels en tissant différents codes expressifs pour restituer au théâtre sa nature d\'espace collectif : un lieu de réflexion et de confrontation avec les complexités du présent.\n\nL\'urgence est d\'observer et de raconter ce qui demeure en marge, les histoires et identités invisibles ou oubliées par les récits officiels. Le parcours de BANDITE se fonde sur une idée de l\'art comme pratique de traversée, capable d\'unir territoires, langages et communautés. Le collectif cherche constamment à construire des espaces de dialogue entre corps et mémoires, entre dimension réelle et digitale, entre présent et ancestral. L\'objectif n\'est pas de représenter, mais d\'activer : générer des expériences dans lesquelles le public devient partie prenante d\'un rituel collectif d\'écoute, de conscience et de transmission.\n\nBANDITE est le coeur battant de l\'association Resonavisse: une association culturelle pensée comme un espace vivant d\'exploration, de création et de partage. Un champ ouvert, en transformation continue, où pratiquer l\'art comme rencontre, intuition et possibilité.</string>
@@ -91,6 +91,8 @@
     <string name="return_home">Retour à l\'accueil</string>
     <string name="donation_ask">Ce projet vit grâce à ceux qui le soutiennent : aidez-nous à créer le prochain parcours avec un petit don.</string>
     <string name="support_project">Soutenez le projet</string>
+    <string name="exit_thanks_title">Merci d\'avoir marché avec nous</string>
+    <string name="not_now">Pas maintenant</string>
     <string name="rating_question">Comment était votre expérience ?</string>
     <string name="rating_comment_hint">Dites-nous quelque chose (facultatif)</string>
     <string name="rating_thanks">Merci pour votre avis !</string>

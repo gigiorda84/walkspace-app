@@ -7,7 +7,7 @@
     <string name="select_language">Select your language</string>
     <string name="continue_button">Continue</string>
     <string name="start_exploring">Start Exploring</string>
-    <string name="connect">Connect</string>
+    <string name="connect">Connect &amp; Support</string>
 
     <!-- About Modal -->
     <string name="about_text">BANDITE is a collective founded in 2023 by Valentina Bosio and Simona Sala, two artists whose paths of research and creation meet at the crossroads of art and activism. Their work stems from an anthropological approach to physical theatre and moves fluidly between theatre, dance, visual arts, video, and multimedia technologies. Their aim is to go beyond traditional performative languages, intertwining different expressive codes to return theatre to its nature as a collective space — a place of reflection and confrontation with the complexities of the present.\n\nThe urgency is to observe and recount what remains at the margins, the stories and identities rendered invisible or forgotten by official narratives. BANDITE\'s work is grounded in the idea of art as a practice of crossing — capable of connecting territories, languages, and communities. The collective constantly seeks to build spaces of dialogue between bodies and memories, between the real and the digital, between the present and the ancestral. The goal is not to represent but to activate, to generate experiences in which the audience becomes part of a collective ritual of listening, awareness, and transmission.\n\nBANDITE is the beating heart of Resonavisse, a cultural association created as a living space for exploration, creation, and sharing — an open field in constant transformation, where art can be practiced as encounter, intuition, and possibility.</string>
@@ -91,6 +91,8 @@
     <string name="return_home">Return to home</string>
     <string name="donation_ask">This project lives thanks to those who support it: help us create the next walk with a small donation.</string>
     <string name="support_project">Support the project</string>
+    <string name="exit_thanks_title">Thanks for walking with us</string>
+    <string name="not_now">Not now</string>
     <string name="rating_question">How was your experience?</string>
     <string name="rating_comment_hint">Tell us something (optional)</string>
     <string name="rating_thanks">Thanks for your feedback!</string>

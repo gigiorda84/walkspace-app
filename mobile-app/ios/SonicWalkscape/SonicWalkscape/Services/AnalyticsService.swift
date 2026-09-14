@@ -182,11 +182,13 @@ class AnalyticsService {
         )
     }
 
-    func trackDonationLinkClicked(tourId: String, provider: String? = nil) {
+    /// `source`: where the donation was started — "completion", "connect" (Welcome sheet)
+    /// or "exit" (early-exit ask). `tourId` is nil when there is no tour context (connect).
+    func trackDonationLinkClicked(tourId: String? = nil, provider: String, source: String) {
         track(
             event: .donationLinkClicked,
             tourId: tourId,
-            properties: provider.map { ["provider": .string($0)] }
+            properties: ["provider": .string(provider), "source": .string(source)]
         )
     }
 

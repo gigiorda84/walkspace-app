@@ -85,9 +85,15 @@ fun DiscoveryScreen(
         position = CameraPosition.fromLatLngZoom(defaultPosition, 12f)
     }
 
+    // Track when the map has finished initializing. CameraUpdateFactory is only
+    // ready after the map loads, so gating on this prevents a crash when tours
+    // load before the map is ready (NullPointerException: CameraUpdateFactory
+    // is not initialized), especially on slow devices.
+    var mapLoaded by remember { mutableStateOf(false) }
+
     // Fit bounds to show all markers when tours load
-    LaunchedEffect(tourLocations) {
-        if (tourLocations.isNotEmpty()) {
+    LaunchedEffect(tourLocations, mapLoaded) {
+        if (mapLoaded && tourLocations.isNotEmpty()) {
             val boundsBuilder = LatLngBounds.builder()
             tourLocations.forEach { boundsBuilder.include(it.position) }
             val bounds = boundsBuilder.build()
@@ -145,6 +151,7 @@ fun DiscoveryScreen(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
+                    onMapLoaded = { mapLoaded = true },
                     properties = MapProperties(
                         mapType = MapType.NORMAL,
                         mapStyleOptions = mapStyleOptions

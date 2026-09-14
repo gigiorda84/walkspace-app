@@ -1,1 +1,1 @@
-Aggiunta una schermata al primo avvio che spiega chiaramente come viene usata la posizione (per attivare l'audio ai punti GPS) prima di richiedere il permesso, secondo le norme di Google Play.
+Sostieni il progetto dalla nuova schermata Contatti e sostegno o quando esci da un percorso in anticipo. Aggiornamento per Android 16.

@@ -1,16 +1,20 @@
 package com.bandite.sonicwalkscape.ui.player
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import android.Manifest
 import com.bandite.sonicwalkscape.R
 import com.bandite.sonicwalkscape.data.models.TourPoint
+import com.bandite.sonicwalkscape.ui.components.DonationCard
 import com.bandite.sonicwalkscape.ui.theme.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
@@ -54,6 +59,27 @@ fun PlayerScreen(
     val currentSubtitle by viewModel.currentSubtitle.collectAsState()
     val subtitlesOn by viewModel.subtitlesEnabled.collectAsState()
     val userLocation by viewModel.currentLocation.collectAsState()
+
+    // Early-exit donation ask: shown once per player session, only after at least one point
+    // has played (currentPoint is null while still "waiting for location").
+    var showExitSheet by remember { mutableStateOf(false) }
+    var exitAskShown by rememberSaveable { mutableStateOf(false) }
+
+    fun exitTour() {
+        viewModel.stopTour()
+        onBack()
+    }
+
+    fun requestExit() {
+        if (currentPoint != null && !exitAskShown) {
+            exitAskShown = true
+            showExitSheet = true
+        } else {
+            exitTour()
+        }
+    }
+
+    BackHandler { requestExit() }
 
     LaunchedEffect(tourId, language) {
         viewModel.setSubtitlesEnabled(subtitlesEnabled)
@@ -112,10 +138,7 @@ fun PlayerScreen(
         ) {
             // Close button
             IconButton(
-                onClick = {
-                    viewModel.stopTour()
-                    onBack()
-                },
+                onClick = { requestExit() },
                 modifier = Modifier
                     .size(40.dp)
                     .shadow(8.dp, CircleShape)
@@ -161,6 +184,78 @@ fun PlayerScreen(
             language = language,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+    }
+
+    if (showExitSheet) {
+        ExitDonationSheet(
+            onDonate = { provider, amount -> viewModel.trackDonationClicked(provider, amount) },
+            onExit = {
+                showExitSheet = false
+                exitTour()
+            }
+        )
+    }
+}
+
+/**
+ * "Thanks for walking with us" + donation card, shown when the user leaves a tour early.
+ * Dismissing (swipe, tap outside, back) or "Not now" exits the tour exactly as before.
+ * Tapping a provider opens the browser and leaves the sheet up until the user comes back.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExitDonationSheet(
+    onDonate: (provider: String, amount: Int?) -> Unit,
+    onExit: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onExit,
+        sheetState = sheetState,
+        containerColor = BrandPurple,
+        contentColor = BrandCream
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 40.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.exit_thanks_title),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = BrandCream,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.donation_ask),
+                fontSize = 15.sp,
+                color = BrandCream,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            DonationCard(onDonate = onDonate)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(onClick = onExit) {
+                Text(
+                    text = stringResource(R.string.not_now),
+                    fontSize = 14.sp,
+                    color = BrandMuted
+                )
+            }
+        }
     }
 }
 

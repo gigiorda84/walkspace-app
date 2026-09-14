@@ -30,7 +30,7 @@ class LocalizedStrings {
 
     var about: String { localized("About", "Chi siamo", "À propos") }
     var startExploring: String { localized("Start Exploring", "Inizia a esplorare", "Commencer") }
-    var connect: String { localized("Connect", "Contattaci", "Se connecter") }
+    var connect: String { localized("Connect & Support", "Contatti e sostegno", "Contact et soutien") }
 
     // MARK: - Discovery View
 
@@ -116,6 +116,8 @@ class LocalizedStrings {
     var returnToHome: String { localized("Return to home", "Torna alla home", "Retour à l'accueil") }
     var donationAsk: String { localized("This project lives thanks to those who support it: help us create the next walk with a small donation.", "Questo progetto vive grazie a chi lo sostiene: aiutaci a creare il prossimo percorso con una piccola donazione.", "Ce projet vit grâce à ceux qui le soutiennent : aidez-nous à créer le prochain parcours avec un petit don.") }
     var supportProject: String { localized("Support the project", "Sostieni il progetto", "Soutenez le projet") }
+    var exitThanksTitle: String { localized("Thanks for walking with us", "Grazie per aver camminato con noi", "Merci d'avoir marché avec nous") }
+    var notNow: String { localized("Not now", "Non ora", "Pas maintenant") }
     var ratingQuestion: String { localized("How was your experience?", "Com'è stata la tua esperienza?", "Comment était votre expérience ?") }
     var ratingCommentPlaceholder: String { localized("Tell us something (optional)", "Vuoi dirci qualcosa? (opzionale)", "Dites-nous quelque chose (facultatif)") }
     var ratingThanks: String { localized("Thanks for your feedback!", "Grazie per il tuo feedback!", "Merci pour votre avis !") }

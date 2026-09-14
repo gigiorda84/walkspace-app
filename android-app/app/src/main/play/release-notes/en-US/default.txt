@@ -1,1 +1,1 @@
-Added a first-launch screen that clearly explains how location is used (to trigger audio at GPS waypoints) before any location permission is requested, per Google Play policy.
+Support the project from the new Connect & Support screen or when leaving a tour early. Updated for Android 16.

@@ -64,7 +64,7 @@ class TourCompletionViewModel @Inject constructor(
 
     fun trackDonationClicked(provider: String, amount: Int?) {
         viewModelScope.launch {
-            val properties = mutableMapOf<String, Any>("provider" to provider)
+            val properties = mutableMapOf<String, Any>("provider" to provider, "source" to "completion")
             if (amount != null) properties["amount"] = amount
             analyticsService.track(
                 "donation_link_clicked",
