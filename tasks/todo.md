@@ -1,3 +1,25 @@
+# Automated iOS App Store review submission
+
+## State (read-only API check, 24 Oct 2026)
+- 1.6 (15) is READY_FOR_SALE (live); build 1.7 (16) processed = VALID, no export-compliance issue.
+- No 1.7 App Store version exists yet; the store listing has only the `it` localization.
+
+## Plan
+- [x] `mobile-app/ios/asc_api.py`: shared stdlib+openssl API client (JWT), used by both scripts;
+      `create-app-store-profile.py` switched to it (re-run: "reusing existing profile", same result).
+- [x] `mobile-app/ios/submit-for-review.py <version> <build> [--submit]`: dry run by default (GETs only,
+      prints what it would do). With `--submit`: create the App Store version if missing (release
+      after approval), attach the build, set "What's New" for every localization from
+      `mobile-app/ios/release-notes/<locale>.txt` (aborts if one is missing), create + submit the
+      review submission.
+- [x] `mobile-app/ios/release-notes/it.txt` for 1.7 (text approved by the user).
+- [x] `TESTFLIGHT-DEPLOYMENT.md`: submission step. Expedited Review stays a web form (no API).
+- [x] Dry run → user OK → `--submit`: "created App Store version 1.7 (release: AFTER_APPROVAL),
+      attached build 16, set What's New [it], submitted for review: state WAITING_FOR_REVIEW".
+- [ ] User: request Expedited Review (web form).
+
+---
+
 # Automated store uploads (Play service account + App Store Connect API key)
 
 ## Goal
@@ -48,7 +70,7 @@ Publisher, already configured in `app/build.gradle.kts`), iOS archive → App St
 - [x] Dry run: EXPORT SUCCEEDED; ipa = 1.7 (16), signed "Apple Distribution: Giuseppe Giordano".
 - [x] Upload 1.7 (16): "Upload succeeded … Uploaded package is processing" (24 Oct 2026, 20:32).
       Non-blocking warning: no dSYM for Sentry.framework in the archive (Apple symbol upload only).
-- [ ] Submit 1.7 for App Store review (+ Expedited Review request) — App Store Connect, user.
+- [x] Submit 1.7 for App Store review — done via `submit-for-review.py` (see top section).
 - [x] Committed + pushed: `8456ffd` (fixes, 1.1.13/vc26, 1.7(16)), `2d56877` (upload setup).
 
 ---

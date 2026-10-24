@@ -205,7 +205,21 @@ mobile-app/ios/upload-to-app-store.sh mobile-app/ios/SonicWalkscape/build/SonicW
 - Export options: `mobile-app/ios/SonicWalkscape/ExportOptions-AppStore.plist` (manual signing with
   "Apple Distribution" + profile "SonicWalkscape App Store CLI"; versions are not changed by Xcode:
   `manageAppVersionAndBuildNumber = false`).
-- After processing, the build appears in TestFlight; submit it for review in App Store Connect.
+- After processing (10–30 min), the build appears in TestFlight.
+
+**Submit for App Store review** (once the build is processed):
+1. Write the "What's New" text in `mobile-app/ios/release-notes/<locale>.txt` — one file per store
+   localization (today only `it`).
+2. Dry run (read-only — shows what it would do and the text it would publish):
+   ```bash
+   python3 -I mobile-app/ios/submit-for-review.py 1.7 16
+   ```
+3. Submit (creates the App Store version if needed, attaches the build, sets What's New, submits;
+   released automatically after approval like previous versions):
+   ```bash
+   python3 -I mobile-app/ios/submit-for-review.py 1.7 16 --submit
+   ```
+- Expedited Review has no API: request it at https://developer.apple.com/contact/app-store/?topic=expedite
 
 ---
 

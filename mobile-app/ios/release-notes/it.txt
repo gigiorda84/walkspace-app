@@ -1,0 +1,1 @@
+Corretto: l'audio ora attende che tu raggiunga ogni punto del percorso, invece di far partire le tracce una dopo l'altra. Anche l'ultimo punto viene sempre riprodotto.
