@@ -29,8 +29,27 @@ Publisher, already configured in `app/build.gradle.kts`), iOS archive → App St
       `mobile-app/ios/upload-to-app-store.sh <archive> [--dry-run]` (bash -n + plutil -lint OK).
 - [x] `mobile-app/TESTFLIGHT-DEPLOYMENT.md`: "Automated upload" section.
 - [x] `~/.appstoreconnect/sonicwalkscape.env` with `ASC_KEY_ID=YP9WJ4XJR2` (chmod 600).
-- [ ] Verify once keys exist (each with OK): Android → upload vc26 to `internal`, then promote to
-      production; iOS → export-only dry run (signing check), then upload 1.7 (16).
+- [x] Android: vc26 uploaded to `internal` with `publishReleaseBundle --artifact-dir` → "Updating
+      [completed] release ([26]) in track 'internal'", BUILD SUCCESSFUL (key + Play permissions OK).
+- [x] Android: promoted internal → production, 100% (user OK) → "Updating [completed] release ([26])
+      in track 'production'", BUILD SUCCESSFUL (24 Oct 2026). Now in Google review.
+- [ ] iOS dry run with App Manager key `YP9WJ4XJR2` FAILED: "Cloud signing permission error" + "No
+      signing certificate 'iOS Distribution' found" (no local distribution cert; Organizer used cloud
+      signing via Apple ID). Needs an **Admin** team key (or a local Apple Distribution certificate).
+- [x] Admin team key `D9ZC4QJ58S` installed (chmod 600), env file updated.
+- [ ] iOS dry run with the Admin key: same failure. Apple's message: "You haven't been given access to
+      cloud-managed distribution certificates" → API keys can't use cloud signing; the keychain only has
+      "Apple Development". Needs a local **Apple Distribution** certificate (Xcode → Manage Certificates).
+- [x] User created a local "Apple Distribution: Giuseppe Giordano (V7Q6885JT4)" certificate.
+- [x] Automatic signing still failed (API keys can't regenerate the Xcode-managed "iOS Team Store"
+      profile) → manual signing: `mobile-app/ios/create-app-store-profile.py` created + installed the
+      profile "SonicWalkscape App Store CLI" via the API (expires 24 Oct 2027); ExportOptions switched to
+      manual signing with that profile.
+- [x] Dry run: EXPORT SUCCEEDED; ipa = 1.7 (16), signed "Apple Distribution: Giuseppe Giordano".
+- [x] Upload 1.7 (16): "Upload succeeded … Uploaded package is processing" (24 Oct 2026, 20:32).
+      Non-blocking warning: no dSYM for Sentry.framework in the archive (Apple symbol upload only).
+- [ ] Submit 1.7 for App Store review (+ Expedited Review request) — App Store Connect, user.
+- [x] Committed + pushed: `8456ffd` (fixes, 1.1.13/vc26, 1.7(16)), `2d56877` (upload setup).
 
 ---
 

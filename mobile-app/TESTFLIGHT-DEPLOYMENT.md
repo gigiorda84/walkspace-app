@@ -176,7 +176,11 @@ Uploads an archive from the command line, without signing in to Xcode with an Ap
 
 **One-time setup** (Account Holder / Admin):
 1. App Store Connect → Users and Access → Integrations → App Store Connect API → **Team Keys**
-   → Generate API Key, access **App Manager** (use a team key; individual keys fail with xcodebuild).
+   → Generate API Key, access **Admin** (use a team key; individual keys fail with xcodebuild).
+   API keys cannot use Apple's cloud-managed distribution certificate ("Cloud signing permission
+   error", even with Admin), so this Mac needs its own **Apple Distribution** certificate:
+   Xcode → Settings → Accounts → Apple ID → team → Manage Certificates… → **+** → Apple Distribution.
+   The first signing may show a keychain prompt for that key: enter the Mac password, "Always Allow".
 2. Download `AuthKey_<KEYID>.p8` (only possible once) to `~/.appstoreconnect/private_keys/`
    (`chmod 600`). Keep it outside the repo — the repo is in iCloud Drive.
 3. Put the identifiers in `~/.appstoreconnect/sonicwalkscape.env`:
@@ -184,16 +188,24 @@ Uploads an archive from the command line, without signing in to Xcode with an Ap
    ASC_KEY_ID=<Key ID>
    ASC_ISSUER_ID=<Issuer ID shown at the top of the API keys page>
    ```
+4. Create + install the App Store provisioning profile for that certificate (manual signing — the
+   Xcode-managed "iOS Team Store" profile can't be regenerated with an API key):
+   ```bash
+   python3 -I mobile-app/ios/create-app-store-profile.py
+   ```
+   It creates "SonicWalkscape App Store CLI" (or reuses it if active) and installs it for Xcode.
+   Re-run it when the distribution certificate is renewed (current one expires 24 Oct 2027) —
+   change `CERT_NAME` in the script if the certificate name changes.
 
 **Upload** (after `xcodebuild … archive`; bump `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` first):
 ```bash
 mobile-app/ios/upload-to-app-store.sh mobile-app/ios/SonicWalkscape/build/SonicWalkscape-X.Y-N.xcarchive
 ```
 - `--dry-run` as 2nd argument exports a signed `.ipa` locally instead of uploading (checks key + signing).
-- Export options: `mobile-app/ios/SonicWalkscape/ExportOptions-AppStore.plist` (versions are not
-  changed by Xcode: `manageAppVersionAndBuildNumber = false`).
+- Export options: `mobile-app/ios/SonicWalkscape/ExportOptions-AppStore.plist` (manual signing with
+  "Apple Distribution" + profile "SonicWalkscape App Store CLI"; versions are not changed by Xcode:
+  `manageAppVersionAndBuildNumber = false`).
 - After processing, the build appears in TestFlight; submit it for review in App Store Connect.
-- If signing fails with a permissions error, the key needs the **Admin** role.
 
 ---
 
