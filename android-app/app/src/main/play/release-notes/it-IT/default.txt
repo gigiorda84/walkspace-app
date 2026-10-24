@@ -1,1 +1,1 @@
-Sostieni il progetto dalla nuova schermata Contatti e sostegno o quando esci da un percorso in anticipo. Aggiornamento per Android 16.
+Corretto: l'audio ora attende che tu raggiunga ogni punto invece di riprodurre le tracce successive una dopo l'altra. Sostieni il progetto dalla nuova schermata Contatti e sostegno o quando esci da un percorso in anticipo. Aggiornamento per Android 16.

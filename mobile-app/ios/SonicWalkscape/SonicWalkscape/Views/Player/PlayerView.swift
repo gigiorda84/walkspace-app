@@ -36,6 +36,9 @@ struct PlayerView: View {
     @State private var isLoadingManifest = false
     @State private var manifestError: String?
 
+    // Point whose audio is loaded in the player
+    @State private var playingPointId: String?
+
     // Timer for updating playback progress
     @State private var progressTimer: Timer?
 
@@ -119,7 +122,8 @@ struct PlayerView: View {
 
                     Spacer()
 
-                    // Debug toggle
+                    #if DEBUG
+                    // Debug toggle (debug builds only)
                     Button(action: { showDebugOverlay.toggle() }) {
                         Image(systemName: "ant.fill")
                             .font(.system(size: 14, weight: .semibold))
@@ -130,6 +134,7 @@ struct PlayerView: View {
                             .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
                     .padding(.trailing, 8)
+                    #endif
 
                     // Subtitle toggle
                     Button(action: { showSubtitles.toggle() }) {
@@ -183,8 +188,11 @@ struct PlayerView: View {
         }
         .onReceive(audioManager.$didFinishPlaying) { finished in
             if finished {
-                // Check if this was the last point
-                if currentPointIndex >= tourPoints.count - 1 {
+                if playingPointId != currentPoint.id {
+                    // A previous point's audio was replayed while walking to the next point:
+                    // nothing to advance or complete
+                    DebugLogger.audio("Replayed audio finished - still waiting for point \(currentPointIndex + 1)")
+                } else if currentPointIndex >= tourPoints.count - 1 {
                     // Tour completed!
                     showCompletionScreen = true
                     trackTourCompleted()
@@ -427,20 +435,37 @@ struct PlayerView: View {
         )
 
         audioManager.play(audioURL: audioURL, localURL: localURL)
+        playingPointId = pointId
     }
 
     private func togglePlayPause() {
-        // Check if audio player is ready
-        if audioManager.duration == 0 {
-            // Player not initialized - try to load audio for current point
-            DebugLogger.warning("Player not ready. Loading audio for current point...")
-            let point = tourPoints[currentPointIndex]
-            playAudio(for: point.id)
-            audioManager.updateNowPlayingInfo(title: point.title, artist: tour.title["en"] ?? "Sonic Walkscape")
+        // Load the current point if the player is empty, or if it holds a previous point's
+        // audio (finished, user is walking to the next point)
+        if audioManager.duration == 0 || playingPointId != currentPoint.id {
+            DebugLogger.audio("Loading audio for current point on demand: \(currentPoint.title)")
+            playCurrentPoint()
         } else {
             // Player ready - toggle play/pause
             audioManager.togglePlayPause()
         }
+    }
+
+    /// Play the current point on demand (Play/Next/Previous) and mark it played for GPS
+    private func playCurrentPoint() {
+        let point = currentPoint
+        locationManager.setPointIndex(currentPointIndex)
+
+        // Track manual point trigger
+        manualTriggeredCount += 1
+        AnalyticsService.shared.trackPointTriggered(
+            tourId: tour.id,
+            pointId: point.id,
+            triggerType: .manual
+        )
+
+        loadSubtitlesForCurrentPoint()
+        audioManager.updateNowPlayingInfo(title: point.title, artist: tour.title["en"] ?? "Sonic Walkscape")
+        playAudio(for: point.id)
     }
 
     private func skipBackward() {
@@ -541,8 +566,12 @@ struct PlayerView: View {
     // MARK: - Point Navigation
 
     private func moveToNextPoint() {
-        // If we're on the last point, show completion screen
-        if currentPointIndex >= tourPoints.count - 1 {
+        // Waiting for the current point (not played yet, e.g. GPS missed it): play it instead of
+        // skipping it - on the last point this would otherwise end the tour without its audio
+        let awaitingCurrentPoint = playingPointId != currentPoint.id
+
+        // If we're on the last point and it has played, show completion screen
+        if !awaitingCurrentPoint && currentPointIndex >= tourPoints.count - 1 {
             showCompletionScreen = true
             audioManager.stop()
             trackTourCompleted()
@@ -550,23 +579,14 @@ struct PlayerView: View {
             return
         }
 
-        currentPointIndex += 1
+        if !awaitingCurrentPoint {
+            currentPointIndex += 1
+        }
         audioManager.stop()
 
-        // Track manual point trigger
-        manualTriggeredCount += 1
-        let point = tourPoints[currentPointIndex]
-        AnalyticsService.shared.trackPointTriggered(
-            tourId: tour.id,
-            pointId: point.id,
-            triggerType: .manual
-        )
-
-        loadSubtitlesForCurrentPoint()
-
         // Load audio for new point
-        DebugLogger.audio("Manual skip to point \(currentPointIndex + 1): \(point.title)")
-        playAudio(for: point.id)
+        DebugLogger.audio("Manual skip to point \(currentPointIndex + 1): \(currentPoint.title)")
+        playCurrentPoint()
     }
 
     private func moveToPreviousPoint() {
@@ -575,20 +595,9 @@ struct PlayerView: View {
         currentPointIndex -= 1
         audioManager.stop()
 
-        // Track manual navigation (going back)
-        manualTriggeredCount += 1
-        let point = tourPoints[currentPointIndex]
-        AnalyticsService.shared.trackPointTriggered(
-            tourId: tour.id,
-            pointId: point.id,
-            triggerType: .manual
-        )
-
-        loadSubtitlesForCurrentPoint()
-
         // Load audio for new point
-        DebugLogger.audio("Manual back to point \(currentPointIndex + 1): \(point.title)")
-        playAudio(for: point.id)
+        DebugLogger.audio("Manual back to point \(currentPointIndex + 1): \(currentPoint.title)")
+        playCurrentPoint()
     }
 
     // MARK: - Analytics Helpers

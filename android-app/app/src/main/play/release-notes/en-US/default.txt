@@ -1,1 +1,1 @@
-Support the project from the new Connect & Support screen or when leaving a tour early. Updated for Android 16.
+Fixed: audio now waits until you reach each point instead of playing the next clips back to back. Support the project from the new Connect & Support screen or when leaving a tour early. Updated for Android 16.

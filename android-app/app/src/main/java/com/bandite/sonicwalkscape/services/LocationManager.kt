@@ -154,14 +154,28 @@ class LocationManager(private val context: Context) {
             return
         }
 
+        // Check if next point was queued (user passed through while audio was playing)
+        val wasQueued = _nextPointQueued.value
+
         _currentPointIndex.value = pointIndex + 1
         _nextPointQueued.value = false
 
         val nextPoint = tourPoints[_currentPointIndex.value]
-        triggeredPoints.add(nextPoint.id)
-        _nearbyPoint.value = nextPoint
-        onPointTriggered?.invoke(nextPoint)
-        DebugLogger.location("Point ${nextPoint.order} AUTO-TRIGGERED: ${nextPoint.getDisplayTitle()}")
+
+        // If the point was queued, trigger it immediately; otherwise wait for GPS to reach it
+        if (wasQueued) {
+            triggeredPoints.add(nextPoint.id)
+            _nearbyPoint.value = nextPoint
+            onPointTriggered?.invoke(nextPoint)
+            DebugLogger.location("Point ${nextPoint.order} AUTO-TRIGGERED from queue: ${nextPoint.getDisplayTitle()}")
+        } else {
+            _nearbyPoint.value = null
+            DebugLogger.location("Waiting for point ${nextPoint.order}: ${nextPoint.getDisplayTitle()}")
+        }
+
+        // The user may already be inside the next point (e.g. standing still at the last point):
+        // re-check the last known position instead of waiting for a new GPS fix
+        _currentLocation.value?.let { checkSequentialPointProximity(it) }
     }
 
     fun resetProgress() {

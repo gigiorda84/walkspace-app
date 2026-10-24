@@ -1,1 +1,1 @@
-Soutenez le projet depuis le nouvel écran Contact et soutien ou en quittant un parcours avant la fin. Mise à jour pour Android 16.
+Corrigé : l'audio attend désormais que vous atteigniez chaque point au lieu d'enchaîner les pistes suivantes. Soutenez le projet depuis le nouvel écran Contact et soutien ou en quittant un parcours avant la fin. Mise à jour pour Android 16.

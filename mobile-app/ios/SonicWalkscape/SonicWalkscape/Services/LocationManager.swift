@@ -86,8 +86,8 @@ class LocationManager: NSObject, ObservableObject {
 
         // Check if user is within trigger radius
         if distance <= nextPoint.triggerRadiusMeters {
-            // Point triggered!
-            if !isPointActive {
+            // Point triggered! (once per point: no restart on GPS jitter or after a manual play)
+            if !isPointActive && !triggeredPoints.contains(nextPoint.id) {
                 isPointActive = true
                 nearbyPoint = nextPoint
                 triggeredPoints.insert(nextPoint.id)
@@ -127,14 +127,40 @@ class LocationManager: NSObject, ObservableObject {
             return
         }
 
+        // Check if next point was queued (user passed through while audio was playing)
+        let wasQueued = nextPointQueued
+
         currentPointIndex += 1
-        isPointActive = true
+        isPointActive = false
         nextPointQueued = false
 
         let nextPoint = tourPoints[currentPointIndex]
-        nearbyPoint = nextPoint
-        triggeredPoints.insert(nextPoint.id)
-        DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED: \(nextPoint.title)")
+
+        // If the point was queued, trigger it immediately; otherwise wait for GPS to reach it
+        if wasQueued {
+            isPointActive = true
+            nearbyPoint = nextPoint
+            triggeredPoints.insert(nextPoint.id)
+            DebugLogger.gps("Point \(nextPoint.order) AUTO-TRIGGERED from queue: \(nextPoint.title)")
+        } else {
+            nearbyPoint = nil
+            DebugLogger.gps("Waiting for point \(nextPoint.order): \(nextPoint.title)")
+        }
+
+        // The user may already be inside the next point (e.g. standing still at the last point):
+        // re-check the last known position instead of waiting for a new GPS fix
+        checkSequentialPointProximity()
+    }
+
+    /// Call when the user plays a point manually (Play/Next/Previous) so GPS continues from it
+    func setPointIndex(_ index: Int) {
+        guard index >= 0 && index < tourPoints.count else { return }
+        currentPointIndex = index
+        isPointActive = true
+        nearbyPoint = nil
+        nextPointQueued = false
+        triggeredPoints.insert(tourPoints[index].id)
+        DebugLogger.gps("Set point index to \(index + 1)")
     }
 }
 

@@ -37,8 +37,8 @@ android {
         applicationId = "com.bandite.sonicwalkscape"
         minSdk = 26
         targetSdk = 36
-        versionCode = 25
-        versionName = "1.1.12"
+        versionCode = 26
+        versionName = "1.1.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

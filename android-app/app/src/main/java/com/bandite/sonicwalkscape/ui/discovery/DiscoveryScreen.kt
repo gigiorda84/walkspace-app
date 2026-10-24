@@ -267,11 +267,15 @@ private fun TourMarker(
     val markerState = rememberMarkerState(position = tourLocation.position)
     val title = tourLocation.tour.getDisplayTitle(language).uppercase()
 
-    // Visual marker using MarkerComposable (label display only)
+    // Visual marker using MarkerComposable: the whole label + dot is tappable
     MarkerComposable(
         keys = arrayOf(tourLocation.tour.id, "visual"),
         state = rememberMarkerState(position = tourLocation.position),
-        anchor = Offset(0.5f, 1f)
+        anchor = Offset(0.5f, 1f),
+        onClick = {
+            onClick()
+            true
+        }
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // Yellow pill label

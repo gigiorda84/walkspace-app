@@ -7,6 +7,7 @@ import com.bandite.sonicwalkscape.data.api.AnalyticsRequest
 import com.bandite.sonicwalkscape.data.api.ApiService
 import com.bandite.sonicwalkscape.utils.Constants
 import com.bandite.sonicwalkscape.utils.DebugLogger
+import com.google.gson.Gson
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
@@ -18,24 +19,51 @@ class AnalyticsService(
     private val userPreferencesManager: UserPreferencesManager
 ) {
     private val eventQueue = mutableListOf<AnalyticsEvent>()
-    private companion object { const val MAX_QUEUE_SIZE = 500 }
+    private companion object {
+        const val MAX_QUEUE_SIZE = 500
+        const val QUEUE_PREFS = "analytics_queue"
+        const val KEY_PENDING_EVENTS = "pending_events"
+    }
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var flushJob: Job? = null
+
+    // Unsent events are persisted so events recorded offline (e.g. a tour completed without
+    // signal) survive the app being closed and are sent on a later launch
+    private val queuePrefs = context.getSharedPreferences(QUEUE_PREFS, Context.MODE_PRIVATE)
+    private val gson = Gson()
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
     init {
+        loadQueue()
         startPeriodicFlush()
     }
 
     private fun startPeriodicFlush() {
         flushJob = scope.launch {
             while (isActive) {
-                delay(Constants.ANALYTICS_FLUSH_INTERVAL_MS)
+                // Flush first so events left over from a previous (offline) session go out at launch
                 flush()
+                delay(Constants.ANALYTICS_FLUSH_INTERVAL_MS)
             }
+        }
+    }
+
+    // Call while holding the eventQueue lock
+    private fun saveQueue() {
+        queuePrefs.edit().putString(KEY_PENDING_EVENTS, gson.toJson(eventQueue)).apply()
+    }
+
+    private fun loadQueue() {
+        val json = queuePrefs.getString(KEY_PENDING_EVENTS, null) ?: return
+        try {
+            val events = gson.fromJson(json, Array<AnalyticsEvent>::class.java) ?: return
+            synchronized(eventQueue) { eventQueue.addAll(events) }
+            DebugLogger.analytics("Loaded ${events.size} pending events")
+        } catch (e: Exception) {
+            DebugLogger.e("Failed to load pending analytics events", e)
         }
     }
 
@@ -72,6 +100,7 @@ class AnalyticsService(
                 eventQueue.removeAt(0)
             }
             eventQueue.add(event)
+            saveQueue()
         }
 
         DebugLogger.analytics("Queued event: $eventName")
@@ -92,11 +121,14 @@ class AnalyticsService(
         try {
             val response = apiService.sendAnalyticsEvents(AnalyticsRequest(eventsToSend))
             if (response.isSuccessful) {
+                // Sent events are only dropped from storage once the server accepted them
+                synchronized(eventQueue) { saveQueue() }
                 DebugLogger.analytics("Sent ${eventsToSend.size} events")
             } else {
                 // Re-queue events on failure
                 synchronized(eventQueue) {
                     eventQueue.addAll(0, eventsToSend)
+                    saveQueue()
                 }
                 DebugLogger.analytics("Failed to send events: ${response.code()}")
             }
@@ -104,6 +136,7 @@ class AnalyticsService(
             // Re-queue events on failure
             synchronized(eventQueue) {
                 eventQueue.addAll(0, eventsToSend)
+                saveQueue()
             }
             DebugLogger.e("Analytics send failed", e)
         }

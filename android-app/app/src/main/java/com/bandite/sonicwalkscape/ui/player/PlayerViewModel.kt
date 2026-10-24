@@ -115,7 +115,13 @@ class PlayerViewModel @Inject constructor(
         }
 
         audioPlayerManager.onPlaybackCompleted = {
-            if (!locationManager.hasMorePoints) {
+            val currentIndexPointId = locationManager.getTourPoints()
+                .getOrNull(locationManager.currentPointIndex.value)?.id
+            if (audioPlayerManager.currentPointId.value != currentIndexPointId) {
+                // A previous point's audio was replayed while walking to the next point:
+                // nothing to advance or complete
+                DebugLogger.audio("Replayed audio finished - still waiting for the next point")
+            } else if (!locationManager.hasMorePoints) {
                 // Last point's audio finished - tour is complete
                 _isTourComplete.value = true
                 stopSubtitleSync()
@@ -281,16 +287,10 @@ class PlayerViewModel @Inject constructor(
             audioPlayerManager.pause()
             stopSubtitleSync()
         } else {
-            // If no audio loaded, load current point
-            if (audioPlayerManager.duration.value == 0L) {
-                val points = _tourPoints.value
-                val index = locationManager.currentPointIndex.value
-                if (index < points.size) {
-                    val point = points[index]
-                    _currentPoint.value = point
-                    loadSubtitlesForPoint(point.id)
-                    playPointAudio(point)
-                }
+            // If no audio loaded, or the loaded audio is a previous point's (finished, user is
+            // walking to the next point), load current point
+            if (audioPlayerManager.duration.value == 0L || isAwaitingCurrentPoint()) {
+                playCurrentPoint()
             } else {
                 audioPlayerManager.play()
                 startSubtitleSync()
@@ -313,13 +313,37 @@ class PlayerViewModel @Inject constructor(
         updateCurrentSubtitle()
     }
 
+    /** True when the current point's audio hasn't been loaded yet: nothing played so far, or the
+     *  previous point's audio finished and the user is walking to this one. */
+    private fun isAwaitingCurrentPoint(): Boolean =
+        audioPlayerManager.currentPointId.value !=
+            _tourPoints.value.getOrNull(locationManager.currentPointIndex.value)?.id
+
+    /** Play the current point on demand (Play/Next/Previous) and mark it played for GPS. */
+    private fun playCurrentPoint() {
+        val index = locationManager.currentPointIndex.value
+        val point = _tourPoints.value.getOrNull(index) ?: return
+        locationManager.setPointIndex(index)
+        _currentPoint.value = point
+        loadSubtitlesForPoint(point.id)
+        playPointAudio(point)
+        viewModelScope.launch {
+            _tour.value?.let { tour ->
+                analyticsService.trackPointTriggered(tour.id, point.id)
+            }
+        }
+    }
+
     // Navigation methods
     fun moveToNextPoint() {
         val points = _tourPoints.value
         val currentIndex = locationManager.currentPointIndex.value
+        // Waiting for the current point (not played yet, e.g. GPS missed it): play it instead of
+        // skipping it - on the last point this would otherwise end the tour without its audio
+        val newIndex = if (isAwaitingCurrentPoint()) currentIndex else currentIndex + 1
 
-        if (currentIndex >= points.size - 1) {
-            // Last point - complete tour
+        if (newIndex >= points.size) {
+            // Last point already played - complete tour
             _isTourComplete.value = true
             audioPlayerManager.stop()
             stopSubtitleSync()
@@ -335,16 +359,9 @@ class PlayerViewModel @Inject constructor(
         audioPlayerManager.stop()
         stopSubtitleSync()
 
-        val newIndex = currentIndex + 1
         locationManager.setPointIndex(newIndex)
-
-        if (newIndex < points.size) {
-            val point = points[newIndex]
-            _currentPoint.value = point
-            loadSubtitlesForPoint(point.id)
-            playPointAudio(point)
-            DebugLogger.d("Manual skip to point ${newIndex + 1}: ${point.getDisplayTitle()}")
-        }
+        playCurrentPoint()
+        DebugLogger.d("Manual skip to point ${newIndex + 1}: ${points[newIndex].getDisplayTitle()}")
     }
 
     fun moveToPreviousPoint() {
@@ -358,14 +375,8 @@ class PlayerViewModel @Inject constructor(
 
         val newIndex = currentIndex - 1
         locationManager.setPointIndex(newIndex)
-
-        if (newIndex < points.size) {
-            val point = points[newIndex]
-            _currentPoint.value = point
-            loadSubtitlesForPoint(point.id)
-            playPointAudio(point)
-            DebugLogger.d("Manual back to point ${newIndex + 1}: ${point.getDisplayTitle()}")
-        }
+        playCurrentPoint()
+        DebugLogger.d("Manual back to point ${newIndex + 1}: ${points[newIndex].getDisplayTitle()}")
     }
 
     // Subtitle methods
