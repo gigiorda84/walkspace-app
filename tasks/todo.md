@@ -1,3 +1,184 @@
+# Automated store uploads (Play service account + App Store Connect API key)
+
+## Goal
+Let Claude upload release builds from the command line: Android AAB → Play Console (Gradle Play
+Publisher, already configured in `app/build.gradle.kts`), iOS archive → App Store Connect / TestFlight
+(`xcodebuild -exportArchive` with an App Store Connect API key, Xcode 26.3).
+
+## Decisions
+- Secrets live OUTSIDE the repo (the repo is in iCloud Drive and would sync them):
+  - Play JSON key: `~/.config/sonicwalkscape/play-service-account.json`
+  - Apple key: `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8` (xcodebuild/altool default dir)
+  - Apple Key ID + Issuer ID (identifiers, not secrets): `~/.appstoreconnect/sonicwalkscape.env`
+- Claude never reads/prints the key files; it only passes their paths to the tools.
+- Every actual upload/release still gets an explicit OK in chat (outward-facing action).
+
+## User steps (consoles — only the account owner can do these)
+- [x] Google Cloud service account + JSON key → saved at `~/.config/sonicwalkscape/play-service-account.json`.
+- [ ] Play Console → Users and permissions → service-account e-mail invited with app permissions
+      (to be confirmed by the first upload).
+- [x] App Store Connect team key `YP9WJ4XJR2` → `~/.appstoreconnect/private_keys/AuthKey_YP9WJ4XJR2.p8`.
+- [x] Issuer ID → `ASC_ISSUER_ID` in `~/.appstoreconnect/sonicwalkscape.env`.
+
+## Claude steps (local, small)
+- [x] `android-app/app/build.gradle.kts` `play {}`: also look for the key at
+      `~/.config/sonicwalkscape/play-service-account.json` (repo path keeps working).
+- [x] `android-app/PUBLISHING.md`: current console steps + key path + "upload a pre-built AAB"
+      (`--artifact-dir`, a dir with ONLY that AAB) + promote internal → production.
+- [x] iOS: `mobile-app/ios/SonicWalkscape/ExportOptions-AppStore.plist` (destination `upload`) +
+      `mobile-app/ios/upload-to-app-store.sh <archive> [--dry-run]` (bash -n + plutil -lint OK).
+- [x] `mobile-app/TESTFLIGHT-DEPLOYMENT.md`: "Automated upload" section.
+- [x] `~/.appstoreconnect/sonicwalkscape.env` with `ASC_KEY_ID=YP9WJ4XJR2` (chmod 600).
+- [ ] Verify once keys exist (each with OK): Android → upload vc26 to `internal`, then promote to
+      production; iOS → export-only dry run (signing check), then upload 1.7 (16).
+
+---
+
+# URGENT: audio clips play back to back regardless of GPS (report 23 Oct 2026)
+
+## Problem (field report, group walk)
+- Users heard every point's audio one after another with no pause, regardless of where they
+  were (at map point 5 the app was already playing audio 8). Reinstalling does not help.
+
+## Root cause (confirmed in code + git history)
+- Commit `4f74f95` (26 Mar 2026, "Simplify advanceToNextPoint", Android 1.1.4 / iOS build 11)
+  removed the `wasQueued` check in `advanceToNextPoint()` on **both** platforms.
+- Since then, whenever ANY point's audio ends, the app immediately auto-plays the next point,
+  even if the user hasn't reached it → chain reaction 1→2→3→… racing ahead of the walk.
+- The intended rule (CLAUDE.md + the comment still in `PlayerViewModel`): auto-play the next
+  point only if the user entered its radius while the current audio was playing ("queued");
+  otherwise wait for GPS to trigger it on arrival.
+- Why "those who downloaded" noticed it most: local files start instantly; in streaming mode a
+  weak connection stalls/fails the next clip, which breaks the chain.
+
+## Fix plan
+Plan confirmed by user: core fix + safeguards (+ hide iOS debug icon, reported in the same message).
+
+Core (restores the pre-March logic, both platforms):
+- [x] Android `services/LocationManager.kt` `advanceToNextPoint()`: auto-trigger the next point
+      only if `wasQueued`; otherwise just move the index and wait for GPS.
+- [x] iOS `Services/LocationManager.swift` `advanceToNextPoint()`: same (`isPointActive=false`,
+      `nearbyPoint=nil` when not queued, so GPS triggers it on arrival).
+
+Safeguards for the "walking to the next point" state, which this fix brings back (it never
+appeared while the chain bug was live):
+- [x] Only the current point's audio finishing advances the tour. Otherwise replaying the
+      finished clip (Android: rewind after the end; iOS: lock-screen play) would skip the next
+      point or end the tour early.
+      Android `PlayerViewModel.onPlaybackCompleted` / iOS `PlayerView` `didFinishPlaying`.
+- [x] Play button while waiting = play the upcoming point (same as before point 1). Today it
+      does nothing on Android and replays the old clip on iOS. This is also the recovery path
+      if someone's GPS misses a point ("Next" would skip it, because the index already moved on).
+      Android `PlayerViewModel.togglePlayPause` / iOS `PlayerView.togglePlayPause`.
+
+iOS debug icon (user report, same message):
+- [x] The "ant" debug toggle in the player was visible to everyone → wrapped in `#if DEBUG`
+      (it is the only way to open the debug overlay, so the overlay is hidden too).
+
+Release (state of 1.1.12 / 1.6(15) uploads unknown → versions that are valid either way):
+- [x] Android → 1.1.13 / vc26; Play release notes (it/en/fr) mention the fix.
+- [x] iOS → 1.7 (16) (a new marketing version works whether or not 1.6 was approved).
+- [x] Android signed release AAB (build dir outside iCloud) → BUILD SUCCESSFUL, versionName 1.1.13,
+      copied to `android-app/app/build/outputs/bundle/release/app-release-1.1.13-vc26.aab`.
+- [x] iOS simulator build → BUILD SUCCEEDED; archive → `mobile-app/ios/SonicWalkscape/build/
+      SonicWalkscape-1.7-16.xcarchive` (ARCHIVE SUCCEEDED, 1.7 (16)).
+- [x] iOS GPS harness (real `LocationManager.swift` run on the simulator, simulated walk along the
+      8 points of "PRESENTI MAI ASSENTI"): new code 11/11 PASS; old code reproduces the field bug
+      (audio 2 starts while still at point 1, then restarts on arrival at point 2).
+- [x] Android `advanceToNextPoint()` diffed against the pre-`4f74f95` version: identical except log lines.
+- [x] Android end-to-end on emulator (debug build, analytics switched off + network off during
+      setup so no test events reach production analytics).
+- [ ] Commit (awaiting user OK); upload to Play Console + App Store Connect (manual: no Play service
+      account / ASC key here).
+
+## Addendum (user request): last point must never be lost + analytics must reach the CMS
+History: Feb `2601e4f` fixed "completion screen shown when the PENULTIMATE audio ended, last point
+never heard". The March regression (`4f74f95`) most likely tried to force the last point to play,
+which created the chain bug. With the queue logic restored, these paths can still lose the last point:
+1. Group already standing on the last point when the penultimate audio ends → no new GPS fix
+   (5 m / 10 m distance filter) → app waits forever. Fix: re-check the last known position right
+   after advancing (both platforms).
+2. "Next" while waiting for the last point → `moveToNextPoint` completes the tour WITHOUT playing
+   the last audio (both platforms). Fix: while waiting for a point that hasn't played yet, Next (and
+   Play) play THAT point instead of skipping it.
+3. iOS only: Next/Previous don't update the GPS index → after one manual press GPS keeps waiting
+   for a point the group already passed → last point never checked. Fix: sync it like Android
+   (`setPointIndex`), and like Android never re-trigger an already-played point (no restart).
+4. Content: "PRESENTI MAI ASSENTI" uses 15 m radii (CLAUDE.md recommends 100–300 m) → easy GPS
+   misses. Fix in CMS (no code).
+
+Analytics (CMS uses tour_started, tour_completed{durationMinutes,triggerType}, tour_abandoned,
+point_triggered count per session):
+5. Android keeps unsent events ONLY in memory (iOS persists them). Tour ends without signal (mountains)
+   + app closed → tour_completed lost → missing in CMS. Fix: persist the queue (SharedPreferences +
+   Gson, like iOS UserDefaults) and flush once at startup.
+6. Android doesn't send point_triggered for manual plays (iOS does, as "manual") → session point
+   counts differ by platform. Fix: send it from the manual-play path.
+
+Status: items 1–3, 5, 6 implemented (approved); item 4 is content (CMS).
+- [x] 1 re-check after advance (Android `LocationManager.advanceToNextPoint`, iOS same)
+- [x] 2 Next/Play play the awaited point (Android `PlayerViewModel.isAwaitingCurrentPoint/playCurrentPoint`,
+      iOS `PlayerView.playCurrentPoint` + `moveToNextPoint`)
+- [x] 3 iOS `LocationManager.setPointIndex` + never re-trigger an already-played point
+- [x] 5 Android analytics queue persisted (SharedPreferences + Gson) + flush at startup
+- [x] 6 Android manual plays send `point_triggered`
+
+## Addendum 2 (user request): "Scopri" map — tap the dot AND the label
+- Android root cause: the label+dot marker (`MarkerComposable`) had no click handler ("label display
+  only"); only an invisible pin over the dot was tappable, plus a "within 500 m" map-click fallback
+  that at Discovery zoom is a few pixels. Long labels were mostly untappable.
+- [x] Android `DiscoveryScreen.TourMarker`: `onClick` on the `MarkerComposable` → whole label + dot tappable.
+- iOS: label + dot were already tappable (verified on the simulator with the original code: label
+  centre, label ends, long label far end, dot → all open the tour). No iOS change.
+
+## Review
+### Root cause
+`4f74f95` (26 Mar 2026) removed the "queued" check from `advanceToNextPoint()` on both platforms →
+every audio end auto-played the next point → chain racing ahead of the walk. Most likely added to
+force the last point to play; with the queue logic restored, the last point is now protected by
+re-checking the last GPS fix after each audio, and by Next/Play playing (not skipping) the awaited point.
+
+### Files changed
+- Android: `services/LocationManager.kt` (queue check restored + re-check), `ui/player/PlayerViewModel.kt`
+  (completion guard, `isAwaitingCurrentPoint`/`playCurrentPoint`, Next/Previous via it + analytics),
+  `services/AnalyticsService.kt` (persisted queue), `ui/discovery/DiscoveryScreen.kt` (marker onClick),
+  `build.gradle.kts` (1.1.13 / vc26), Play release notes ×3.
+- iOS: `Services/LocationManager.swift` (queue check restored + re-check + `setPointIndex` + no
+  re-trigger), `Views/Player/PlayerView.swift` (`playingPointId`, completion guard, `playCurrentPoint`,
+  Next doesn't skip awaited point, debug icon `#if DEBUG`), `project.pbxproj` (1.7 (16)).
+
+### Verification
+- iOS harness (real `LocationManager.swift` on the simulator): walk scenarios 11/11, last-point
+  scenarios 8/8 PASS; the first version of the fix fails 4 last-point scenarios (stuck when standing
+  still at the end, stuck after a missed penultimate point, restarts on jitter / after manual play);
+  the original code reproduces the field bug.
+- Android emulator, downloaded UNSEEN tour, simulated GPS, analytics off: no chain; queue works;
+  rewind of a finished clip doesn't skip; Play/Next while waiting play the awaited point; group
+  standing at the last point with no new GPS fix → last point plays; Next while waiting for the last
+  point plays it; completion + `tour_completed` after the last audio; `tour_abandoned` on exit.
+- Android release APK (R8): unsent events reloaded after the app is killed offline ("Loaded 1 pending").
+- Android map: old APK, long label far end → 3 taps, nothing; fixed APK → 6/6 first-tap opens.
+- iOS simulator (downloaded tour): Next ×8, audio 8 ends → "Waiting for point 9" (no chain); Next →
+  plays 9 (not completion); Next during 9 → completion screen.
+
+### Incident during testing (needs cleanup)
+- The iOS simulator player test sent 11 test events to PRODUCTION analytics (analytics opt-out write
+  went to the wrong defaults domain): 1 tour_started, 9 point_triggered, 1 tour_completed, tour UNSEEN,
+  24 Oct 2026 ~17:17–17:20 UTC, device `ios-iPhone`, anonymous_id `F5EBE32B-165D-4ED6-BCC6-0823DA344231`
+  (simulator-only ID). Removal: `DELETE FROM analytics_events WHERE anonymous_id = 'F5EBE32B-165D-4ED6-BCC6-0823DA344231';`
+  (expect 11 rows). Android tests sent nothing.
+
+### Release artifacts
+- Android: `android-app/app/build/outputs/bundle/release/app-release-1.1.13-vc26.aab` → Play Console upload.
+- iOS: `mobile-app/ios/SonicWalkscape/build/SonicWalkscape-1.7-16.xcarchive` → Xcode Organizer → Distribute.
+- Content: consider raising the 15 m radii of "PRESENTI MAI ASSENTI" in the CMS (CLAUDE.md: 100–300 m).
+
+### Build-environment notes
+- `.git/index` vanished mid-session (iCloud); rebuilt with `git read-tree HEAD` (index only, no file
+  touched). Git commands are very slow in this iCloud folder.
+
+---
+
 # Analytics end-to-end verification & fixes
 
 ## Goal

@@ -156,12 +156,16 @@ secrets {
 }
 
 // Google Play Publishing (Gradle Play Publisher).
-// Credentials come from a service-account JSON that is gitignored (see README below).
-// Publish with:  ./gradlew :app:publishReleaseBundle
+// Credentials come from a service-account JSON kept outside the (iCloud-synced) repo at
+// ~/.config/sonicwalkscape/play-service-account.json; the gitignored in-repo file still works.
+// Publish with:  ./gradlew :app:publishReleaseBundle  (see PUBLISHING.md)
 // Change `track` to the track you want to release to (internal | alpha | beta | production).
 play {
-    val credentialsFile = rootProject.file("play-service-account.json")
-    if (credentialsFile.exists()) {
+    val credentialsFile = listOf(
+        File(System.getProperty("user.home"), ".config/sonicwalkscape/play-service-account.json"),
+        rootProject.file("play-service-account.json")
+    ).firstOrNull { it.exists() }
+    if (credentialsFile != null) {
         serviceAccountCredentials.set(credentialsFile)
     }
     defaultToAppBundles.set(true)

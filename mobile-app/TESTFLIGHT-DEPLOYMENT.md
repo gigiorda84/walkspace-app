@@ -170,6 +170,33 @@
 
 ---
 
+## 🤖 Automated upload (App Store Connect API key)
+
+Uploads an archive from the command line, without signing in to Xcode with an Apple ID.
+
+**One-time setup** (Account Holder / Admin):
+1. App Store Connect → Users and Access → Integrations → App Store Connect API → **Team Keys**
+   → Generate API Key, access **App Manager** (use a team key; individual keys fail with xcodebuild).
+2. Download `AuthKey_<KEYID>.p8` (only possible once) to `~/.appstoreconnect/private_keys/`
+   (`chmod 600`). Keep it outside the repo — the repo is in iCloud Drive.
+3. Put the identifiers in `~/.appstoreconnect/sonicwalkscape.env`:
+   ```
+   ASC_KEY_ID=<Key ID>
+   ASC_ISSUER_ID=<Issuer ID shown at the top of the API keys page>
+   ```
+
+**Upload** (after `xcodebuild … archive`; bump `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` first):
+```bash
+mobile-app/ios/upload-to-app-store.sh mobile-app/ios/SonicWalkscape/build/SonicWalkscape-X.Y-N.xcarchive
+```
+- `--dry-run` as 2nd argument exports a signed `.ipa` locally instead of uploading (checks key + signing).
+- Export options: `mobile-app/ios/SonicWalkscape/ExportOptions-AppStore.plist` (versions are not
+  changed by Xcode: `manageAppVersionAndBuildNumber = false`).
+- After processing, the build appears in TestFlight; submit it for review in App Store Connect.
+- If signing fails with a permissions error, the key needs the **Admin** role.
+
+---
+
 ## 📞 Support Contacts
 
 - **Developer Email**: gigiorda@hotmail.it
